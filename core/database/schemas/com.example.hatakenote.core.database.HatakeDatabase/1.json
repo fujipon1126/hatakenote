@@ -1,0 +1,707 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "88cc7a061154ffdca37e158c7219b865",
+    "entities": [
+      {
+        "tableName": "crop_families",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `rotationYears` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rotationYears",
+            "columnName": "rotationYears",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "crops",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `familyId` INTEGER NOT NULL, `colorHex` TEXT NOT NULL, `isActive` INTEGER NOT NULL, FOREIGN KEY(`familyId`) REFERENCES `crop_families`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "familyId",
+            "columnName": "familyId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "colorHex",
+            "columnName": "colorHex",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_crops_familyId",
+            "unique": false,
+            "columnNames": [
+              "familyId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_crops_familyId` ON `${TABLE_NAME}` (`familyId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "crop_families",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "familyId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "fertilizer_schedules",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cropId` INTEGER NOT NULL, `daysAfterPlanting` INTEGER NOT NULL, `fertilizerType` TEXT NOT NULL, `amount` TEXT NOT NULL, `note` TEXT NOT NULL, FOREIGN KEY(`cropId`) REFERENCES `crops`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cropId",
+            "columnName": "cropId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "daysAfterPlanting",
+            "columnName": "daysAfterPlanting",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fertilizerType",
+            "columnName": "fertilizerType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amount",
+            "columnName": "amount",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_fertilizer_schedules_cropId",
+            "unique": false,
+            "columnNames": [
+              "cropId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_fertilizer_schedules_cropId` ON `${TABLE_NAME}` (`cropId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "crops",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "cropId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "rotation_incompatibilities",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `familyId` INTEGER NOT NULL, `incompatibleFamilyId` INTEGER NOT NULL, FOREIGN KEY(`familyId`) REFERENCES `crop_families`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`incompatibleFamilyId`) REFERENCES `crop_families`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "familyId",
+            "columnName": "familyId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "incompatibleFamilyId",
+            "columnName": "incompatibleFamilyId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_rotation_incompatibilities_familyId",
+            "unique": false,
+            "columnNames": [
+              "familyId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_rotation_incompatibilities_familyId` ON `${TABLE_NAME}` (`familyId`)"
+          },
+          {
+            "name": "index_rotation_incompatibilities_incompatibleFamilyId",
+            "unique": false,
+            "columnNames": [
+              "incompatibleFamilyId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_rotation_incompatibilities_incompatibleFamilyId` ON `${TABLE_NAME}` (`incompatibleFamilyId`)"
+          },
+          {
+            "name": "index_rotation_incompatibilities_familyId_incompatibleFamilyId",
+            "unique": true,
+            "columnNames": [
+              "familyId",
+              "incompatibleFamilyId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_rotation_incompatibilities_familyId_incompatibleFamilyId` ON `${TABLE_NAME}` (`familyId`, `incompatibleFamilyId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "crop_families",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "familyId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "crop_families",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "incompatibleFamilyId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "plots",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `gridX` INTEGER NOT NULL, `gridY` INTEGER NOT NULL, `width` INTEGER NOT NULL, `height` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gridX",
+            "columnName": "gridX",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gridY",
+            "columnName": "gridY",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "width",
+            "columnName": "width",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "height",
+            "columnName": "height",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "plantings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cropId` INTEGER NOT NULL, `plantedDate` TEXT NOT NULL, `harvestedDate` TEXT, `note` TEXT, `isActive` INTEGER NOT NULL, FOREIGN KEY(`cropId`) REFERENCES `crops`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cropId",
+            "columnName": "cropId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plantedDate",
+            "columnName": "plantedDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "harvestedDate",
+            "columnName": "harvestedDate",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_plantings_cropId",
+            "unique": false,
+            "columnNames": [
+              "cropId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_plantings_cropId` ON `${TABLE_NAME}` (`cropId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "crops",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "cropId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "planting_plot_cross_ref",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`plantingId` INTEGER NOT NULL, `plotId` INTEGER NOT NULL, PRIMARY KEY(`plantingId`, `plotId`), FOREIGN KEY(`plantingId`) REFERENCES `plantings`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`plotId`) REFERENCES `plots`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "plantingId",
+            "columnName": "plantingId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plotId",
+            "columnName": "plotId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "plantingId",
+            "plotId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_planting_plot_cross_ref_plantingId",
+            "unique": false,
+            "columnNames": [
+              "plantingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_planting_plot_cross_ref_plantingId` ON `${TABLE_NAME}` (`plantingId`)"
+          },
+          {
+            "name": "index_planting_plot_cross_ref_plotId",
+            "unique": false,
+            "columnNames": [
+              "plotId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_planting_plot_cross_ref_plotId` ON `${TABLE_NAME}` (`plotId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "plantings",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "plantingId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "plots",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "plotId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "planting_photos",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `plantingId` INTEGER NOT NULL, `filePath` TEXT NOT NULL, `takenDate` TEXT NOT NULL, FOREIGN KEY(`plantingId`) REFERENCES `plantings`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plantingId",
+            "columnName": "plantingId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "takenDate",
+            "columnName": "takenDate",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_planting_photos_plantingId",
+            "unique": false,
+            "columnNames": [
+              "plantingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_planting_photos_plantingId` ON `${TABLE_NAME}` (`plantingId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "plantings",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "plantingId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "work_logs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `plantingId` INTEGER, `plotId` INTEGER, `workType` TEXT NOT NULL, `workDate` TEXT NOT NULL, `detail` TEXT, FOREIGN KEY(`plantingId`) REFERENCES `plantings`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`plotId`) REFERENCES `plots`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plantingId",
+            "columnName": "plantingId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "plotId",
+            "columnName": "plotId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "workType",
+            "columnName": "workType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "workDate",
+            "columnName": "workDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "detail",
+            "columnName": "detail",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_work_logs_plantingId",
+            "unique": false,
+            "columnNames": [
+              "plantingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_work_logs_plantingId` ON `${TABLE_NAME}` (`plantingId`)"
+          },
+          {
+            "name": "index_work_logs_plotId",
+            "unique": false,
+            "columnNames": [
+              "plotId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_work_logs_plotId` ON `${TABLE_NAME}` (`plotId`)"
+          },
+          {
+            "name": "index_work_logs_workDate",
+            "unique": false,
+            "columnNames": [
+              "workDate"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_work_logs_workDate` ON `${TABLE_NAME}` (`workDate`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "plantings",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "plantingId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "plots",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "plotId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "reminders",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `plantingId` INTEGER NOT NULL, `scheduledDate` TEXT NOT NULL, `notifyDaysBefore` INTEGER NOT NULL, `title` TEXT NOT NULL, `message` TEXT NOT NULL, `isCompleted` INTEGER NOT NULL, FOREIGN KEY(`plantingId`) REFERENCES `plantings`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plantingId",
+            "columnName": "plantingId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduledDate",
+            "columnName": "scheduledDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notifyDaysBefore",
+            "columnName": "notifyDaysBefore",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "message",
+            "columnName": "message",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isCompleted",
+            "columnName": "isCompleted",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_reminders_plantingId",
+            "unique": false,
+            "columnNames": [
+              "plantingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_reminders_plantingId` ON `${TABLE_NAME}` (`plantingId`)"
+          },
+          {
+            "name": "index_reminders_scheduledDate",
+            "unique": false,
+            "columnNames": [
+              "scheduledDate"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_reminders_scheduledDate` ON `${TABLE_NAME}` (`scheduledDate`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "plantings",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "plantingId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '88cc7a061154ffdca37e158c7219b865')"
+    ]
+  }
+}
