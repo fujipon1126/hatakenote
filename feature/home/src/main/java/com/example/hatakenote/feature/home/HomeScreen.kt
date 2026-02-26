@@ -19,13 +19,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -56,9 +60,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.hatakenote.core.domain.model.DailyForecast
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.model.Reminder
+import com.example.hatakenote.core.domain.model.Weather
+import com.example.hatakenote.core.domain.model.WeatherCode
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
@@ -152,6 +159,15 @@ internal fun HomeScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
             ) {
+                // 天気セクション
+                if (uiState.weather != null) {
+                    WeatherSection(
+                        weather = uiState.weather,
+                        locationName = uiState.weatherLocationName,
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
                 // リマインダーセクション
                 if (uiState.upcomingReminders.isNotEmpty()) {
                     ReminderSection(
@@ -560,4 +576,195 @@ private fun ReminderCard(
             }
         }
     }
+}
+
+@Composable
+private fun WeatherSection(
+    weather: Weather,
+    locationName: String,
+) {
+    Column {
+        // 現在の天気
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 8.dp),
+        ) {
+            Icon(
+                imageVector = getWeatherIcon(weather.currentWeatherCode),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = if (locationName.isNotEmpty()) "${locationName}の天気" else "今日の天気",
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+            ),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+            ) {
+                // 現在の気温と天気
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = getWeatherIcon(weather.currentWeatherCode),
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = "${weather.currentTemperature.toInt()}°C",
+                            style = MaterialTheme.typography.headlineLarge,
+                        )
+                        Text(
+                            text = weather.currentWeatherCode.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 週間予報
+                Text(
+                    text = "週間予報",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    weather.dailyForecasts.forEach { forecast ->
+                        DailyForecastCard(forecast = forecast)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DailyForecastCard(forecast: DailyForecast) {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val isToday = forecast.date == today
+
+    val dayText = when (today.daysUntil(forecast.date)) {
+        0 -> "今日"
+        1 -> "明日"
+        else -> "${forecast.date.monthNumber}/${forecast.date.dayOfMonth}"
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                if (isToday) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                } else {
+                    Color.Transparent
+                }
+            )
+            .padding(8.dp),
+    ) {
+        Text(
+            text = dayText,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isToday) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Icon(
+            imageVector = getWeatherIcon(forecast.weatherCode),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "${forecast.temperatureMax.toInt()}°",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Text(
+            text = "${forecast.temperatureMin.toInt()}°",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        if (forecast.precipitationSum > 0) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.WaterDrop,
+                    contentDescription = null,
+                    modifier = Modifier.size(10.dp),
+                    tint = MaterialTheme.colorScheme.tertiary,
+                )
+                Text(
+                    text = "${forecast.precipitationSum.toInt()}mm",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun getWeatherIcon(weatherCode: WeatherCode) = when (weatherCode) {
+    WeatherCode.CLEAR_SKY,
+    WeatherCode.MAINLY_CLEAR -> Icons.Default.WbSunny
+
+    WeatherCode.PARTLY_CLOUDY,
+    WeatherCode.OVERCAST,
+    WeatherCode.FOG,
+    WeatherCode.DEPOSITING_RIME_FOG -> Icons.Default.Cloud
+
+    WeatherCode.DRIZZLE_LIGHT,
+    WeatherCode.DRIZZLE_MODERATE,
+    WeatherCode.DRIZZLE_DENSE,
+    WeatherCode.FREEZING_DRIZZLE_LIGHT,
+    WeatherCode.FREEZING_DRIZZLE_DENSE,
+    WeatherCode.RAIN_SLIGHT,
+    WeatherCode.RAIN_MODERATE,
+    WeatherCode.RAIN_HEAVY,
+    WeatherCode.FREEZING_RAIN_LIGHT,
+    WeatherCode.FREEZING_RAIN_HEAVY,
+    WeatherCode.RAIN_SHOWERS_SLIGHT,
+    WeatherCode.RAIN_SHOWERS_MODERATE,
+    WeatherCode.RAIN_SHOWERS_VIOLENT -> Icons.Default.WaterDrop
+
+    WeatherCode.SNOW_SLIGHT,
+    WeatherCode.SNOW_MODERATE,
+    WeatherCode.SNOW_HEAVY,
+    WeatherCode.SNOW_GRAINS,
+    WeatherCode.SNOW_SHOWERS_SLIGHT,
+    WeatherCode.SNOW_SHOWERS_HEAVY -> Icons.Default.Cloud
+
+    WeatherCode.THUNDERSTORM,
+    WeatherCode.THUNDERSTORM_WITH_SLIGHT_HAIL,
+    WeatherCode.THUNDERSTORM_WITH_HEAVY_HAIL -> Icons.Default.Cloud
+
+    WeatherCode.UNKNOWN -> Icons.Default.Cloud
 }

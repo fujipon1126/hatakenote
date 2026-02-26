@@ -5,8 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.model.Reminder
+import com.example.hatakenote.core.domain.model.Weather
+import com.example.hatakenote.core.domain.repository.AppSettingsRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.ReminderRepository
+import com.example.hatakenote.core.domain.repository.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,6 +25,9 @@ data class HomeUiState(
     val gridColumns: Int = 4,
     val gridRows: Int = 3,
     val upcomingReminders: List<Reminder> = emptyList(),
+    val weather: Weather? = null,
+    val weatherLocationName: String = "",
+    val weatherError: Boolean = false,
     val isLoading: Boolean = true,
     val showAddPlotDialog: Boolean = false,
     val editingPlot: Plot? = null,
@@ -31,6 +37,8 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     private val plotRepository: PlotRepository,
     private val reminderRepository: ReminderRepository,
+    private val weatherRepository: WeatherRepository,
+    private val appSettingsRepository: AppSettingsRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -38,6 +46,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadData()
+        loadWeatherWithSettings()
     }
 
     private fun loadData() {
@@ -65,6 +74,34 @@ class HomeViewModel @Inject constructor(
                     )
                 }
         }
+    }
+
+    private fun loadWeatherWithSettings() {
+        viewModelScope.launch {
+            appSettingsRepository.getSettings().collect { settings ->
+                loadWeather(settings.latitude, settings.longitude, settings.locationName)
+            }
+        }
+    }
+
+    private suspend fun loadWeather(latitude: Double, longitude: Double, locationName: String) {
+        weatherRepository.getWeather(latitude, longitude)
+            .onSuccess { weather ->
+                _uiState.value = _uiState.value.copy(
+                    weather = weather,
+                    weatherLocationName = locationName,
+                    weatherError = false,
+                )
+            }
+            .onFailure {
+                _uiState.value = _uiState.value.copy(
+                    weatherError = true,
+                )
+            }
+    }
+
+    fun refreshWeather() {
+        loadWeatherWithSettings()
     }
 
     fun completeReminder(reminderId: Long) {

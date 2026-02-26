@@ -1,5 +1,6 @@
 package com.example.hatakenote.core.network.di
 
+import com.example.hatakenote.core.network.api.WeatherApiService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -47,4 +48,9 @@ object NetworkModule {
         .client(okHttpClient)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
+
+    @Provides
+    @Singleton
+    fun provideWeatherApiService(retrofit: Retrofit): WeatherApiService =
+        retrofit.create(WeatherApiService::class.java)
 }

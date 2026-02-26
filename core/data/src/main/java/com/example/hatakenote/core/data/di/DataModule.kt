@@ -65,4 +65,16 @@ abstract class DataModule {
     abstract fun bindPlantingPhotoRepository(
         impl: PlantingPhotoRepositoryImpl
     ): PlantingPhotoRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindWeatherRepository(
+        impl: WeatherRepositoryImpl
+    ): WeatherRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAppSettingsRepository(
+        impl: AppSettingsRepositoryImpl
+    ): AppSettingsRepository
 }
