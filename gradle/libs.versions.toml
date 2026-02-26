@@ -1,6 +1,7 @@
 [versions]
 # Android
 agp = "8.7.3"
+javaxInject = "1"
 kotlin = "2.1.0"
 ksp = "2.1.0-1.0.29"
 
@@ -80,6 +81,7 @@ androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref 
 androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWork" }
 
 # Room
+javax-inject = { module = "javax.inject:javax.inject", version.ref = "javaxInject" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }

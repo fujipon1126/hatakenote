@@ -23,6 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -56,6 +58,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
+import com.example.hatakenote.core.domain.model.Reminder
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.todayIn
 
 @Composable
 internal fun HomeRoute(
@@ -76,6 +83,7 @@ internal fun HomeRoute(
         onAddPlotClick = viewModel::showAddPlotDialog,
         onDismissPlotDialog = viewModel::dismissPlotDialog,
         onSavePlot = viewModel::savePlot,
+        onCompleteReminder = viewModel::completeReminder,
     )
 }
 
@@ -90,6 +98,7 @@ internal fun HomeScreen(
     onAddPlotClick: () -> Unit,
     onDismissPlotDialog: () -> Unit,
     onSavePlot: (String, Int, Int, Int, Int) -> Unit,
+    onCompleteReminder: (Long) -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -143,6 +152,15 @@ internal fun HomeScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
             ) {
+                // リマインダーセクション
+                if (uiState.upcomingReminders.isNotEmpty()) {
+                    ReminderSection(
+                        reminders = uiState.upcomingReminders,
+                        onCompleteReminder = onCompleteReminder,
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
                 Text(
                     text = "畑マップ",
                     style = MaterialTheme.typography.titleMedium,
@@ -437,4 +455,109 @@ private fun AddEditPlotDialog(
             }
         },
     )
+}
+
+@Composable
+private fun ReminderSection(
+    reminders: List<Reminder>,
+    onCompleteReminder: (Long) -> Unit,
+) {
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 8.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "今週のリマインダー",
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            reminders.forEach { reminder ->
+                ReminderCard(
+                    reminder = reminder,
+                    onComplete = { onCompleteReminder(reminder.id) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReminderCard(
+    reminder: Reminder,
+    onComplete: () -> Unit,
+) {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val daysUntil = today.daysUntil(reminder.scheduledDate)
+
+    val dateText = when {
+        daysUntil < 0 -> "${-daysUntil}日超過"
+        daysUntil == 0 -> "今日"
+        daysUntil == 1 -> "明日"
+        else -> "${daysUntil}日後"
+    }
+
+    val isOverdue = daysUntil < 0
+    val containerColor = when {
+        isOverdue -> MaterialTheme.colorScheme.errorContainer
+        daysUntil <= 1 -> MaterialTheme.colorScheme.tertiaryContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = reminder.title,
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = dateText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isOverdue) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${reminder.scheduledDate.monthNumber}/${reminder.scheduledDate.dayOfMonth}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            IconButton(onClick = onComplete) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "完了",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+    }
 }

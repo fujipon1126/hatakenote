@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.hatakenote.android.library)
     alias(libs.plugins.hatakenote.android.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -15,4 +16,9 @@ dependencies {
 
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.coroutines.android)
+
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 }

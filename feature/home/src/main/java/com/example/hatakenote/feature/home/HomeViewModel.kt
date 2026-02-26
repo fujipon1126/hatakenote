@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
+import com.example.hatakenote.core.domain.model.Reminder
 import com.example.hatakenote.core.domain.repository.PlotRepository
+import com.example.hatakenote.core.domain.repository.ReminderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -18,6 +21,7 @@ data class HomeUiState(
     val plots: List<PlotWithCurrentPlanting> = emptyList(),
     val gridColumns: Int = 4,
     val gridRows: Int = 3,
+    val upcomingReminders: List<Reminder> = emptyList(),
     val isLoading: Boolean = true,
     val showAddPlotDialog: Boolean = false,
     val editingPlot: Plot? = null,
@@ -26,32 +30,46 @@ data class HomeUiState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val plotRepository: PlotRepository,
+    private val reminderRepository: ReminderRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        loadPlots()
+        loadData()
     }
 
-    private fun loadPlots() {
+    private fun loadData() {
         viewModelScope.launch {
-            plotRepository.getAllWithCurrentPlantings()
+            // 7日以内のリマインダーを取得
+            combine(
+                plotRepository.getAllWithCurrentPlantings(),
+                reminderRepository.getUpcoming(days = 7),
+            ) { plots, reminders ->
+                Pair(plots, reminders)
+            }
                 .stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = emptyList()
+                    initialValue = Pair(emptyList(), emptyList())
                 )
-                .collect { plots ->
+                .collect { (plots, reminders) ->
                     val maxPosition = plotRepository.getMaxGridPosition()
                     _uiState.value = _uiState.value.copy(
                         plots = plots,
                         gridColumns = maxOf(4, maxPosition.first + 1),
                         gridRows = maxOf(3, maxPosition.second + 1),
+                        upcomingReminders = reminders,
                         isLoading = false,
                     )
                 }
+        }
+    }
+
+    fun completeReminder(reminderId: Long) {
+        viewModelScope.launch {
+            reminderRepository.markCompleted(reminderId)
         }
     }
 

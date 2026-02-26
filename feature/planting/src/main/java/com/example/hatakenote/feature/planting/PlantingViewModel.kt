@@ -13,6 +13,7 @@ import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
+import com.example.hatakenote.core.domain.usecase.GenerateRemindersUseCase
 import com.example.hatakenote.feature.planting.navigation.PlantingRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,6 +56,7 @@ class PlantingViewModel @Inject constructor(
     private val plotRepository: PlotRepository,
     private val plantingRepository: PlantingRepository,
     private val plantingPhotoRepository: PlantingPhotoRepository,
+    private val generateRemindersUseCase: GenerateRemindersUseCase,
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<PlantingRoute>()
@@ -230,6 +232,13 @@ class PlantingViewModel @Inject constructor(
                         isActive = true,
                     )
                     plantingIdResult = plantingRepository.insert(newPlanting, plotIds)
+
+                    // 追肥スケジュールからリマインダーを自動生成
+                    generateRemindersUseCase(
+                        plantingId = plantingIdResult,
+                        cropId = crop.id,
+                        plantedDate = state.plantedDate,
+                    )
                 }
 
                 // Save pending photos
