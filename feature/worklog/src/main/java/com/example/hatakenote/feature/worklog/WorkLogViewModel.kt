@@ -68,6 +68,13 @@ class WorkLogViewModel @Inject constructor(
     private val workLogId: Long? = route.workLogId
     private val initialPlantingId: Long? = route.plantingId
     private val initialPlotId: Long? = route.plotId
+    private val initialWorkDate: LocalDate? = route.workDate?.let {
+        try {
+            LocalDate.parse(it)
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     private val _uiState = MutableStateFlow(WorkLogUiState())
     val uiState: StateFlow<WorkLogUiState> = _uiState.asStateFlow()
@@ -142,6 +149,7 @@ class WorkLogViewModel @Inject constructor(
                         isLoading = false,
                         isEditMode = false,
                         selectedWorkType = initialWorkType,
+                        workDate = initialWorkDate ?: Clock.System.todayIn(TimeZone.currentSystemDefault()),
                         availablePlantings = plantingsWithCropAndPlots,
                         selectedPlanting = selectedPlanting,
                         availablePlots = plots,

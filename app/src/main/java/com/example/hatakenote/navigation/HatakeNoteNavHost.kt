@@ -64,7 +64,9 @@ fun HatakeNoteNavHost(
 
         calendarScreen(
             onBackClick = { navController.popBackStack() },
-            onDateClick = { },
+            onAddWorkLogClick = { dateString ->
+                navController.navigateToWorkLog(workDate = dateString)
+            },
         )
 
         assistantScreen(

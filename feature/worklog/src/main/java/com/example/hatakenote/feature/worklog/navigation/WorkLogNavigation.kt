@@ -12,15 +12,17 @@ data class WorkLogRoute(
     val workLogId: Long? = null,
     val plantingId: Long? = null,
     val plotId: Long? = null,
+    val workDate: String? = null,
 )
 
 fun NavController.navigateToWorkLog(
     workLogId: Long? = null,
     plantingId: Long? = null,
     plotId: Long? = null,
+    workDate: String? = null,
     navOptions: NavOptions? = null,
 ) {
-    navigate(WorkLogRoute(workLogId, plantingId, plotId), navOptions)
+    navigate(WorkLogRoute(workLogId, plantingId, plotId, workDate), navOptions)
 }
 
 fun NavGraphBuilder.workLogScreen(
