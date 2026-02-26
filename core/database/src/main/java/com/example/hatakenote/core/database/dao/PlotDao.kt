@@ -25,4 +25,10 @@ interface PlotDao {
 
     @Delete
     suspend fun delete(plot: PlotEntity)
+
+    @Query("SELECT COALESCE(MAX(gridX + width - 1), 0) FROM plots")
+    suspend fun getMaxGridX(): Int
+
+    @Query("SELECT COALESCE(MAX(gridY + height - 1), 0) FROM plots")
+    suspend fun getMaxGridY(): Int
 }

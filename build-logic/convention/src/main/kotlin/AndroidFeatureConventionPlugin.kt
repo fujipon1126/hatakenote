@@ -25,6 +25,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 add("implementation", catalog.library("androidx-navigation-compose"))
                 add("implementation", catalog.library("kotlinx-coroutines-android"))
                 add("implementation", catalog.library("kotlinx-serialization-json"))
+                add("implementation", catalog.library("kotlinx-datetime"))
             }
         }
     }
