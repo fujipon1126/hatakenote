@@ -40,8 +40,8 @@ fun HatakeNoteNavHost(
 
         plotDetailScreen(
             onBackClick = { navController.popBackStack() },
-            onAddPlantingClick = { plotId -> navController.navigateToPlanting() },
-            onPlantingClick = { plantingId -> navController.navigateToPlanting(plantingId) },
+            onAddPlantingClick = { plotId -> navController.navigateToPlanting(initialPlotId = plotId) },
+            onPlantingClick = { plantingId -> navController.navigateToPlanting(plantingId = plantingId) },
             onWorkLogClick = { plantingId, plotId ->
                 navController.navigateToWorkLog(plantingId, plotId)
             },

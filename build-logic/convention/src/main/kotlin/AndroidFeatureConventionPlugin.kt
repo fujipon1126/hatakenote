@@ -26,6 +26,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 add("implementation", catalog.library("kotlinx-coroutines-android"))
                 add("implementation", catalog.library("kotlinx-serialization-json"))
                 add("implementation", catalog.library("kotlinx-datetime"))
+                add("implementation", catalog.library("coil-compose"))
             }
         }
     }

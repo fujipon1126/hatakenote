@@ -8,10 +8,17 @@ import com.example.hatakenote.feature.planting.PlantingRoute
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PlantingRoute(val plantingId: Long? = null)
+data class PlantingRoute(
+    val plantingId: Long? = null,
+    val initialPlotId: Long? = null,
+)
 
-fun NavController.navigateToPlanting(plantingId: Long? = null, navOptions: NavOptions? = null) {
-    navigate(PlantingRoute(plantingId), navOptions)
+fun NavController.navigateToPlanting(
+    plantingId: Long? = null,
+    initialPlotId: Long? = null,
+    navOptions: NavOptions? = null,
+) {
+    navigate(PlantingRoute(plantingId, initialPlotId), navOptions)
 }
 
 fun NavGraphBuilder.plantingScreen(
