@@ -43,7 +43,7 @@ fun HatakeNoteNavHost(
             onAddPlantingClick = { plotId -> navController.navigateToPlanting(initialPlotId = plotId) },
             onPlantingClick = { plantingId -> navController.navigateToPlanting(plantingId = plantingId) },
             onWorkLogClick = { plantingId, plotId ->
-                navController.navigateToWorkLog(plantingId, plotId)
+                navController.navigateToWorkLog(plantingId = plantingId, plotId = plotId)
             },
         )
 
