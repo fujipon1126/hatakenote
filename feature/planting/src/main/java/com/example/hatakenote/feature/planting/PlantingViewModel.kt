@@ -13,7 +13,9 @@ import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
+import com.example.hatakenote.core.domain.usecase.CheckRotationCompatibilityUseCase
 import com.example.hatakenote.core.domain.usecase.GenerateRemindersUseCase
+import com.example.hatakenote.core.domain.usecase.RotationWarning
 import com.example.hatakenote.feature.planting.navigation.PlantingRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +41,7 @@ data class PlantingUiState(
     val photos: List<PlantingPhoto> = emptyList(),
     val pendingPhotoUris: List<Uri> = emptyList(),
     val existingPlanting: Planting? = null,
+    val rotationWarnings: List<RotationWarning> = emptyList(),
     val showCropSelector: Boolean = false,
     val showPlotSelector: Boolean = false,
     val showDatePicker: Boolean = false,
@@ -57,6 +60,7 @@ class PlantingViewModel @Inject constructor(
     private val plantingRepository: PlantingRepository,
     private val plantingPhotoRepository: PlantingPhotoRepository,
     private val generateRemindersUseCase: GenerateRemindersUseCase,
+    private val checkRotationCompatibilityUseCase: CheckRotationCompatibilityUseCase,
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<PlantingRoute>()
@@ -121,6 +125,7 @@ class PlantingViewModel @Inject constructor(
             selectedCrop = crop,
             showCropSelector = false,
         )
+        checkRotationWarnings()
     }
 
     fun togglePlotSelection(plotId: Long) {
@@ -131,6 +136,32 @@ class PlantingViewModel @Inject constructor(
             currentSelection + plotId
         }
         _uiState.value = _uiState.value.copy(selectedPlotIds = newSelection)
+        checkRotationWarnings()
+    }
+
+    private fun checkRotationWarnings() {
+        val state = _uiState.value
+        val crop = state.selectedCrop
+        val plotIds = state.selectedPlotIds.toList()
+
+        if (crop == null || plotIds.isEmpty() || state.isEditMode) {
+            _uiState.value = state.copy(rotationWarnings = emptyList())
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val warnings = checkRotationCompatibilityUseCase(crop, plotIds)
+                _uiState.value = _uiState.value.copy(rotationWarnings = warnings)
+            } catch (e: Exception) {
+                // エラー時は警告なしとして処理を続行
+                _uiState.value = _uiState.value.copy(rotationWarnings = emptyList())
+            }
+        }
+    }
+
+    fun dismissRotationWarnings() {
+        _uiState.value = _uiState.value.copy(rotationWarnings = emptyList())
     }
 
     fun setPlantedDate(date: LocalDate) {

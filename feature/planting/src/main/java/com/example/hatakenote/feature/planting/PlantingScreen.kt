@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -72,6 +73,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.hatakenote.core.domain.model.Crop
 import com.example.hatakenote.core.domain.model.Plot
+import com.example.hatakenote.core.domain.usecase.RotationWarning
+import com.example.hatakenote.core.domain.usecase.WarningSeverity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -121,6 +124,7 @@ internal fun PlantingRoute(
         onDismissHarvestDialog = viewModel::dismissHarvestDialog,
         onHarvest = viewModel::harvest,
         onClearError = viewModel::clearError,
+        onDismissRotationWarnings = viewModel::dismissRotationWarnings,
         onSave = {
             viewModel.save { uri, plantingId ->
                 withContext(Dispatchers.IO) {
@@ -167,6 +171,7 @@ internal fun PlantingScreen(
     onDismissHarvestDialog: () -> Unit,
     onHarvest: (LocalDate) -> Unit,
     onClearError: () -> Unit,
+    onDismissRotationWarnings: () -> Unit,
     onSave: () -> Unit,
     canSave: Boolean,
     canHarvest: Boolean,
@@ -255,6 +260,16 @@ internal fun PlantingScreen(
                             plots = uiState.plots,
                             selectedPlotIds = uiState.selectedPlotIds,
                             onPlotToggle = onPlotToggle,
+                        )
+                    }
+                }
+
+                // Rotation Warnings
+                if (uiState.rotationWarnings.isNotEmpty()) {
+                    item {
+                        RotationWarningCard(
+                            warnings = uiState.rotationWarnings,
+                            onDismiss = onDismissRotationWarnings,
                         )
                     }
                 }
@@ -731,5 +746,98 @@ private fun HarvestDialog(
             )
             DatePicker(state = datePickerState)
         }
+    }
+}
+
+@Composable
+private fun RotationWarningCard(
+    warnings: List<RotationWarning>,
+    onDismiss: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "連作障害の注意",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            warnings.forEach { warning ->
+                WarningItem(warning = warning)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text(
+                        text = "理解して続行",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WarningItem(
+    warning: RotationWarning,
+) {
+    val backgroundColor = when (warning.severity) {
+        WarningSeverity.HIGH -> MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+        WarningSeverity.MEDIUM -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)
+    }
+
+    val borderColor = when (warning.severity) {
+        WarningSeverity.HIGH -> MaterialTheme.colorScheme.error
+        WarningSeverity.MEDIUM -> MaterialTheme.colorScheme.tertiary
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = backgroundColor,
+                shape = RoundedCornerShape(8.dp),
+            )
+            .border(
+                width = 1.dp,
+                color = borderColor.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(8.dp),
+            )
+            .padding(12.dp),
+    ) {
+        Text(
+            text = warning.message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+        )
     }
 }
