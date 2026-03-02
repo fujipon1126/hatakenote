@@ -133,7 +133,7 @@ internal fun SettingsScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Notifications,
-                        contentDescription = null,
+                        contentDescription = "通知設定",
                         tint = MaterialTheme.colorScheme.primary,
                     )
                     Spacer(modifier = Modifier.width(16.dp))
@@ -245,7 +245,7 @@ private fun SettingsItem(
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = title,
             tint = MaterialTheme.colorScheme.primary,
         )
         Spacer(modifier = Modifier.width(16.dp))
@@ -262,7 +262,7 @@ private fun SettingsItem(
         }
         Icon(
             imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
+            contentDescription = "詳細を開く",
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

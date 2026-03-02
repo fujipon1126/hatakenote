@@ -75,6 +75,7 @@ import com.example.hatakenote.core.domain.model.Crop
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.usecase.RotationWarning
 import com.example.hatakenote.core.domain.usecase.WarningSeverity
+import com.example.hatakenote.core.ui.util.parseColorSafe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -373,11 +374,7 @@ private fun CropSelector(
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = if (selectedCrop != null) {
-                try {
-                    Color(android.graphics.Color.parseColor(selectedCrop.colorHex)).copy(alpha = 0.1f)
-                } catch (e: Exception) {
-                    MaterialTheme.colorScheme.surfaceVariant
-                }
+                parseColorSafe(selectedCrop.colorHex, MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.1f)
             } else {
                 MaterialTheme.colorScheme.surfaceVariant
             },
@@ -394,13 +391,7 @@ private fun CropSelector(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(
-                            try {
-                                Color(android.graphics.Color.parseColor(selectedCrop.colorHex))
-                            } catch (e: Exception) {
-                                MaterialTheme.colorScheme.primary
-                            }
-                        ),
+                        .background(parseColorSafe(selectedCrop.colorHex, MaterialTheme.colorScheme.primary)),
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
@@ -443,7 +434,7 @@ private fun PlotSelector(
                     onClick = { onPlotToggle(plot.id) },
                     label = { Text(plot.name) },
                     leadingIcon = if (isSelected) {
-                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                        { Icon(Icons.Default.Check, contentDescription = "選択済み", modifier = Modifier.size(18.dp)) }
                     } else null,
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -475,7 +466,7 @@ private fun DateSelector(
         ) {
             Icon(
                 imageVector = Icons.Default.CalendarMonth,
-                contentDescription = null,
+                contentDescription = "日付選択",
                 tint = MaterialTheme.colorScheme.primary,
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -623,11 +614,7 @@ private fun CropItem(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    val cropColor = try {
-        Color(android.graphics.Color.parseColor(crop.colorHex))
-    } catch (e: Exception) {
-        MaterialTheme.colorScheme.primary
-    }
+    val cropColor = parseColorSafe(crop.colorHex, MaterialTheme.colorScheme.primary)
 
     Card(
         modifier = Modifier
@@ -662,7 +649,7 @@ private fun CropItem(
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = null,
+                    contentDescription = "選択済み",
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
@@ -770,7 +757,7 @@ private fun RotationWarningCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Warning,
-                    contentDescription = null,
+                    contentDescription = "警告",
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(24.dp),
                 )

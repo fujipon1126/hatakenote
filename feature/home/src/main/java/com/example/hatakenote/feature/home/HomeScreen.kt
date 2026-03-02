@@ -38,10 +38,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +66,7 @@ import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.model.Reminder
 import com.example.hatakenote.core.domain.model.Weather
 import com.example.hatakenote.core.domain.model.WeatherCode
+import com.example.hatakenote.core.ui.util.parseColorSafe
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
@@ -82,6 +86,8 @@ internal fun HomeRoute(
         onDismissPlotDialog = viewModel::dismissPlotDialog,
         onSavePlot = viewModel::savePlot,
         onCompleteReminder = viewModel::completeReminder,
+        onRefreshWeather = viewModel::refreshWeather,
+        onClearError = viewModel::clearError,
     )
 }
 
@@ -94,8 +100,20 @@ internal fun HomeScreen(
     onDismissPlotDialog: () -> Unit,
     onSavePlot: (String, Int, Int, Int, Int) -> Unit,
     onCompleteReminder: (Long) -> Unit,
+    onRefreshWeather: () -> Unit,
+    onClearError: () -> Unit,
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            onClearError()
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("畑ノート") },
@@ -133,6 +151,9 @@ internal fun HomeScreen(
                         weather = uiState.weather,
                         locationName = uiState.weatherLocationName,
                     )
+                    Spacer(modifier = Modifier.height(24.dp))
+                } else if (uiState.weatherError) {
+                    WeatherErrorSection(onRetry = onRefreshWeather)
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
@@ -265,12 +286,7 @@ private fun PlotCell(
 
     // Determine background color based on planted crops
     val backgroundColor = if (currentPlantings.isNotEmpty()) {
-        val colorHex = currentPlantings.first().crop.colorHex
-        try {
-            Color(android.graphics.Color.parseColor(colorHex))
-        } catch (e: Exception) {
-            MaterialTheme.colorScheme.primaryContainer
-        }
+        parseColorSafe(currentPlantings.first().crop.colorHex, MaterialTheme.colorScheme.primaryContainer)
     } else {
         MaterialTheme.colorScheme.surfaceVariant
     }
@@ -453,7 +469,7 @@ private fun ReminderSection(
         ) {
             Icon(
                 imageVector = Icons.Default.Notifications,
-                contentDescription = null,
+                contentDescription = "リマインダー",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp),
             )
@@ -547,6 +563,48 @@ private fun ReminderCard(
 }
 
 @Composable
+private fun WeatherErrorSection(
+    onRetry: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Cloud,
+                contentDescription = "天気取得エラー",
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(32.dp),
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "天気情報を取得できませんでした",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                )
+                Text(
+                    text = "設定で位置情報を確認してください",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f),
+                )
+            }
+            TextButton(onClick = onRetry) {
+                Text("再試行")
+            }
+        }
+    }
+}
+
+@Composable
 private fun WeatherSection(
     weather: Weather,
     locationName: String,
@@ -559,7 +617,7 @@ private fun WeatherSection(
         ) {
             Icon(
                 imageVector = getWeatherIcon(weather.currentWeatherCode),
-                contentDescription = null,
+                contentDescription = "天気",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp),
             )
@@ -585,7 +643,7 @@ private fun WeatherSection(
                 ) {
                     Icon(
                         imageVector = getWeatherIcon(weather.currentWeatherCode),
-                        contentDescription = null,
+                        contentDescription = weather.currentWeatherCode.description,
                         modifier = Modifier.size(48.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -664,7 +722,7 @@ private fun DailyForecastCard(forecast: DailyForecast) {
         Spacer(modifier = Modifier.height(4.dp))
         Icon(
             imageVector = getWeatherIcon(forecast.weatherCode),
-            contentDescription = null,
+            contentDescription = forecast.weatherCode.description,
             modifier = Modifier.size(24.dp),
             tint = MaterialTheme.colorScheme.primary,
         )
@@ -685,7 +743,7 @@ private fun DailyForecastCard(forecast: DailyForecast) {
             ) {
                 Icon(
                     imageVector = Icons.Default.WaterDrop,
-                    contentDescription = null,
+                    contentDescription = "降水量",
                     modifier = Modifier.size(10.dp),
                     tint = MaterialTheme.colorScheme.tertiary,
                 )

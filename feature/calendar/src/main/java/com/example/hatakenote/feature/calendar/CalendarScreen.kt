@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.core.domain.model.WorkType
+import com.example.hatakenote.core.ui.util.parseColorSafe
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -365,20 +366,8 @@ private fun DayCell(
 @Composable
 private fun getEventIndicatorColor(event: CalendarEvent): Color {
     return when (event) {
-        is CalendarEvent.PlantingEvent -> {
-            try {
-                Color(android.graphics.Color.parseColor(event.cropColor))
-            } catch (e: Exception) {
-                MaterialTheme.colorScheme.primary
-            }
-        }
-        is CalendarEvent.HarvestEvent -> {
-            try {
-                Color(android.graphics.Color.parseColor(event.cropColor))
-            } catch (e: Exception) {
-                MaterialTheme.colorScheme.tertiary
-            }
-        }
+        is CalendarEvent.PlantingEvent -> parseColorSafe(event.cropColor, MaterialTheme.colorScheme.primary)
+        is CalendarEvent.HarvestEvent -> parseColorSafe(event.cropColor, MaterialTheme.colorScheme.tertiary)
         is CalendarEvent.ReminderEvent -> MaterialTheme.colorScheme.error
         is CalendarEvent.WorkLogEvent -> MaterialTheme.colorScheme.secondary
     }
@@ -408,7 +397,7 @@ private fun EventBottomSheetContent(
             FilledTonalButton(onClick = onAddWorkLogClick) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = null,
+                    contentDescription = "作業を追加",
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -442,29 +431,19 @@ private fun EventBottomSheetContent(
 private fun EventCard(event: CalendarEvent) {
     val (icon, title, subtitle, color) = when (event) {
         is CalendarEvent.PlantingEvent -> {
-            val cropColor = try {
-                Color(android.graphics.Color.parseColor(event.cropColor))
-            } catch (e: Exception) {
-                MaterialTheme.colorScheme.primary
-            }
             EventCardData(
                 icon = Icons.Default.Agriculture,
                 title = "植付け: ${event.cropName}",
                 subtitle = null,
-                color = cropColor,
+                color = parseColorSafe(event.cropColor, MaterialTheme.colorScheme.primary),
             )
         }
         is CalendarEvent.HarvestEvent -> {
-            val cropColor = try {
-                Color(android.graphics.Color.parseColor(event.cropColor))
-            } catch (e: Exception) {
-                MaterialTheme.colorScheme.tertiary
-            }
             EventCardData(
                 icon = Icons.Default.Agriculture,
                 title = "収穫: ${event.cropName}",
                 subtitle = null,
-                color = cropColor,
+                color = parseColorSafe(event.cropColor, MaterialTheme.colorScheme.tertiary),
             )
         }
         is CalendarEvent.ReminderEvent -> {
@@ -510,7 +489,7 @@ private fun EventCard(event: CalendarEvent) {
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = null,
+                contentDescription = title,
                 tint = color,
                 modifier = Modifier.size(24.dp),
             )

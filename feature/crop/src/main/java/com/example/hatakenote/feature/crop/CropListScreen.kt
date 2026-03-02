@@ -55,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.hatakenote.core.ui.util.parseColorSafe
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.core.domain.model.Crop
 import com.example.hatakenote.core.domain.model.CropFamily
@@ -248,7 +249,7 @@ private fun CropListItem(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(parseColor(crop.colorHex)),
+                    .background(parseColorSafe(crop.colorHex)),
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -409,7 +410,7 @@ private fun CropEditDialog(
                                 modifier = Modifier
                                     .size(24.dp)
                                     .clip(CircleShape)
-                                    .background(parseColor(colorHex)),
+                                    .background(parseColorSafe(colorHex)),
                             )
                         },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = colorDropdownExpanded) },
@@ -429,7 +430,7 @@ private fun CropEditDialog(
                                             modifier = Modifier
                                                 .size(24.dp)
                                                 .clip(CircleShape)
-                                                .background(parseColor(hex)),
+                                                .background(parseColorSafe(hex)),
                                         )
                                         Spacer(modifier = Modifier.width(12.dp))
                                         Text(label)
@@ -459,12 +460,4 @@ private fun CropEditDialog(
             }
         },
     )
-}
-
-private fun parseColor(colorHex: String): Color {
-    return try {
-        Color(android.graphics.Color.parseColor(colorHex))
-    } catch (e: Exception) {
-        Color.Gray
-    }
 }

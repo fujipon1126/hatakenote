@@ -31,6 +31,7 @@ data class HomeUiState(
     val isLoading: Boolean = true,
     val showAddPlotDialog: Boolean = false,
     val editingPlot: Plot? = null,
+    val errorMessage: String? = null,
 )
 
 @HiltViewModel
@@ -106,7 +107,13 @@ class HomeViewModel @Inject constructor(
 
     fun completeReminder(reminderId: Long) {
         viewModelScope.launch {
-            reminderRepository.markCompleted(reminderId)
+            try {
+                reminderRepository.markCompleted(reminderId)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "リマインダーの完了に失敗しました"
+                )
+            }
         }
     }
 
@@ -124,35 +131,51 @@ class HomeViewModel @Inject constructor(
 
     fun savePlot(name: String, gridX: Int, gridY: Int, width: Int, height: Int) {
         viewModelScope.launch {
-            val editingPlot = _uiState.value.editingPlot
-            if (editingPlot != null) {
-                plotRepository.update(
-                    editingPlot.copy(
-                        name = name,
-                        gridX = gridX,
-                        gridY = gridY,
-                        width = width,
-                        height = height,
+            try {
+                val editingPlot = _uiState.value.editingPlot
+                if (editingPlot != null) {
+                    plotRepository.update(
+                        editingPlot.copy(
+                            name = name,
+                            gridX = gridX,
+                            gridY = gridY,
+                            width = width,
+                            height = height,
+                        )
                     )
-                )
-            } else {
-                plotRepository.insert(
-                    Plot(
-                        name = name,
-                        gridX = gridX,
-                        gridY = gridY,
-                        width = width,
-                        height = height,
+                } else {
+                    plotRepository.insert(
+                        Plot(
+                            name = name,
+                            gridX = gridX,
+                            gridY = gridY,
+                            width = width,
+                            height = height,
+                        )
                     )
+                }
+                dismissPlotDialog()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "区画の保存に失敗しました"
                 )
             }
-            dismissPlotDialog()
         }
     }
 
     fun deletePlot(plot: Plot) {
         viewModelScope.launch {
-            plotRepository.delete(plot)
+            try {
+                plotRepository.delete(plot)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "区画の削除に失敗しました"
+                )
+            }
         }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 }

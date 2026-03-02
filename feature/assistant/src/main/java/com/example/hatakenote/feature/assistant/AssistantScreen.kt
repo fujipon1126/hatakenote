@@ -149,7 +149,7 @@ private fun WelcomeMessage() {
             ) {
                 Icon(
                     imageVector = Icons.Default.Agriculture,
-                    contentDescription = null,
+                    contentDescription = "AIアシスタント",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(32.dp),
                 )
@@ -198,7 +198,7 @@ private fun ChatMessageItem(message: ChatMessage) {
             ) {
                 Icon(
                     imageVector = Icons.Default.Agriculture,
-                    contentDescription = null,
+                    contentDescription = "AIの返答",
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(20.dp),
                 )
@@ -244,7 +244,7 @@ private fun ChatMessageItem(message: ChatMessage) {
             ) {
                 Icon(
                     imageVector = Icons.Default.Person,
-                    contentDescription = null,
+                    contentDescription = "あなたのメッセージ",
                     tint = MaterialTheme.colorScheme.onSecondary,
                     modifier = Modifier.size(20.dp),
                 )
@@ -268,7 +268,7 @@ private fun LoadingIndicator() {
         ) {
             Icon(
                 imageVector = Icons.Default.Agriculture,
-                contentDescription = null,
+                contentDescription = "AIが考え中",
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(20.dp),
             )

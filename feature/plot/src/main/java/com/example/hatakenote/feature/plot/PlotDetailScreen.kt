@@ -55,6 +55,7 @@ import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlantingWithCrop
 import com.example.hatakenote.core.domain.model.WorkLog
 import com.example.hatakenote.core.domain.model.WorkType
+import com.example.hatakenote.core.ui.util.parseColorSafe
 
 @Composable
 internal fun PlotDetailRoute(
@@ -298,11 +299,7 @@ private fun PlantingCard(
     plantingWithCrop: PlantingWithCrop,
     onClick: () -> Unit,
 ) {
-    val cropColor = try {
-        Color(android.graphics.Color.parseColor(plantingWithCrop.crop.colorHex))
-    } catch (e: Exception) {
-        MaterialTheme.colorScheme.primary
-    }
+    val cropColor = parseColorSafe(plantingWithCrop.crop.colorHex, MaterialTheme.colorScheme.primary)
 
     Card(
         modifier = Modifier
@@ -356,7 +353,7 @@ private fun WorkLogSection(
             OutlinedButton(onClick = onAddWorkLogClick) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = null,
+                    contentDescription = "作業追加",
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(modifier = Modifier.width(4.dp))

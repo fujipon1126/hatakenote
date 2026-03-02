@@ -240,7 +240,7 @@ internal fun WorkLogScreen(
                         onClick = onDateClick,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Icon(Icons.Default.CalendarToday, contentDescription = null)
+                        Icon(Icons.Default.CalendarToday, contentDescription = "日付選択")
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("${uiState.workDate.year}年${uiState.workDate.monthNumber}月${uiState.workDate.dayOfMonth}日")
                     }
