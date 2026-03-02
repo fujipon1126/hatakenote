@@ -21,13 +21,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.AlertDialog
@@ -74,9 +71,6 @@ import kotlinx.datetime.todayIn
 @Composable
 internal fun HomeRoute(
     onPlotClick: (Long) -> Unit,
-    onCalendarClick: () -> Unit,
-    onAssistantClick: () -> Unit,
-    onSettingsClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -84,9 +78,6 @@ internal fun HomeRoute(
     HomeScreen(
         uiState = uiState,
         onPlotClick = onPlotClick,
-        onCalendarClick = onCalendarClick,
-        onAssistantClick = onAssistantClick,
-        onSettingsClick = onSettingsClick,
         onAddPlotClick = viewModel::showAddPlotDialog,
         onDismissPlotDialog = viewModel::dismissPlotDialog,
         onSavePlot = viewModel::savePlot,
@@ -99,9 +90,6 @@ internal fun HomeRoute(
 internal fun HomeScreen(
     uiState: HomeUiState,
     onPlotClick: (Long) -> Unit,
-    onCalendarClick: () -> Unit,
-    onAssistantClick: () -> Unit,
-    onSettingsClick: () -> Unit,
     onAddPlotClick: () -> Unit,
     onDismissPlotDialog: () -> Unit,
     onSavePlot: (String, Int, Int, Int, Int) -> Unit,
@@ -111,26 +99,6 @@ internal fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = { Text("畑ノート") },
-                actions = {
-                    IconButton(onClick = onCalendarClick) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = "カレンダー"
-                        )
-                    }
-                    IconButton(onClick = onAssistantClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Chat,
-                            contentDescription = "AIアシスタント"
-                        )
-                    }
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "設定"
-                        )
-                    }
-                }
             )
         },
         floatingActionButton = {

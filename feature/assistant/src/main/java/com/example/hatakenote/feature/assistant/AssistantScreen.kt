@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Agriculture
 import androidx.compose.material.icons.filled.Person
@@ -53,14 +52,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 internal fun AssistantRoute(
-    onBackClick: () -> Unit,
     viewModel: AssistantViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     AssistantScreen(
         uiState = uiState,
-        onBackClick = onBackClick,
         onInputTextChange = viewModel::updateInputText,
         onSendMessage = viewModel::sendMessage,
     )
@@ -70,7 +67,6 @@ internal fun AssistantRoute(
 @Composable
 internal fun AssistantScreen(
     uiState: AssistantUiState,
-    onBackClick: () -> Unit,
     onInputTextChange: (String) -> Unit,
     onSendMessage: () -> Unit,
 ) {
@@ -86,12 +82,7 @@ internal fun AssistantScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("AIアシスタント") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "戻る")
-                    }
-                }
+                title = { Text("チャット") },
             )
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),

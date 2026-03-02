@@ -14,10 +14,8 @@ fun NavController.navigateToAssistant(navOptions: NavOptions? = null) {
     navigate(AssistantRoute, navOptions)
 }
 
-fun NavGraphBuilder.assistantScreen(
-    onBackClick: () -> Unit,
-) {
+fun NavGraphBuilder.assistantScreen() {
     composable<AssistantRoute> {
-        AssistantRoute(onBackClick = onBackClick)
+        AssistantRoute()
     }
 }

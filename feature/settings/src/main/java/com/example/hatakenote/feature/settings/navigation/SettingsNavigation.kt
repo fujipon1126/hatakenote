@@ -15,12 +15,10 @@ fun NavController.navigateToSettings(navOptions: NavOptions? = null) {
 }
 
 fun NavGraphBuilder.settingsScreen(
-    onBackClick: () -> Unit,
     onCropListClick: () -> Unit,
 ) {
     composable<SettingsRoute> {
         SettingsRoute(
-            onBackClick = onBackClick,
             onCropListClick = onCropListClick,
         )
     }

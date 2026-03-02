@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Agriculture
 import androidx.compose.material.icons.filled.Build
@@ -67,7 +66,6 @@ import kotlinx.datetime.todayIn
 
 @Composable
 internal fun CalendarRoute(
-    onBackClick: () -> Unit,
     onAddWorkLogClick: (String) -> Unit,
     viewModel: CalendarViewModel = hiltViewModel(),
 ) {
@@ -75,7 +73,6 @@ internal fun CalendarRoute(
 
     CalendarScreen(
         uiState = uiState,
-        onBackClick = onBackClick,
         onPreviousMonth = viewModel::goToPreviousMonth,
         onNextMonth = viewModel::goToNextMonth,
         onToday = viewModel::goToToday,
@@ -89,7 +86,6 @@ internal fun CalendarRoute(
 @Composable
 internal fun CalendarScreen(
     uiState: CalendarUiState,
-    onBackClick: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onToday: () -> Unit,
@@ -103,11 +99,6 @@ internal fun CalendarScreen(
         topBar = {
             TopAppBar(
                 title = { Text("カレンダー") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "戻る")
-                    }
-                },
                 actions = {
                     IconButton(onClick = onToday) {
                         Icon(Icons.Default.Today, "今日")

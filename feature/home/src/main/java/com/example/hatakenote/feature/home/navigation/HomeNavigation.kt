@@ -16,16 +16,10 @@ fun NavController.navigateToHome(navOptions: NavOptions? = null) {
 
 fun NavGraphBuilder.homeScreen(
     onPlotClick: (Long) -> Unit,
-    onCalendarClick: () -> Unit,
-    onAssistantClick: () -> Unit,
-    onSettingsClick: () -> Unit,
 ) {
     composable<HomeRoute> {
         HomeRoute(
             onPlotClick = onPlotClick,
-            onCalendarClick = onCalendarClick,
-            onAssistantClick = onAssistantClick,
-            onSettingsClick = onSettingsClick,
         )
     }
 }

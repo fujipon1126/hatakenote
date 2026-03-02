@@ -14,7 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Grass
 import androidx.compose.material.icons.filled.LocationOn
@@ -49,7 +48,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 internal fun SettingsRoute(
-    onBackClick: () -> Unit,
     onCropListClick: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -57,7 +55,6 @@ internal fun SettingsRoute(
 
     SettingsScreen(
         uiState = uiState,
-        onBackClick = onBackClick,
         onCropListClick = onCropListClick,
         onShowLocationDialog = viewModel::showLocationDialog,
         onDismissLocationDialog = viewModel::dismissLocationDialog,
@@ -72,7 +69,6 @@ internal fun SettingsRoute(
 @Composable
 internal fun SettingsScreen(
     uiState: SettingsUiState,
-    onBackClick: () -> Unit,
     onCropListClick: () -> Unit,
     onShowLocationDialog: () -> Unit,
     onDismissLocationDialog: () -> Unit,
@@ -101,11 +97,6 @@ internal fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("設定") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "戻る")
-                    }
-                }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
