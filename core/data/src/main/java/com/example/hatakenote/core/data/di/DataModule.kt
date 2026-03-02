@@ -77,4 +77,10 @@ abstract class DataModule {
     abstract fun bindAppSettingsRepository(
         impl: AppSettingsRepositoryImpl
     ): AppSettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAiAssistantRepository(
+        impl: AiAssistantRepositoryImpl
+    ): AiAssistantRepository
 }
