@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_title">カレンダー</string>
+    <string name="calendar_today">今日</string>
+    <string name="calendar_add_work">作業を追加</string>
+    <string name="calendar_no_events">この日の予定はありません</string>
+    <string name="calendar_no_events_hint">作業を追加ボタンから記録できます</string>
+    <string name="calendar_planting">植付け: %s</string>
+    <string name="calendar_harvest">収穫: %s</string>
+    <string name="calendar_prev_month">前月</string>
+    <string name="calendar_next_month">次月</string>
+    <string name="calendar_year_month">%1$d年%2$d月</string>
+    <string name="calendar_date_format">%1$d年%2$d月%3$d日</string>
+    <string name="calendar_completed">（完了）</string>
+
+    <!-- Day names -->
+    <string name="calendar_day_sun">日</string>
+    <string name="calendar_day_mon">月</string>
+    <string name="calendar_day_tue">火</string>
+    <string name="calendar_day_wed">水</string>
+    <string name="calendar_day_thu">木</string>
+    <string name="calendar_day_fri">金</string>
+    <string name="calendar_day_sat">土</string>
+
+    <!-- Work types -->
+    <string name="work_type_fertilize">追肥</string>
+    <string name="work_type_till">耕起</string>
+    <string name="work_type_base_fertilize">元肥</string>
+    <string name="work_type_other">その他作業</string>
+</resources>

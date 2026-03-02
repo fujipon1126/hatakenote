@@ -46,11 +46,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.hatakenote.feature.worklog.R
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.WorkType
 import kotlinx.datetime.Instant
@@ -130,11 +132,11 @@ internal fun WorkLogScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(if (uiState.isEditMode) "作業記録を編集" else "作業記録")
+                    Text(if (uiState.isEditMode) stringResource(R.string.worklog_edit) else stringResource(R.string.worklog_add))
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "戻る")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.worklog_back))
                     }
                 },
                 actions = {
@@ -142,7 +144,7 @@ internal fun WorkLogScreen(
                         onClick = onSaveClick,
                         enabled = canSave,
                     ) {
-                        Icon(Icons.Filled.Check, "保存")
+                        Icon(Icons.Filled.Check, stringResource(R.string.save))
                     }
                 },
             )
@@ -169,7 +171,7 @@ internal fun WorkLogScreen(
                 // Work Type Selection
                 item {
                     Text(
-                        text = "作業種別",
+                        text = stringResource(R.string.worklog_type),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
@@ -193,7 +195,7 @@ internal fun WorkLogScreen(
                     if (uiState.selectedWorkType.bindToPlanting()) {
                         // Planting selection
                         Text(
-                            text = "対象の作付け",
+                            text = stringResource(R.string.worklog_target_planting),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                         )
@@ -206,13 +208,13 @@ internal fun WorkLogScreen(
                                 text = uiState.selectedPlanting?.let { planting ->
                                     val plotNames = planting.plots.joinToString(", ") { it.name }
                                     "${planting.crop.name}（${plotNames}）"
-                                } ?: "作付けを選択",
+                                } ?: stringResource(R.string.worklog_select_planting),
                             )
                         }
                     } else {
                         // Plot selection
                         Text(
-                            text = "対象の区画",
+                            text = stringResource(R.string.worklog_target_plot),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                         )
@@ -222,7 +224,7 @@ internal fun WorkLogScreen(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
-                                text = uiState.selectedPlot?.name ?: "区画を選択",
+                                text = uiState.selectedPlot?.name ?: stringResource(R.string.worklog_select_plot),
                             )
                         }
                     }
@@ -231,7 +233,7 @@ internal fun WorkLogScreen(
                 // Date Selection
                 item {
                     Text(
-                        text = "作業日",
+                        text = stringResource(R.string.worklog_date),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
@@ -240,16 +242,16 @@ internal fun WorkLogScreen(
                         onClick = onDateClick,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Icon(Icons.Default.CalendarToday, contentDescription = "日付選択")
+                        Icon(Icons.Default.CalendarToday, contentDescription = stringResource(R.string.worklog_select_date))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("${uiState.workDate.year}年${uiState.workDate.monthNumber}月${uiState.workDate.dayOfMonth}日")
+                        Text(stringResource(R.string.worklog_date_format, uiState.workDate.year, uiState.workDate.monthNumber, uiState.workDate.dayOfMonth))
                     }
                 }
 
                 // Detail Input
                 item {
                     Text(
-                        text = "詳細",
+                        text = stringResource(R.string.worklog_detail),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
@@ -287,12 +289,12 @@ internal fun WorkLogScreen(
                         }
                     },
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDatePickerDismiss) {
-                    Text("キャンセル")
+                    Text(stringResource(R.string.cancel))
                 }
             },
         ) {
@@ -304,10 +306,10 @@ internal fun WorkLogScreen(
     if (uiState.showPlantingSelector) {
         AlertDialog(
             onDismissRequest = onPlantingSelectorDismiss,
-            title = { Text("作付けを選択") },
+            title = { Text(stringResource(R.string.worklog_select_planting)) },
             text = {
                 if (uiState.availablePlantings.isEmpty()) {
-                    Text("栽培中の作付けがありません")
+                    Text(stringResource(R.string.worklog_no_plantings))
                 } else {
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -324,7 +326,7 @@ internal fun WorkLogScreen(
             },
             confirmButton = {
                 TextButton(onClick = onPlantingSelectorDismiss) {
-                    Text("閉じる")
+                    Text(stringResource(R.string.close))
                 }
             },
         )
@@ -334,10 +336,10 @@ internal fun WorkLogScreen(
     if (uiState.showPlotSelector) {
         AlertDialog(
             onDismissRequest = onPlotSelectorDismiss,
-            title = { Text("区画を選択") },
+            title = { Text(stringResource(R.string.worklog_select_plot)) },
             text = {
                 if (uiState.availablePlots.isEmpty()) {
-                    Text("区画がありません")
+                    Text(stringResource(R.string.worklog_no_plots))
                 } else {
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -354,7 +356,7 @@ internal fun WorkLogScreen(
             },
             confirmButton = {
                 TextButton(onClick = onPlotSelectorDismiss) {
-                    Text("閉じる")
+                    Text(stringResource(R.string.close))
                 }
             },
         )
@@ -404,7 +406,7 @@ private fun PlantingSelectItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "植付: ${planting.planting.plantedDate.year}/${planting.planting.plantedDate.monthNumber}/${planting.planting.plantedDate.dayOfMonth}",
+                    text = stringResource(R.string.worklog_planted_date, planting.planting.plantedDate.year, planting.planting.plantedDate.monthNumber, planting.planting.plantedDate.dayOfMonth),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -412,7 +414,7 @@ private fun PlantingSelectItem(
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "選択済み",
+                    contentDescription = stringResource(R.string.worklog_selected),
                     tint = cropColor,
                 )
             }
@@ -452,7 +454,7 @@ private fun PlotSelectItem(
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "選択済み",
+                    contentDescription = stringResource(R.string.worklog_selected),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }

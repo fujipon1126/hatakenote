@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="planting_add">作付け登録</string>
+    <string name="planting_edit">作付け編集</string>
+    <string name="planting_select_crop">作物を選択</string>
+    <string name="planting_select_crop_hint">作物を選択してください</string>
+    <string name="planting_crop">作物</string>
+    <string name="planting_plot">区画（複数選択可）</string>
+    <string name="planting_no_plots">区画がありません。先に区画を作成してください。</string>
+    <string name="planting_date">植付日</string>
+    <string name="planting_select_date">日付選択</string>
+    <string name="planting_date_format">%1$d年%2$d月%3$d日</string>
+    <string name="planting_expected_harvest">収穫予定日</string>
+    <string name="planting_notes">メモ</string>
+    <string name="planting_notes_hint">メモを入力...</string>
+    <string name="planting_harvest">収穫</string>
+    <string name="planting_harvest_confirm">収穫を記録</string>
+    <string name="planting_harvest_date_title">収穫日を選択</string>
+    <string name="planting_rotation_warning">連作障害の注意</string>
+    <string name="planting_rotation_continue">理解して続行</string>
+    <string name="planting_photo">写真</string>
+    <string name="planting_add_photo">写真を追加</string>
+    <string name="planting_photo_add">追加</string>
+    <string name="planting_photo_remove">削除</string>
+    <string name="planting_status_growing">栽培中</string>
+    <string name="planting_status_harvested">収穫済み</string>
+    <string name="planting_filter_all">すべて</string>
+    <string name="planting_filter_growing">栽培中</string>
+    <string name="planting_filter_harvested">収穫済み</string>
+    <string name="planting_back">戻る</string>
+    <string name="planting_warning">警告</string>
+    <string name="planting_selected">選択済み</string>
+
+    <!-- Common -->
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="ok">OK</string>
+</resources>

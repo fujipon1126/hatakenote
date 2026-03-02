@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="crop_list_title">作物マスター管理</string>
+    <string name="crop_list_empty">作物が登録されていません</string>
+    <string name="crop_list_empty_hint">＋ボタンから追加してください</string>
+    <string name="crop_list_add">作物を追加</string>
+    <string name="crop_list_edit">作物を編集</string>
+    <string name="crop_list_delete_title">作物を削除</string>
+    <string name="crop_list_delete_message">「%1$s」を削除しますか？\n\nこの作物を使用している作付け記録がある場合、表示に影響が出る可能性があります。</string>
+    <string name="crop_name">作物名</string>
+    <string name="crop_name_hint">例: トマト</string>
+    <string name="crop_family">科</string>
+    <string name="crop_family_unknown">不明</string>
+    <string name="crop_rotation_years">連作年数: %d年</string>
+    <string name="crop_color">表示色</string>
+    <string name="crop_active">有効</string>
+    <string name="crop_inactive">無効</string>
+    <string name="crop_back">戻る</string>
+    <string name="crop_edit">編集</string>
+    <string name="crop_delete">削除</string>
+    <string name="crop_saved">保存しました</string>
+
+    <!-- Common -->
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="delete">削除</string>
+</resources>

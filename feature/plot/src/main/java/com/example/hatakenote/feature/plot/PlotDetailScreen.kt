@@ -49,10 +49,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.hatakenote.feature.plot.R
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlantingWithCrop
 import com.example.hatakenote.core.domain.model.WorkLog
@@ -104,12 +106,12 @@ internal fun PlotDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(uiState.plot?.name ?: "区画詳細") },
+                title = { Text(uiState.plot?.name ?: stringResource(R.string.plot_detail_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "戻る"
+                            contentDescription = stringResource(R.string.plot_detail_back)
                         )
                     }
                 },
@@ -117,13 +119,13 @@ internal fun PlotDetailScreen(
                     IconButton(onClick = onEditClick) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "編集"
+                            contentDescription = stringResource(R.string.plot_detail_edit_plot)
                         )
                     }
                     IconButton(onClick = onDeleteClick) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "削除"
+                            contentDescription = stringResource(R.string.plot_detail_delete)
                         )
                     }
                 }
@@ -133,7 +135,7 @@ internal fun PlotDetailScreen(
             FloatingActionButton(onClick = { onAddPlantingClick(plotId) }) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "作付けを追加"
+                    contentDescription = stringResource(R.string.plot_detail_add_planting)
                 )
             }
         }
@@ -155,7 +157,7 @@ internal fun PlotDetailScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "区画が見つかりません",
+                    text = stringResource(R.string.plot_not_found),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.error,
                 )
@@ -222,7 +224,7 @@ private fun PlotInfoCard(plot: Plot) {
             modifier = Modifier.padding(16.dp),
         ) {
             Text(
-                text = "区画情報",
+                text = stringResource(R.string.plot_detail_plot_info),
                 style = MaterialTheme.typography.titleMedium,
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -230,8 +232,8 @@ private fun PlotInfoCard(plot: Plot) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                InfoItem(label = "位置", value = "(${plot.gridX}, ${plot.gridY})")
-                InfoItem(label = "サイズ", value = "${plot.width} x ${plot.height}")
+                InfoItem(label = stringResource(R.string.plot_detail_position), value = "(${plot.gridX}, ${plot.gridY})")
+                InfoItem(label = stringResource(R.string.plot_detail_size), value = "${plot.width} x ${plot.height}")
             }
         }
     }
@@ -259,7 +261,7 @@ private fun CurrentPlantingsSection(
 ) {
     Column {
         Text(
-            text = "現在の作物",
+            text = stringResource(R.string.plot_detail_current_crops),
             style = MaterialTheme.typography.titleMedium,
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -285,7 +287,7 @@ private fun CurrentPlantingsSection(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "現在作付けされている作物はありません",
+                        text = stringResource(R.string.plot_detail_no_crops),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -334,7 +336,7 @@ private fun PlantingCard(
                     style = MaterialTheme.typography.titleSmall,
                 )
                 Text(
-                    text = "植付: ${plantingWithCrop.planting.plantedDate}",
+                    text = stringResource(R.string.plot_planted_date, plantingWithCrop.planting.plantedDate.toString()),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -356,17 +358,17 @@ private fun WorkLogSection(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "区画作業履歴",
+                text = stringResource(R.string.plot_detail_work_history),
                 style = MaterialTheme.typography.titleMedium,
             )
             OutlinedButton(onClick = onAddWorkLogClick) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "作業追加",
+                    contentDescription = stringResource(R.string.plot_detail_add_work),
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("作業追加")
+                Text(stringResource(R.string.plot_detail_add_work))
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -395,7 +397,7 @@ private fun WorkLogSection(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "作業履歴はありません",
+                        text = stringResource(R.string.plot_detail_no_work_history),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -408,7 +410,7 @@ private fun WorkLogSection(
             }
             if (plotWorkLogs.size > 5) {
                 Text(
-                    text = "他 ${plotWorkLogs.size - 5} 件",
+                    text = stringResource(R.string.plot_detail_more_items, plotWorkLogs.size - 5),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 8.dp),
@@ -433,7 +435,7 @@ private fun WorkLogItem(workLog: WorkLog) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = workLog.workType.toDisplayName(),
+                text = getWorkTypeName(workLog.workType),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -454,11 +456,12 @@ private fun WorkLogItem(workLog: WorkLog) {
     }
 }
 
-private fun WorkType.toDisplayName(): String = when (this) {
-    WorkType.TILL -> "耕起"
-    WorkType.BASE_FERTILIZE -> "元肥"
-    WorkType.FERTILIZE -> "追肥"
-    WorkType.OTHER -> "その他"
+@Composable
+private fun getWorkTypeName(workType: WorkType): String = when (workType) {
+    WorkType.TILL -> stringResource(R.string.work_type_till)
+    WorkType.BASE_FERTILIZE -> stringResource(R.string.work_type_base_fertilize)
+    WorkType.FERTILIZE -> stringResource(R.string.work_type_fertilize)
+    WorkType.OTHER -> stringResource(R.string.work_type_other)
 }
 
 @Composable
@@ -475,7 +478,7 @@ private fun EditPlotDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("区画を編集") },
+        title = { Text(stringResource(R.string.plot_detail_edit)) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -483,7 +486,7 @@ private fun EditPlotDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("区画名") },
+                    label = { Text(stringResource(R.string.plot_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -493,7 +496,7 @@ private fun EditPlotDialog(
                     OutlinedTextField(
                         value = gridX,
                         onValueChange = { gridX = it.filter { c -> c.isDigit() } },
-                        label = { Text("X座標") },
+                        label = { Text(stringResource(R.string.plot_x)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -501,7 +504,7 @@ private fun EditPlotDialog(
                     OutlinedTextField(
                         value = gridY,
                         onValueChange = { gridY = it.filter { c -> c.isDigit() } },
-                        label = { Text("Y座標") },
+                        label = { Text(stringResource(R.string.plot_y)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -513,7 +516,7 @@ private fun EditPlotDialog(
                     OutlinedTextField(
                         value = width,
                         onValueChange = { width = it.filter { c -> c.isDigit() } },
-                        label = { Text("幅") },
+                        label = { Text(stringResource(R.string.plot_width)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -521,7 +524,7 @@ private fun EditPlotDialog(
                     OutlinedTextField(
                         value = height,
                         onValueChange = { height = it.filter { c -> c.isDigit() } },
-                        label = { Text("高さ") },
+                        label = { Text(stringResource(R.string.plot_height)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -542,12 +545,12 @@ private fun EditPlotDialog(
                 },
                 enabled = name.isNotBlank(),
             ) {
-                Text("保存")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("キャンセル")
+                Text(stringResource(R.string.cancel))
             }
         },
     )
@@ -561,18 +564,18 @@ private fun DeleteConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("区画を削除") },
+        title = { Text(stringResource(R.string.plot_detail_delete_title)) },
         text = {
-            Text("「$plotName」を削除しますか？この操作は取り消せません。")
+            Text(stringResource(R.string.plot_detail_delete_message, plotName))
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("削除", color = MaterialTheme.colorScheme.error)
+                Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("キャンセル")
+                Text(stringResource(R.string.cancel))
             }
         },
     )

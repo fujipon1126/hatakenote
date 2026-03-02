@@ -51,11 +51,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.hatakenote.feature.calendar.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.core.domain.model.WorkType
 import com.example.hatakenote.core.ui.util.parseColorSafe
@@ -100,10 +102,10 @@ internal fun CalendarScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("カレンダー") },
+                title = { Text(stringResource(R.string.calendar_title)) },
                 actions = {
                     IconButton(onClick = onToday) {
-                        Icon(Icons.Default.Today, "今日")
+                        Icon(Icons.Default.Today, stringResource(R.string.calendar_today))
                     }
                 },
             )
@@ -183,24 +185,32 @@ private fun MonthNavigator(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onPreviousMonth) {
-            Icon(Icons.Default.ChevronLeft, "前月")
+            Icon(Icons.Default.ChevronLeft, stringResource(R.string.calendar_prev_month))
         }
 
         Text(
-            text = "${year}年${month}月",
+            text = stringResource(R.string.calendar_year_month, year, month),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
         )
 
         IconButton(onClick = onNextMonth) {
-            Icon(Icons.Default.ChevronRight, "次月")
+            Icon(Icons.Default.ChevronRight, stringResource(R.string.calendar_next_month))
         }
     }
 }
 
 @Composable
 private fun DayOfWeekHeader() {
-    val dayNames = listOf("日", "月", "火", "水", "木", "金", "土")
+    val dayNames = listOf(
+        stringResource(R.string.calendar_day_sun),
+        stringResource(R.string.calendar_day_mon),
+        stringResource(R.string.calendar_day_tue),
+        stringResource(R.string.calendar_day_wed),
+        stringResource(R.string.calendar_day_thu),
+        stringResource(R.string.calendar_day_fri),
+        stringResource(R.string.calendar_day_sat),
+    )
     val dayColors = listOf(
         MaterialTheme.colorScheme.error, // Sunday
         MaterialTheme.colorScheme.onSurface,
@@ -391,18 +401,18 @@ private fun EventBottomSheetContent(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "${date.year}年${date.monthNumber}月${date.dayOfMonth}日",
+                text = stringResource(R.string.calendar_date_format, date.year, date.monthNumber, date.dayOfMonth),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
             )
             FilledTonalButton(onClick = onAddWorkLogClick) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "作業を追加",
+                    contentDescription = stringResource(R.string.calendar_add_work),
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("作業を追加")
+                Text(stringResource(R.string.calendar_add_work))
             }
         }
 
@@ -429,13 +439,13 @@ private fun EventBottomSheetContent(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "この日の予定はありません",
+                        text = stringResource(R.string.calendar_no_events),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "作業を追加ボタンから記録できます",
+                        text = stringResource(R.string.calendar_no_events_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     )
@@ -457,11 +467,12 @@ private fun EventBottomSheetContent(
 
 @Composable
 private fun EventCard(event: CalendarEvent) {
+    val completedText = stringResource(R.string.calendar_completed)
     val (icon, title, subtitle, color) = when (event) {
         is CalendarEvent.PlantingEvent -> {
             EventCardData(
                 icon = Icons.Default.Agriculture,
-                title = "植付け: ${event.cropName}",
+                title = stringResource(R.string.calendar_planting, event.cropName),
                 subtitle = null,
                 color = parseColorSafe(event.cropColor, MaterialTheme.colorScheme.primary),
             )
@@ -469,13 +480,13 @@ private fun EventCard(event: CalendarEvent) {
         is CalendarEvent.HarvestEvent -> {
             EventCardData(
                 icon = Icons.Default.Agriculture,
-                title = "収穫: ${event.cropName}",
+                title = stringResource(R.string.calendar_harvest, event.cropName),
                 subtitle = null,
                 color = parseColorSafe(event.cropColor, MaterialTheme.colorScheme.tertiary),
             )
         }
         is CalendarEvent.ReminderEvent -> {
-            val statusText = if (event.reminder.isCompleted) "（完了）" else ""
+            val statusText = if (event.reminder.isCompleted) completedText else ""
             EventCardData(
                 icon = Icons.Default.Notifications,
                 title = event.reminder.title + statusText,
@@ -548,12 +559,13 @@ private data class EventCardData(
     val color: Color,
 )
 
+@Composable
 private fun getWorkTypeName(workType: WorkType): String {
     return when (workType) {
-        WorkType.FERTILIZE -> "追肥"
-        WorkType.TILL -> "耕起"
-        WorkType.BASE_FERTILIZE -> "元肥"
-        WorkType.OTHER -> "その他作業"
+        WorkType.FERTILIZE -> stringResource(R.string.work_type_fertilize)
+        WorkType.TILL -> stringResource(R.string.work_type_till)
+        WorkType.BASE_FERTILIZE -> stringResource(R.string.work_type_base_fertilize)
+        WorkType.OTHER -> stringResource(R.string.work_type_other)
     }
 }
 

@@ -54,11 +54,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.hatakenote.feature.home.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.core.domain.model.DailyForecast
 import com.example.hatakenote.core.domain.model.Plot
@@ -116,14 +118,14 @@ internal fun HomeScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("畑ノート") },
+                title = { Text(stringResource(R.string.home_title)) },
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddPlotClick) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "区画を追加"
+                    contentDescription = stringResource(R.string.home_add_plot)
                 )
             }
         }
@@ -167,7 +169,7 @@ internal fun HomeScreen(
                 }
 
                 Text(
-                    text = "畑マップ",
+                    text = stringResource(R.string.home_plot_map),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 16.dp),
                 )
@@ -204,13 +206,13 @@ private fun EmptyPlotMessage(onAddPlotClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "区画がまだありません",
+            text = stringResource(R.string.home_no_plots),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "右下の＋ボタンから区画を追加してください",
+            text = stringResource(R.string.home_no_plots_hint),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -374,7 +376,7 @@ private fun AddEditPlotDialog(
     var height by remember { mutableStateOf(editingPlot?.height?.toString() ?: "1") }
 
     val isEdit = editingPlot != null
-    val title = if (isEdit) "区画を編集" else "区画を追加"
+    val title = if (isEdit) stringResource(R.string.home_edit_plot) else stringResource(R.string.home_add_plot)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -386,8 +388,8 @@ private fun AddEditPlotDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("区画名") },
-                    placeholder = { Text("例: A-1") },
+                    label = { Text(stringResource(R.string.home_plot_name)) },
+                    placeholder = { Text(stringResource(R.string.home_plot_name_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -397,7 +399,7 @@ private fun AddEditPlotDialog(
                     OutlinedTextField(
                         value = gridX,
                         onValueChange = { gridX = it.filter { c -> c.isDigit() } },
-                        label = { Text("X座標") },
+                        label = { Text(stringResource(R.string.home_plot_x)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -405,7 +407,7 @@ private fun AddEditPlotDialog(
                     OutlinedTextField(
                         value = gridY,
                         onValueChange = { gridY = it.filter { c -> c.isDigit() } },
-                        label = { Text("Y座標") },
+                        label = { Text(stringResource(R.string.home_plot_y)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -417,7 +419,7 @@ private fun AddEditPlotDialog(
                     OutlinedTextField(
                         value = width,
                         onValueChange = { width = it.filter { c -> c.isDigit() } },
-                        label = { Text("幅") },
+                        label = { Text(stringResource(R.string.home_plot_width)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -425,7 +427,7 @@ private fun AddEditPlotDialog(
                     OutlinedTextField(
                         value = height,
                         onValueChange = { height = it.filter { c -> c.isDigit() } },
-                        label = { Text("高さ") },
+                        label = { Text(stringResource(R.string.home_plot_height)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -446,12 +448,12 @@ private fun AddEditPlotDialog(
                 },
                 enabled = name.isNotBlank(),
             ) {
-                Text("保存")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("キャンセル")
+                Text(stringResource(R.string.cancel))
             }
         },
     )
@@ -469,13 +471,13 @@ private fun ReminderSection(
         ) {
             Icon(
                 imageVector = Icons.Default.Notifications,
-                contentDescription = "リマインダー",
+                contentDescription = stringResource(R.string.home_upcoming_reminders),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp),
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = "今週のリマインダー",
+                text = stringResource(R.string.home_upcoming_reminders),
                 style = MaterialTheme.typography.titleMedium,
             )
         }
@@ -554,7 +556,7 @@ private fun ReminderCard(
             IconButton(onClick = onComplete) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "完了",
+                    contentDescription = stringResource(R.string.complete),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
@@ -580,25 +582,25 @@ private fun WeatherErrorSection(
         ) {
             Icon(
                 imageVector = Icons.Default.Cloud,
-                contentDescription = "天気取得エラー",
+                contentDescription = stringResource(R.string.weather_error_title),
                 tint = MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(32.dp),
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "天気情報を取得できませんでした",
+                    text = stringResource(R.string.weather_error_title),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onErrorContainer,
                 )
                 Text(
-                    text = "設定で位置情報を確認してください",
+                    text = stringResource(R.string.weather_error_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f),
                 )
             }
             TextButton(onClick = onRetry) {
-                Text("再試行")
+                Text(stringResource(R.string.retry))
             }
         }
     }
@@ -617,13 +619,13 @@ private fun WeatherSection(
         ) {
             Icon(
                 imageVector = getWeatherIcon(weather.currentWeatherCode),
-                contentDescription = "天気",
+                contentDescription = stringResource(R.string.weather_title),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp),
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = if (locationName.isNotEmpty()) "${locationName}の天気" else "今日の天気",
+                text = if (locationName.isNotEmpty()) stringResource(R.string.weather_title_with_location, locationName) else stringResource(R.string.weather_title),
                 style = MaterialTheme.typography.titleMedium,
             )
         }
@@ -743,7 +745,7 @@ private fun DailyForecastCard(forecast: DailyForecast) {
             ) {
                 Icon(
                     imageVector = Icons.Default.WaterDrop,
-                    contentDescription = "降水量",
+                    contentDescription = stringResource(R.string.weather_precipitation),
                     modifier = Modifier.size(10.dp),
                     tint = MaterialTheme.colorScheme.tertiary,
                 )

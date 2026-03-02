@@ -45,10 +45,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.hatakenote.feature.assistant.R
 
 @Composable
 internal fun AssistantRoute(
@@ -82,7 +84,7 @@ internal fun AssistantScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("チャット") },
+                title = { Text(stringResource(R.string.assistant_title)) },
             )
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -149,31 +151,31 @@ private fun WelcomeMessage() {
             ) {
                 Icon(
                     imageVector = Icons.Default.Agriculture,
-                    contentDescription = "AIアシスタント",
+                    contentDescription = stringResource(R.string.assistant_welcome_title),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(32.dp),
                 )
                 Spacer(modifier = Modifier.padding(8.dp))
                 Text(
-                    text = "畑ノート AIアシスタント",
+                    text = stringResource(R.string.assistant_welcome_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "家庭菜園に関する質問にお答えします。",
+                text = stringResource(R.string.assistant_welcome_message),
                 style = MaterialTheme.typography.bodyMedium,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "例えば...",
+                text = stringResource(R.string.assistant_welcome_examples_title),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "・トマトの育て方を教えて\n・ナスの追肥のタイミングは？\n・連作障害を避けるには？",
+                text = stringResource(R.string.assistant_welcome_examples),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -198,7 +200,7 @@ private fun ChatMessageItem(message: ChatMessage) {
             ) {
                 Icon(
                     imageVector = Icons.Default.Agriculture,
-                    contentDescription = "AIの返答",
+                    contentDescription = stringResource(R.string.assistant_ai_response),
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(20.dp),
                 )
@@ -244,7 +246,7 @@ private fun ChatMessageItem(message: ChatMessage) {
             ) {
                 Icon(
                     imageVector = Icons.Default.Person,
-                    contentDescription = "あなたのメッセージ",
+                    contentDescription = stringResource(R.string.assistant_your_message),
                     tint = MaterialTheme.colorScheme.onSecondary,
                     modifier = Modifier.size(20.dp),
                 )
@@ -268,7 +270,7 @@ private fun LoadingIndicator() {
         ) {
             Icon(
                 imageVector = Icons.Default.Agriculture,
-                contentDescription = "AIが考え中",
+                contentDescription = stringResource(R.string.assistant_thinking),
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(20.dp),
             )
@@ -288,7 +290,7 @@ private fun LoadingIndicator() {
                 )
                 Spacer(modifier = Modifier.padding(4.dp))
                 Text(
-                    text = "考え中...",
+                    text = stringResource(R.string.assistant_thinking),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -320,7 +322,7 @@ private fun ChatInput(
                 value = inputText,
                 onValueChange = onInputTextChange,
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("質問を入力...") },
+                placeholder = { Text(stringResource(R.string.assistant_input_hint)) },
                 enabled = !isLoading,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = { onSendMessage() }),
@@ -334,7 +336,7 @@ private fun ChatInput(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "送信",
+                    contentDescription = stringResource(R.string.assistant_send),
                     tint = if (inputText.isNotBlank() && !isLoading) {
                         MaterialTheme.colorScheme.primary
                     } else {

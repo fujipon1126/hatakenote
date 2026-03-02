@@ -67,9 +67,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.hatakenote.feature.planting.R
 import coil.compose.AsyncImage
 import com.example.hatakenote.core.domain.model.Crop
 import com.example.hatakenote.core.domain.model.Plot
@@ -197,16 +199,16 @@ internal fun PlantingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (uiState.isEditMode) "作付け編集" else "作付け登録") },
+                title = { Text(if (uiState.isEditMode) stringResource(R.string.planting_edit) else stringResource(R.string.planting_add)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "戻る")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.planting_back))
                     }
                 },
                 actions = {
                     if (canHarvest) {
                         TextButton(onClick = onShowHarvestDialog) {
-                            Text("収穫", color = MaterialTheme.colorScheme.tertiary)
+                            Text(stringResource(R.string.planting_harvest), color = MaterialTheme.colorScheme.tertiary)
                         }
                     }
                     TextButton(
@@ -219,7 +221,7 @@ internal fun PlantingScreen(
                                 strokeWidth = 2.dp,
                             )
                         } else {
-                            Text("保存")
+                            Text(stringResource(R.string.save))
                         }
                     }
                 }
@@ -246,7 +248,7 @@ internal fun PlantingScreen(
             ) {
                 // Crop Selection
                 item {
-                    SectionCard(title = "作物") {
+                    SectionCard(title = stringResource(R.string.planting_crop)) {
                         CropSelector(
                             selectedCrop = uiState.selectedCrop,
                             onClick = onShowCropSelector,
@@ -256,7 +258,7 @@ internal fun PlantingScreen(
 
                 // Plot Selection
                 item {
-                    SectionCard(title = "区画（複数選択可）") {
+                    SectionCard(title = stringResource(R.string.planting_plot)) {
                         PlotSelector(
                             plots = uiState.plots,
                             selectedPlotIds = uiState.selectedPlotIds,
@@ -277,7 +279,7 @@ internal fun PlantingScreen(
 
                 // Date Selection
                 item {
-                    SectionCard(title = "植付日") {
+                    SectionCard(title = stringResource(R.string.planting_date)) {
                         DateSelector(
                             date = uiState.plantedDate,
                             onClick = onShowDatePicker,
@@ -287,12 +289,12 @@ internal fun PlantingScreen(
 
                 // Note
                 item {
-                    SectionCard(title = "メモ") {
+                    SectionCard(title = stringResource(R.string.planting_notes)) {
                         OutlinedTextField(
                             value = uiState.note,
                             onValueChange = onNoteChanged,
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("メモを入力...") },
+                            placeholder = { Text(stringResource(R.string.planting_notes_hint)) },
                             minLines = 2,
                             maxLines = 4,
                         )
@@ -301,7 +303,7 @@ internal fun PlantingScreen(
 
                 // Photos
                 item {
-                    SectionCard(title = "写真") {
+                    SectionCard(title = stringResource(R.string.planting_photo)) {
                         PhotoSection(
                             existingPhotos = uiState.photos,
                             pendingPhotoUris = uiState.pendingPhotoUris,
@@ -400,7 +402,7 @@ private fun CropSelector(
                 )
             } else {
                 Text(
-                    text = "作物を選択してください",
+                    text = stringResource(R.string.planting_select_crop_hint),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -418,7 +420,7 @@ private fun PlotSelector(
 ) {
     if (plots.isEmpty()) {
         Text(
-            text = "区画がありません。先に区画を作成してください。",
+            text = stringResource(R.string.planting_no_plots),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -434,7 +436,7 @@ private fun PlotSelector(
                     onClick = { onPlotToggle(plot.id) },
                     label = { Text(plot.name) },
                     leadingIcon = if (isSelected) {
-                        { Icon(Icons.Default.Check, contentDescription = "選択済み", modifier = Modifier.size(18.dp)) }
+                        { Icon(Icons.Default.Check, contentDescription = stringResource(R.string.planting_selected), modifier = Modifier.size(18.dp)) }
                     } else null,
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -466,12 +468,12 @@ private fun DateSelector(
         ) {
             Icon(
                 imageVector = Icons.Default.CalendarMonth,
-                contentDescription = "日付選択",
+                contentDescription = stringResource(R.string.planting_select_date),
                 tint = MaterialTheme.colorScheme.primary,
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "${date.year}年${date.monthNumber}月${date.dayOfMonth}日",
+                text = stringResource(R.string.planting_date_format, date.year, date.monthNumber, date.dayOfMonth),
                 style = MaterialTheme.typography.bodyLarge,
             )
         }
@@ -508,13 +510,13 @@ private fun PhotoSection(
                     ) {
                         Icon(
                             imageVector = Icons.Default.PhotoCamera,
-                            contentDescription = "写真を追加",
+                            contentDescription = stringResource(R.string.planting_add_photo),
                             modifier = Modifier.size(32.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "追加",
+                            text = stringResource(R.string.planting_photo_add),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -551,7 +553,7 @@ private fun PhotoItem(
     ) {
         AsyncImage(
             model = uri,
-            contentDescription = "写真",
+            contentDescription = stringResource(R.string.planting_photo),
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(8.dp)),
@@ -569,7 +571,7 @@ private fun PhotoItem(
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = "削除",
+                contentDescription = stringResource(R.string.planting_photo_remove),
                 modifier = Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.onError,
             )
@@ -586,7 +588,7 @@ private fun CropSelectorDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("作物を選択") },
+        title = { Text(stringResource(R.string.planting_select_crop)) },
         text = {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -602,7 +604,7 @@ private fun CropSelectorDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("キャンセル")
+                Text(stringResource(R.string.cancel))
             }
         },
     )
@@ -649,7 +651,7 @@ private fun CropItem(
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "選択済み",
+                    contentDescription = stringResource(R.string.planting_selected),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
@@ -680,12 +682,12 @@ private fun PlantingDatePickerDialog(
                     }
                 }
             ) {
-                Text("OK")
+                Text(stringResource(R.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("キャンセル")
+                Text(stringResource(R.string.cancel))
             }
         },
     ) {
@@ -716,18 +718,18 @@ private fun HarvestDialog(
                     }
                 }
             ) {
-                Text("収穫を記録")
+                Text(stringResource(R.string.planting_harvest_confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("キャンセル")
+                Text(stringResource(R.string.cancel))
             }
         },
     ) {
         Column {
             Text(
-                text = "収穫日を選択",
+                text = stringResource(R.string.planting_harvest_date_title),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
             )
@@ -757,13 +759,13 @@ private fun RotationWarningCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Warning,
-                    contentDescription = "警告",
+                    contentDescription = stringResource(R.string.planting_warning),
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(24.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "連作障害の注意",
+                    text = stringResource(R.string.planting_rotation_warning),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onErrorContainer,
                 )
@@ -784,7 +786,7 @@ private fun RotationWarningCard(
             ) {
                 TextButton(onClick = onDismiss) {
                     Text(
-                        text = "理解して続行",
+                        text = stringResource(R.string.planting_rotation_continue),
                         color = MaterialTheme.colorScheme.onErrorContainer,
                     )
                 }

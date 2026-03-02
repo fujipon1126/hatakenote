@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="assistant_title">チャット</string>
+    <string name="assistant_input_hint">質問を入力…</string>
+    <string name="assistant_send">送信</string>
+    <string name="assistant_welcome_title">畑ノート AIアシスタント</string>
+    <string name="assistant_welcome_message">家庭菜園に関する質問にお答えします。</string>
+    <string name="assistant_welcome_examples_title">例えば…</string>
+    <string name="assistant_welcome_examples">・トマトの育て方を教えて\n・ナスの追肥のタイミングは？\n・連作障害を避けるには？</string>
+    <string name="assistant_thinking">考え中…</string>
+    <string name="assistant_ai_response">AIの返答</string>
+    <string name="assistant_your_message">あなたのメッセージ</string>
+</resources>

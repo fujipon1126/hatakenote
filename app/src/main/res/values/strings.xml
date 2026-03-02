@@ -1,3 +1,158 @@
 <resources>
-    <string name="app_name">hatakenote</string>
+    <string name="app_name">畑ノート</string>
+
+    <!-- Common -->
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="delete">削除</string>
+    <string name="close">閉じる</string>
+    <string name="ok">OK</string>
+    <string name="retry">再試行</string>
+    <string name="add">追加</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">ホーム</string>
+    <string name="nav_calendar">カレンダー</string>
+    <string name="nav_chat">チャット</string>
+    <string name="nav_settings">設定</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">畑ノート</string>
+    <string name="home_plot_map">畑マップ</string>
+    <string name="home_add_plot">区画を追加</string>
+    <string name="home_edit_plot">区画を編集</string>
+    <string name="home_plot_name">区画名</string>
+    <string name="home_plot_name_hint">例: A-1</string>
+    <string name="home_plot_x">X座標</string>
+    <string name="home_plot_y">Y座標</string>
+    <string name="home_plot_width">幅</string>
+    <string name="home_plot_height">高さ</string>
+    <string name="home_no_plots">区画がありません</string>
+    <string name="home_no_plots_hint">＋ボタンから区画を追加してください</string>
+    <string name="home_upcoming_reminders">今後のリマインダー</string>
+    <string name="home_reminder_days_format">%d日後</string>
+    <string name="home_reminder_today">今日</string>
+    <string name="home_reminder_complete">完了</string>
+
+    <!-- Weather -->
+    <string name="weather_title">今日の天気</string>
+    <string name="weather_title_with_location">%sの天気</string>
+    <string name="weather_error_title">天気情報を取得できませんでした</string>
+    <string name="weather_error_hint">設定で位置情報を確認してください</string>
+    <string name="weather_precipitation">降水量</string>
+    <string name="weather_forecast">週間予報</string>
+
+    <!-- Calendar Screen -->
+    <string name="calendar_title">カレンダー</string>
+    <string name="calendar_today">今日</string>
+    <string name="calendar_add_work">作業を追加</string>
+    <string name="calendar_no_events">この日の予定はありません</string>
+    <string name="calendar_no_events_hint">作業を追加ボタンから記録できます</string>
+    <string name="calendar_date_format">%d年%d月%d日</string>
+    <string name="calendar_planting">植付け: %s</string>
+    <string name="calendar_harvest">収穫: %s</string>
+
+    <!-- Assistant Screen -->
+    <string name="assistant_title">チャット</string>
+    <string name="assistant_input_hint">質問を入力…</string>
+    <string name="assistant_send">送信</string>
+    <string name="assistant_welcome_title">畑ノート AIアシスタント</string>
+    <string name="assistant_welcome_message">家庭菜園に関する質問にお答えします。</string>
+    <string name="assistant_welcome_examples_title">例えば…</string>
+    <string name="assistant_welcome_examples">・トマトの育て方を教えて\n・ナスの追肥のタイミングは？\n・連作障害を避けるには？</string>
+    <string name="assistant_thinking">考え中…</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">設定</string>
+    <string name="settings_weather_section">天気情報</string>
+    <string name="settings_location">位置情報</string>
+    <string name="settings_location_not_set">未設定</string>
+    <string name="settings_location_dialog_title">位置情報を設定</string>
+    <string name="settings_location_dialog_description">天気予報の取得に使用する位置を設定します。</string>
+    <string name="settings_location_name">地名</string>
+    <string name="settings_location_name_hint">例: 八王子</string>
+    <string name="settings_latitude">緯度</string>
+    <string name="settings_latitude_hint">35.6662</string>
+    <string name="settings_longitude">経度</string>
+    <string name="settings_longitude_hint">139.3160</string>
+    <string name="settings_location_help">※ Google Mapsなどで緯度・経度を確認できます</string>
+    <string name="settings_reminder_section">リマインダー</string>
+    <string name="settings_reminder_notify_days">事前通知日数</string>
+    <string name="settings_reminder_notify_days_description">リマインダーの何日前に通知するか</string>
+    <string name="settings_reminder_days_suffix">日</string>
+    <string name="settings_master_data_section">マスターデータ管理</string>
+    <string name="settings_crop_master">作物マスター</string>
+    <string name="settings_crop_master_description">作物の追加・編集・削除</string>
+    <string name="settings_app_info_section">アプリ情報</string>
+    <string name="settings_version">バージョン %s</string>
+    <string name="settings_saved">保存しました</string>
+
+    <!-- Crop List Screen -->
+    <string name="crop_list_title">作物マスター管理</string>
+    <string name="crop_list_empty">作物が登録されていません</string>
+    <string name="crop_list_empty_hint">＋ボタンから追加してください</string>
+    <string name="crop_list_add">作物を追加</string>
+    <string name="crop_list_edit">作物を編集</string>
+    <string name="crop_list_delete_title">作物を削除</string>
+    <string name="crop_list_delete_message">「%s」を削除しますか？\n\nこの作物を使用している作付け記録がある場合、表示に影響が出る可能性があります。</string>
+    <string name="crop_name">作物名</string>
+    <string name="crop_name_hint">例: トマト</string>
+    <string name="crop_family">科</string>
+    <string name="crop_color">表示色</string>
+    <string name="crop_active">有効</string>
+    <string name="crop_inactive">無効</string>
+
+    <!-- Plot Detail Screen -->
+    <string name="plot_detail_current_crops">現在の作物</string>
+    <string name="plot_detail_no_crops">現在作付けされている作物はありません</string>
+    <string name="plot_detail_work_history">区画作業履歴</string>
+    <string name="plot_detail_no_work_history">作業履歴はありません</string>
+    <string name="plot_detail_add_work">作業追加</string>
+    <string name="plot_detail_more_items">他 %d 件</string>
+    <string name="plot_detail_edit">区画を編集</string>
+    <string name="plot_detail_delete_title">区画を削除</string>
+    <string name="plot_detail_delete_message">「%s」を削除しますか？この操作は取り消せません。</string>
+    <string name="plot_detail_add_planting">作付けを追加</string>
+    <string name="plot_detail_plot_info">区画情報</string>
+    <string name="plot_detail_position">位置</string>
+    <string name="plot_detail_size">サイズ</string>
+
+    <!-- Planting Screen -->
+    <string name="planting_add">作付けを追加</string>
+    <string name="planting_edit">作付けを編集</string>
+    <string name="planting_select_crop">作物を選択</string>
+    <string name="planting_select_crop_hint">作物を選択してください</string>
+    <string name="planting_date">植付け日</string>
+    <string name="planting_select_date">日付選択</string>
+    <string name="planting_expected_harvest">収穫予定日</string>
+    <string name="planting_notes">メモ</string>
+    <string name="planting_notes_hint">メモを入力…</string>
+    <string name="planting_harvest">収穫</string>
+    <string name="planting_harvest_confirm_title">収穫を記録</string>
+    <string name="planting_harvest_confirm_message">収穫を記録しますか？</string>
+    <string name="planting_rotation_warning">連作警告</string>
+    <string name="planting_photo">写真</string>
+    <string name="planting_add_photo">写真を追加</string>
+    <string name="planting_status_growing">栽培中</string>
+    <string name="planting_status_harvested">収穫済み</string>
+    <string name="planting_filter_all">すべて</string>
+    <string name="planting_filter_growing">栽培中</string>
+    <string name="planting_filter_harvested">収穫済み</string>
+
+    <!-- Work Log Screen -->
+    <string name="worklog_add">作業記録を追加</string>
+    <string name="worklog_edit">作業記録を編集</string>
+    <string name="worklog_date">作業日</string>
+    <string name="worklog_type">作業種類</string>
+    <string name="worklog_detail">詳細</string>
+    <string name="worklog_detail_hint">作業内容を入力…</string>
+    <string name="worklog_select_planting">作付けを選択</string>
+    <string name="worklog_select_plot">区画を選択</string>
+    <string name="worklog_no_plantings">栽培中の作付けがありません</string>
+    <string name="worklog_no_plots">区画がありません</string>
+
+    <!-- Error Messages -->
+    <string name="error_save_plot">区画の保存に失敗しました</string>
+    <string name="error_delete_plot">区画の削除に失敗しました</string>
+    <string name="error_complete_reminder">リマインダーの完了に失敗しました</string>
 </resources>

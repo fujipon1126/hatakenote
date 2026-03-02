@@ -41,10 +41,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.hatakenote.feature.settings.R
 
 @Composable
 internal fun SettingsRoute(
@@ -86,9 +88,10 @@ internal fun SettingsScreen(
         }
     }
 
+    val saveSuccessMessage = stringResource(R.string.settings_saved)
     LaunchedEffect(uiState.saveSuccess) {
         if (uiState.saveSuccess) {
-            snackbarHostState.showSnackbar("保存しました")
+            snackbarHostState.showSnackbar(saveSuccessMessage)
             onClearSaveSuccess()
         }
     }
@@ -96,7 +99,7 @@ internal fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("設定") },
+                title = { Text(stringResource(R.string.settings_title)) },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -110,17 +113,17 @@ internal fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // 天気情報設定セクション
-            SettingsSection(title = "天気情報") {
+            SettingsSection(title = stringResource(R.string.settings_weather_section)) {
                 SettingsItem(
                     icon = Icons.Default.LocationOn,
-                    title = "位置情報",
-                    subtitle = uiState.locationName.ifEmpty { "未設定" },
+                    title = stringResource(R.string.settings_location),
+                    subtitle = uiState.locationName.ifEmpty { stringResource(R.string.settings_location_not_set) },
                     onClick = onShowLocationDialog,
                 )
             }
 
             // リマインダー設定セクション
-            SettingsSection(title = "リマインダー") {
+            SettingsSection(title = stringResource(R.string.settings_reminder_section)) {
                 var days by remember(uiState.reminderNotifyDays) {
                     mutableStateOf(uiState.reminderNotifyDays)
                 }
@@ -133,17 +136,17 @@ internal fun SettingsScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Notifications,
-                        contentDescription = "通知設定",
+                        contentDescription = stringResource(R.string.settings_notification),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "事前通知日数",
+                            text = stringResource(R.string.settings_reminder_notify_days),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         Text(
-                            text = "リマインダーの何日前に通知するか",
+                            text = stringResource(R.string.settings_reminder_notify_days_description),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -157,35 +160,35 @@ internal fun SettingsScreen(
                         modifier = Modifier.width(80.dp),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        suffix = { Text("日") },
+                        suffix = { Text(stringResource(R.string.settings_reminder_days_suffix)) },
                     )
                 }
             }
 
             // マスターデータ管理セクション
-            SettingsSection(title = "マスターデータ管理") {
+            SettingsSection(title = stringResource(R.string.settings_master_data_section)) {
                 SettingsItem(
                     icon = Icons.Default.Grass,
-                    title = "作物マスター",
-                    subtitle = "作物の追加・編集・削除",
+                    title = stringResource(R.string.settings_crop_master),
+                    subtitle = stringResource(R.string.settings_crop_master_description),
                     onClick = onCropListClick,
                 )
             }
 
             // アプリ情報
-            SettingsSection(title = "アプリ情報") {
+            SettingsSection(title = stringResource(R.string.settings_app_info_section)) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
                 ) {
                     Text(
-                        text = "畑ノート",
+                        text = stringResource(R.string.settings_app_name),
                         style = MaterialTheme.typography.bodyLarge,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "バージョン 1.0.0",
+                        text = stringResource(R.string.settings_version, "1.0.0"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -262,7 +265,7 @@ private fun SettingsItem(
         }
         Icon(
             imageVector = Icons.Default.ChevronRight,
-            contentDescription = "詳細を開く",
+            contentDescription = stringResource(R.string.settings_open_detail),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
@@ -282,13 +285,13 @@ private fun LocationEditDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("位置情報を設定") },
+        title = { Text(stringResource(R.string.settings_location_dialog_title)) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    text = "天気予報の取得に使用する位置を設定します。",
+                    text = stringResource(R.string.settings_location_dialog_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -296,8 +299,8 @@ private fun LocationEditDialog(
                 OutlinedTextField(
                     value = locationName,
                     onValueChange = { locationName = it },
-                    label = { Text("地名") },
-                    placeholder = { Text("例: 八王子") },
+                    label = { Text(stringResource(R.string.settings_location_name)) },
+                    placeholder = { Text(stringResource(R.string.settings_location_name_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -308,8 +311,8 @@ private fun LocationEditDialog(
                     OutlinedTextField(
                         value = latitude,
                         onValueChange = { latitude = it },
-                        label = { Text("緯度") },
-                        placeholder = { Text("35.6662") },
+                        label = { Text(stringResource(R.string.settings_latitude)) },
+                        placeholder = { Text(stringResource(R.string.settings_latitude_hint)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -317,8 +320,8 @@ private fun LocationEditDialog(
                     OutlinedTextField(
                         value = longitude,
                         onValueChange = { longitude = it },
-                        label = { Text("経度") },
-                        placeholder = { Text("139.3160") },
+                        label = { Text(stringResource(R.string.settings_longitude)) },
+                        placeholder = { Text(stringResource(R.string.settings_longitude_hint)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -326,7 +329,7 @@ private fun LocationEditDialog(
                 }
 
                 Text(
-                    text = "※ Google Mapsなどで緯度・経度を確認できます",
+                    text = stringResource(R.string.settings_location_help),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -337,12 +340,12 @@ private fun LocationEditDialog(
                 onClick = { onSave(latitude, longitude, locationName) },
                 enabled = latitude.isNotBlank() && longitude.isNotBlank(),
             ) {
-                Text("保存")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("キャンセル")
+                Text(stringResource(R.string.cancel))
             }
         },
     )

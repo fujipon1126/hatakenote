@@ -54,9 +54,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.hatakenote.core.ui.util.parseColorSafe
+import com.example.hatakenote.feature.crop.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.core.domain.model.Crop
 import com.example.hatakenote.core.domain.model.CropFamily
@@ -110,9 +112,10 @@ internal fun CropListScreen(
         }
     }
 
+    val savedMessage = stringResource(R.string.crop_saved)
     LaunchedEffect(uiState.saveSuccess) {
         if (uiState.saveSuccess) {
-            snackbarHostState.showSnackbar("保存しました")
+            snackbarHostState.showSnackbar(savedMessage)
             onClearSaveSuccess()
         }
     }
@@ -120,17 +123,17 @@ internal fun CropListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("作物マスター管理") },
+                title = { Text(stringResource(R.string.crop_list_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "戻る")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.crop_back))
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddClick) {
-                Icon(Icons.Default.Add, "作物を追加")
+                Icon(Icons.Default.Add, stringResource(R.string.crop_list_add))
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -160,19 +163,20 @@ internal fun CropListScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "作物が登録されていません",
+                        text = stringResource(R.string.crop_list_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "＋ボタンから追加してください",
+                        text = stringResource(R.string.crop_list_empty_hint),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     )
                 }
             }
         } else {
+            val unknownFamily = stringResource(R.string.crop_family_unknown)
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -184,7 +188,7 @@ internal fun CropListScreen(
                     val family = uiState.families.find { it.id == crop.familyId }
                     CropListItem(
                         crop = crop,
-                        familyName = family?.name ?: "不明",
+                        familyName = family?.name ?: unknownFamily,
                         onEditClick = { onEditClick(crop) },
                         onDeleteClick = { onDeleteClick(crop) },
                         onToggleActive = { onToggleActive(crop) },
@@ -208,20 +212,20 @@ internal fun CropListScreen(
     if (uiState.showDeleteConfirmDialog && uiState.deletingCrop != null) {
         AlertDialog(
             onDismissRequest = onDismissDeleteDialog,
-            title = { Text("作物を削除") },
+            title = { Text(stringResource(R.string.crop_list_delete_title)) },
             text = {
-                Text("「${uiState.deletingCrop.name}」を削除しますか？\n\nこの作物を使用している作付け記録がある場合、表示に影響が出る可能性があります。")
+                Text(stringResource(R.string.crop_list_delete_message, uiState.deletingCrop.name))
             },
             confirmButton = {
                 TextButton(
                     onClick = onConfirmDelete,
                 ) {
-                    Text("削除", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismissDeleteDialog) {
-                    Text("キャンセル")
+                    Text(stringResource(R.string.cancel))
                 }
             },
         )
@@ -290,7 +294,7 @@ private fun CropListItem(
             IconButton(onClick = onEditClick) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = "編集",
+                    contentDescription = stringResource(R.string.crop_edit),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
@@ -299,7 +303,7 @@ private fun CropListItem(
             IconButton(onClick = onDeleteClick) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "削除",
+                    contentDescription = stringResource(R.string.crop_delete),
                     tint = MaterialTheme.colorScheme.error,
                 )
             }
@@ -346,9 +350,15 @@ private fun CropEditDialog(
         "#607D8B" to "ブルーグレー",
     )
 
+    val dialogTitle = if (isEdit) {
+        stringResource(R.string.crop_list_edit)
+    } else {
+        stringResource(R.string.crop_list_add)
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (isEdit) "作物を編集" else "作物を追加") },
+        title = { Text(dialogTitle) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -357,8 +367,8 @@ private fun CropEditDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("作物名") },
-                    placeholder = { Text("例: トマト") },
+                    label = { Text(stringResource(R.string.crop_name)) },
+                    placeholder = { Text(stringResource(R.string.crop_name_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -372,7 +382,7 @@ private fun CropEditDialog(
                         value = selectedFamily?.name ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("科") },
+                        label = { Text(stringResource(R.string.crop_family)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = familyDropdownExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -388,7 +398,7 @@ private fun CropEditDialog(
                                     Column {
                                         Text(family.name)
                                         Text(
-                                            text = "連作年数: ${family.rotationYears}年",
+                                            text = stringResource(R.string.crop_rotation_years, family.rotationYears),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
@@ -412,7 +422,7 @@ private fun CropEditDialog(
                         value = colors.find { it.first == colorHex }?.second ?: colorHex,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("表示色") },
+                        label = { Text(stringResource(R.string.crop_color)) },
                         leadingIcon = {
                             Box(
                                 modifier = Modifier
@@ -459,12 +469,12 @@ private fun CropEditDialog(
                 onClick = { onSave(name, selectedFamilyId, colorHex) },
                 enabled = name.isNotBlank() && selectedFamilyId > 0,
             ) {
-                Text("保存")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("キャンセル")
+                Text(stringResource(R.string.cancel))
             }
         },
     )

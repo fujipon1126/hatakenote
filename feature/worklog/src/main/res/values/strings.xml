@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="worklog_add">作業記録</string>
+    <string name="worklog_edit">作業記録を編集</string>
+    <string name="worklog_date">作業日</string>
+    <string name="worklog_date_format">%1$d年%2$d月%3$d日</string>
+    <string name="worklog_type">作業種別</string>
+    <string name="worklog_target_planting">対象の作付け</string>
+    <string name="worklog_target_plot">対象の区画</string>
+    <string name="worklog_detail">詳細</string>
+    <string name="worklog_detail_hint">作業内容を入力…</string>
+    <string name="worklog_select_planting">作付けを選択</string>
+    <string name="worklog_select_plot">区画を選択</string>
+    <string name="worklog_no_plantings">栽培中の作付けがありません</string>
+    <string name="worklog_no_plots">区画がありません</string>
+    <string name="worklog_back">戻る</string>
+    <string name="worklog_select_date">日付選択</string>
+    <string name="worklog_selected">選択済み</string>
+    <string name="worklog_planted_date">植付: %1$d/%2$d/%3$d</string>
+
+    <!-- Common -->
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="ok">OK</string>
+    <string name="close">閉じる</string>
+</resources>

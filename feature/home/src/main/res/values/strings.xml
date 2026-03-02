@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home Screen -->
+    <string name="home_title">畑ノート</string>
+    <string name="home_plot_map">畑マップ</string>
+    <string name="home_add_plot">区画を追加</string>
+    <string name="home_edit_plot">区画を編集</string>
+    <string name="home_plot_name">区画名</string>
+    <string name="home_plot_name_hint">例: A-1</string>
+    <string name="home_plot_x">X座標</string>
+    <string name="home_plot_y">Y座標</string>
+    <string name="home_plot_width">幅</string>
+    <string name="home_plot_height">高さ</string>
+    <string name="home_no_plots">区画がありません</string>
+    <string name="home_no_plots_hint">＋ボタンから区画を追加してください</string>
+    <string name="home_upcoming_reminders">今後のリマインダー</string>
+    <string name="home_reminder_days_format">%d日後</string>
+    <string name="home_reminder_today">今日</string>
+
+    <!-- Weather -->
+    <string name="weather_title">今日の天気</string>
+    <string name="weather_title_with_location">%sの天気</string>
+    <string name="weather_error_title">天気情報を取得できませんでした</string>
+    <string name="weather_error_hint">設定で位置情報を確認してください</string>
+    <string name="weather_precipitation">降水量</string>
+
+    <!-- Common -->
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="retry">再試行</string>
+    <string name="complete">完了</string>
+</resources>

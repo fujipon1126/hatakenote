@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">設定</string>
+    <string name="settings_weather_section">天気情報</string>
+    <string name="settings_location">位置情報</string>
+    <string name="settings_location_not_set">未設定</string>
+    <string name="settings_location_dialog_title">位置情報を設定</string>
+    <string name="settings_location_dialog_description">天気予報の取得に使用する位置を設定します。</string>
+    <string name="settings_location_name">地名</string>
+    <string name="settings_location_name_hint">例: 八王子</string>
+    <string name="settings_latitude">緯度</string>
+    <string name="settings_latitude_hint">35.6662</string>
+    <string name="settings_longitude">経度</string>
+    <string name="settings_longitude_hint">139.3160</string>
+    <string name="settings_location_help">※ Google Mapsなどで緯度・経度を確認できます</string>
+    <string name="settings_reminder_section">リマインダー</string>
+    <string name="settings_reminder_notify_days">事前通知日数</string>
+    <string name="settings_reminder_notify_days_description">リマインダーの何日前に通知するか</string>
+    <string name="settings_reminder_days_suffix">日</string>
+    <string name="settings_master_data_section">マスターデータ管理</string>
+    <string name="settings_crop_master">作物マスター</string>
+    <string name="settings_crop_master_description">作物の追加・編集・削除</string>
+    <string name="settings_app_info_section">アプリ情報</string>
+    <string name="settings_app_name">畑ノート</string>
+    <string name="settings_version">バージョン %s</string>
+    <string name="settings_saved">保存しました</string>
+    <string name="settings_notification">通知設定</string>
+    <string name="settings_open_detail">詳細を開く</string>
+
+    <!-- Common -->
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+</resources>
