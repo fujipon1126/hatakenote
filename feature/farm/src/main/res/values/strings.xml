@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="farm_select_title">畑を選択</string>
+    <string name="farm_select_description">使用する畑を選択してください</string>
+    <string name="farm_create_new">新しい畑を作成</string>
+    <string name="farm_join_existing">招待コードで参加</string>
+    <string name="farm_no_farms">まだ畑がありません</string>
+    <string name="farm_no_farms_hint">新しく作成するか、招待コードで参加してください</string>
+
+    <string name="farm_create_title">畑を作成</string>
+    <string name="farm_create_name_label">畑の名前</string>
+    <string name="farm_create_name_placeholder">例: 山田農園</string>
+    <string name="farm_create_button">作成</string>
+    <string name="farm_create_success">畑を作成しました</string>
+
+    <string name="farm_join_title">畑に参加</string>
+    <string name="farm_join_code_label">招待コード</string>
+    <string name="farm_join_code_placeholder">6文字のコードを入力</string>
+    <string name="farm_join_button">参加</string>
+    <string name="farm_join_success">畑に参加しました</string>
+    <string name="farm_join_invalid_code">招待コードが見つかりません</string>
+
+    <string name="farm_invite_title">メンバーを招待</string>
+    <string name="farm_invite_code_label">招待コード</string>
+    <string name="farm_invite_code_hint">このコードを共有してください</string>
+    <string name="farm_invite_copy">コピー</string>
+    <string name="farm_invite_copied">コピーしました</string>
+    <string name="farm_invite_regenerate">新しいコードを生成</string>
+
+    <string name="farm_members_title">メンバー</string>
+    <string name="farm_members_count">%d人のメンバー</string>
+    <string name="farm_owner">オーナー</string>
+
+    <string name="farm_error_network">ネットワークエラーが発生しました。接続を確認してください。</string>
+    <string name="farm_error_unknown">エラーが発生しました。もう一度お試しください。</string>
+    <string name="farm_error_not_signed_in">ログインが必要です</string>
+
+    <string name="farm_back">戻る</string>
+    <string name="farm_cancel">キャンセル</string>
+    <string name="farm_selected">選択済み</string>
+</resources>

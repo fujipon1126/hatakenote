@@ -34,6 +34,7 @@ include(":core:database")
 include(":core:network")
 include(":core:ui")
 include(":core:auth")
+include(":core:firestore")
 
 // Feature modules
 include(":feature:home")
@@ -45,3 +46,4 @@ include(":feature:calendar")
 include(":feature:assistant")
 include(":feature:settings")
 include(":feature:auth")
+include(":feature:farm")

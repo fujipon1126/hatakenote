@@ -17,6 +17,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.hatakenote.feature.auth.navigation.LoginRoute
 import com.example.hatakenote.feature.crop.navigation.CropListRoute
+import com.example.hatakenote.feature.farm.navigation.FarmSelectRoute
 import com.example.hatakenote.feature.home.navigation.HomeRoute
 import com.example.hatakenote.feature.planting.navigation.PlantingRoute
 import com.example.hatakenote.feature.plot.navigation.PlotDetailRoute
@@ -32,8 +33,9 @@ fun HatakeNoteApp() {
 
     // Determine if bottom navigation should be shown
     val shouldShowBottomBar = currentDestination?.let { destination ->
-        // Hide bottom bar on login and detail screens
+        // Hide bottom bar on login, farm select, and detail screens
         !destination.hasRoute<LoginRoute>() &&
+            !destination.hasRoute<FarmSelectRoute>() &&
             !destination.hasRoute<PlotDetailRoute>() &&
             !destination.hasRoute<PlantingRoute>() &&
             !destination.hasRoute<WorkLogRoute>() &&

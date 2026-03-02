@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.hatakenote.android.hilt)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.appdistribution)
 }
 
 val localProperties = Properties().apply {
@@ -16,6 +17,18 @@ val localProperties = Properties().apply {
 
 android {
     namespace = "com.example.hatakenote"
+
+    signingConfigs {
+        create("release") {
+            val storeFilePath = localProperties.getProperty("RELEASE_STORE_FILE", "")
+            if (storeFilePath.isNotEmpty()) {
+                storeFile = rootProject.file(storeFilePath)
+                storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD", "")
+                keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS", "")
+                keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD", "")
+            }
+        }
+    }
 
     defaultConfig {
         applicationId = "com.example.hatakenote"
@@ -35,12 +48,18 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
     buildFeatures {
         buildConfig = true
     }
+}
+
+firebaseAppDistribution {
+    groups = "testers"
+    releaseNotes = "テスト版"
 }
 
 dependencies {
@@ -52,6 +71,7 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:ui"))
     implementation(project(":core:auth"))
+    implementation(project(":core:firestore"))
 
     // Feature modules
     implementation(project(":feature:home"))
@@ -63,6 +83,7 @@ dependencies {
     implementation(project(":feature:assistant"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:auth"))
+    implementation(project(":feature:farm"))
 
     // Navigation
     implementation(libs.androidx.navigation.compose)

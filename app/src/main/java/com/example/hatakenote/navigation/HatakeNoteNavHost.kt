@@ -9,6 +9,8 @@ import com.example.hatakenote.feature.assistant.navigation.assistantScreen
 import com.example.hatakenote.feature.auth.navigation.LoginRoute
 import com.example.hatakenote.feature.auth.navigation.loginScreen
 import com.example.hatakenote.feature.calendar.navigation.calendarScreen
+import com.example.hatakenote.feature.farm.navigation.FarmSelectRoute
+import com.example.hatakenote.feature.farm.navigation.farmSelectScreen
 import com.example.hatakenote.feature.crop.navigation.cropListScreen
 import com.example.hatakenote.feature.crop.navigation.navigateToCropList
 import com.example.hatakenote.feature.home.navigation.HomeRoute
@@ -35,11 +37,19 @@ fun HatakeNoteNavHost(
     ) {
         loginScreen(
             onLoginSuccess = {
-                navController.navigate(HomeRoute) {
+                navController.navigate(FarmSelectRoute) {
                     popUpTo(LoginRoute) { inclusive = true }
                 }
             },
             webClientId = webClientId,
+        )
+
+        farmSelectScreen(
+            onFarmSelected = {
+                navController.navigate(HomeRoute) {
+                    popUpTo(FarmSelectRoute) { inclusive = true }
+                }
+            },
         )
 
         homeScreen(
