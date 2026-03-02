@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.hatakenote.android.application)
     alias(libs.plugins.hatakenote.android.hilt)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
 }
 
 val localProperties = Properties().apply {
@@ -24,6 +25,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\"")
+        buildConfigField("String", "FIREBASE_WEB_CLIENT_ID", "\"${localProperties.getProperty("FIREBASE_WEB_CLIENT_ID", "")}\"")
     }
 
     buildTypes {
@@ -49,6 +51,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:network"))
     implementation(project(":core:ui"))
+    implementation(project(":core:auth"))
 
     // Feature modules
     implementation(project(":feature:home"))
@@ -59,6 +62,7 @@ dependencies {
     implementation(project(":feature:calendar"))
     implementation(project(":feature:assistant"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:auth"))
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
@@ -68,6 +72,17 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+
+    // Google Sign-In (Credential Manager)
+    implementation(libs.play.services.auth)
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     // Test
     testImplementation(libs.junit)

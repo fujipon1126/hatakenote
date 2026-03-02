@@ -33,6 +33,7 @@ include(":core:data")
 include(":core:database")
 include(":core:network")
 include(":core:ui")
+include(":core:auth")
 
 // Feature modules
 include(":feature:home")
@@ -43,3 +44,4 @@ include(":feature:crop")
 include(":feature:calendar")
 include(":feature:assistant")
 include(":feature:settings")
+include(":feature:auth")

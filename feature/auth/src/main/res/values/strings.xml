@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">畑ノート</string>
+    <string name="login_subtitle">複数人でデータを共有して\n農作業を記録しましょう</string>
+    <string name="login_google_button">Googleでログイン</string>
+    <string name="login_error">ログインに失敗しました</string>
+    <string name="login_loading">ログイン中…</string>
+</resources>

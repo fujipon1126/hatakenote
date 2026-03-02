@@ -15,7 +15,9 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.hatakenote.feature.auth.navigation.LoginRoute
 import com.example.hatakenote.feature.crop.navigation.CropListRoute
+import com.example.hatakenote.feature.home.navigation.HomeRoute
 import com.example.hatakenote.feature.planting.navigation.PlantingRoute
 import com.example.hatakenote.feature.plot.navigation.PlotDetailRoute
 import com.example.hatakenote.feature.worklog.navigation.WorkLogRoute
@@ -30,8 +32,9 @@ fun HatakeNoteApp() {
 
     // Determine if bottom navigation should be shown
     val shouldShowBottomBar = currentDestination?.let { destination ->
-        // Hide bottom bar on detail screens
-        !destination.hasRoute<PlotDetailRoute>() &&
+        // Hide bottom bar on login and detail screens
+        !destination.hasRoute<LoginRoute>() &&
+            !destination.hasRoute<PlotDetailRoute>() &&
             !destination.hasRoute<PlantingRoute>() &&
             !destination.hasRoute<WorkLogRoute>() &&
             !destination.hasRoute<CropListRoute>()
@@ -66,6 +69,8 @@ fun HatakeNoteApp() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
+            startDestination = HomeRoute,
+            webClientId = BuildConfig.FIREBASE_WEB_CLIENT_ID,
         )
     }
 }

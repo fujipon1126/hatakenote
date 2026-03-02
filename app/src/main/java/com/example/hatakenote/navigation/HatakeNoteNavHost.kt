@@ -6,6 +6,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.hatakenote.feature.assistant.navigation.assistantScreen
+import com.example.hatakenote.feature.auth.navigation.LoginRoute
+import com.example.hatakenote.feature.auth.navigation.loginScreen
 import com.example.hatakenote.feature.calendar.navigation.calendarScreen
 import com.example.hatakenote.feature.crop.navigation.cropListScreen
 import com.example.hatakenote.feature.crop.navigation.navigateToCropList
@@ -23,12 +25,23 @@ import com.example.hatakenote.feature.worklog.navigation.workLogScreen
 fun HatakeNoteNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
+    startDestination: Any = HomeRoute,
+    webClientId: String = "",
 ) {
     NavHost(
         navController = navController,
-        startDestination = HomeRoute,
+        startDestination = startDestination,
         modifier = modifier,
     ) {
+        loginScreen(
+            onLoginSuccess = {
+                navController.navigate(HomeRoute) {
+                    popUpTo(LoginRoute) { inclusive = true }
+                }
+            },
+            webClientId = webClientId,
+        )
+
         homeScreen(
             onPlotClick = { plotId -> navController.navigateToPlotDetail(plotId) },
         )
