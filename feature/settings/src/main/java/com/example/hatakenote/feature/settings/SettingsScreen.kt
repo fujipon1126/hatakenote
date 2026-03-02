@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Grass
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
@@ -49,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 internal fun SettingsRoute(
     onBackClick: () -> Unit,
+    onCropListClick: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -56,6 +58,7 @@ internal fun SettingsRoute(
     SettingsScreen(
         uiState = uiState,
         onBackClick = onBackClick,
+        onCropListClick = onCropListClick,
         onShowLocationDialog = viewModel::showLocationDialog,
         onDismissLocationDialog = viewModel::dismissLocationDialog,
         onUpdateLocation = viewModel::updateLocation,
@@ -70,6 +73,7 @@ internal fun SettingsRoute(
 internal fun SettingsScreen(
     uiState: SettingsUiState,
     onBackClick: () -> Unit,
+    onCropListClick: () -> Unit,
     onShowLocationDialog: () -> Unit,
     onDismissLocationDialog: () -> Unit,
     onUpdateLocation: (String, String, String) -> Unit,
@@ -165,6 +169,16 @@ internal fun SettingsScreen(
                         suffix = { Text("日") },
                     )
                 }
+            }
+
+            // マスターデータ管理セクション
+            SettingsSection(title = "マスターデータ管理") {
+                SettingsItem(
+                    icon = Icons.Default.Grass,
+                    title = "作物マスター",
+                    subtitle = "作物の追加・編集・削除",
+                    onClick = onCropListClick,
+                )
             }
 
             // アプリ情報
