@@ -18,35 +18,8 @@ abstract class DataModule {
         impl: CropFamilyRepositoryImpl
     ): CropFamilyRepository
 
-    @Binds
-    @Singleton
-    abstract fun bindCropRepository(
-        impl: CropRepositoryImpl
-    ): CropRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindPlotRepository(
-        impl: PlotRepositoryImpl
-    ): PlotRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindPlantingRepository(
-        impl: PlantingRepositoryImpl
-    ): PlantingRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindWorkLogRepository(
-        impl: WorkLogRepositoryImpl
-    ): WorkLogRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindReminderRepository(
-        impl: ReminderRepositoryImpl
-    ): ReminderRepository
+    // Note: CropRepository, PlotRepository, PlantingRepository, WorkLogRepository,
+    // ReminderRepository are now bound in FirestoreModule
 
     @Binds
     @Singleton
