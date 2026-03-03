@@ -16,10 +16,12 @@ fun NavController.navigateToHome(navOptions: NavOptions? = null) {
 
 fun NavGraphBuilder.homeScreen(
     onPlotClick: (Long) -> Unit,
+    onNavigateToFarmSelect: () -> Unit,
 ) {
     composable<HomeRoute> {
         HomeRoute(
             onPlotClick = onPlotClick,
+            onNavigateToFarmSelect = onNavigateToFarmSelect,
         )
     }
 }

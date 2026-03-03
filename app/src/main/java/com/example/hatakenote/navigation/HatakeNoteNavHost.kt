@@ -54,6 +54,9 @@ fun HatakeNoteNavHost(
 
         homeScreen(
             onPlotClick = { plotId -> navController.navigateToPlotDetail(plotId) },
+            onNavigateToFarmSelect = {
+                navController.navigate(FarmSelectRoute)
+            },
         )
 
         plotDetailScreen(

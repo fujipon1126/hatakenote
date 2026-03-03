@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.AlertDialog
@@ -77,6 +78,7 @@ import kotlinx.datetime.todayIn
 @Composable
 internal fun HomeRoute(
     onPlotClick: (Long) -> Unit,
+    onNavigateToFarmSelect: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -84,6 +86,7 @@ internal fun HomeRoute(
     HomeScreen(
         uiState = uiState,
         onPlotClick = onPlotClick,
+        onNavigateToFarmSelect = onNavigateToFarmSelect,
         onAddPlotClick = viewModel::showAddPlotDialog,
         onDismissPlotDialog = viewModel::dismissPlotDialog,
         onSavePlot = viewModel::savePlot,
@@ -98,6 +101,7 @@ internal fun HomeRoute(
 internal fun HomeScreen(
     uiState: HomeUiState,
     onPlotClick: (Long) -> Unit,
+    onNavigateToFarmSelect: () -> Unit,
     onAddPlotClick: () -> Unit,
     onDismissPlotDialog: () -> Unit,
     onSavePlot: (String, Int, Int, Int, Int) -> Unit,
@@ -122,6 +126,14 @@ internal fun HomeScreen(
                     Text(
                         text = uiState.farmName.ifEmpty { stringResource(R.string.home_title) }
                     )
+                },
+                actions = {
+                    IconButton(onClick = onNavigateToFarmSelect) {
+                        Icon(
+                            imageVector = Icons.Default.SwapHoriz,
+                            contentDescription = stringResource(R.string.home_switch_farm),
+                        )
+                    }
                 },
             )
         },
