@@ -118,7 +118,11 @@ internal fun HomeScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.home_title)) },
+                title = {
+                    Text(
+                        text = uiState.farmName.ifEmpty { stringResource(R.string.home_title) }
+                    )
+                },
             )
         },
         floatingActionButton = {

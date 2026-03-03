@@ -7,9 +7,12 @@ import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.model.Reminder
 import com.example.hatakenote.core.domain.model.Weather
 import com.example.hatakenote.core.domain.repository.AppSettingsRepository
+import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.ReminderRepository
 import com.example.hatakenote.core.domain.repository.WeatherRepository
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,6 +24,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class HomeUiState(
+    val farmName: String = "",
     val plots: List<PlotWithCurrentPlanting> = emptyList(),
     val gridColumns: Int = 4,
     val gridRows: Int = 3,
@@ -40,6 +44,7 @@ class HomeViewModel @Inject constructor(
     private val reminderRepository: ReminderRepository,
     private val weatherRepository: WeatherRepository,
     private val appSettingsRepository: AppSettingsRepository,
+    private val farmRepository: FarmRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -48,6 +53,22 @@ class HomeViewModel @Inject constructor(
     init {
         loadData()
         loadWeatherWithSettings()
+        observeCurrentFarm()
+    }
+
+    private fun observeCurrentFarm() {
+        viewModelScope.launch {
+            farmRepository.getCurrentFarmId()
+                .filterNotNull()
+                .flatMapLatest { farmId ->
+                    farmRepository.getFarmById(farmId)
+                }
+                .collect { farm ->
+                    _uiState.value = _uiState.value.copy(
+                        farmName = farm?.name ?: ""
+                    )
+                }
+        }
     }
 
     private fun loadData() {
