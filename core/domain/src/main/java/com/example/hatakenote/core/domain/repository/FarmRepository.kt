@@ -12,5 +12,6 @@ interface FarmRepository {
     suspend fun createFarm(name: String): Result<Farm>
     suspend fun joinFarm(inviteCode: String): Result<Farm>
     suspend fun leaveFarm(farmId: String): Result<Unit>
+    suspend fun deleteFarm(farmId: String): Result<Unit>
     suspend fun generateInviteCode(farmId: String): Result<String>
 }

@@ -134,6 +134,30 @@ class FirestoreFarmRepository @Inject constructor(
         }
     }
 
+    override suspend fun deleteFarm(farmId: String): Result<Unit> {
+        return try {
+            val userId = auth.currentUser?.uid
+                ?: return Result.failure(Exception("User not signed in"))
+
+            val snapshot = farmsCollection.document(farmId).get().await()
+            val ownerId = snapshot.getString("ownerId")
+
+            if (ownerId != userId) {
+                return Result.failure(Exception("Only the owner can delete this farm"))
+            }
+
+            farmsCollection.document(farmId).delete().await()
+
+            if (currentFarmIdFlow.value == farmId) {
+                currentFarmIdFlow.value = null
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun generateInviteCode(farmId: String): Result<String> {
         return try {
             val newCode = generateRandomCode()

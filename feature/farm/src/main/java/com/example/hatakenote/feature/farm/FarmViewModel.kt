@@ -20,9 +20,12 @@ data class FarmUiState(
     val isLoading: Boolean = true,
     val isCreating: Boolean = false,
     val isJoining: Boolean = false,
+    val isDeleting: Boolean = false,
     val showCreateDialog: Boolean = false,
     val showJoinDialog: Boolean = false,
     val showInviteDialog: Boolean = false,
+    val showDeleteDialog: Boolean = false,
+    val farmToDelete: Farm? = null,
     val currentInviteCode: String? = null,
     val errorMessage: String? = null,
     val successMessage: String? = null,
@@ -106,6 +109,24 @@ class FarmViewModel @Inject constructor(
         }
     }
 
+    fun showDeleteDialog(farm: Farm) {
+        _uiState.update {
+            it.copy(
+                showDeleteDialog = true,
+                farmToDelete = farm,
+            )
+        }
+    }
+
+    fun hideDeleteDialog() {
+        _uiState.update {
+            it.copy(
+                showDeleteDialog = false,
+                farmToDelete = null,
+            )
+        }
+    }
+
     fun createFarm(name: String) {
         if (name.isBlank()) return
 
@@ -171,6 +192,39 @@ class FarmViewModel @Inject constructor(
         viewModelScope.launch {
             farmRepository.setCurrentFarmId(farm.id)
             _uiState.update { it.copy(farmSelected = true) }
+        }
+    }
+
+    fun deleteFarm(farm: Farm) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isDeleting = true, errorMessage = null) }
+
+            farmRepository.deleteFarm(farm.id)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            isDeleting = false,
+                            showDeleteDialog = false,
+                            farmToDelete = null,
+                            successMessage = "畑「${farm.name}」を削除しました",
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    val errorMsg = if (e.message?.contains("Only the owner") == true) {
+                        "オーナーのみが畑を削除できます"
+                    } else {
+                        getErrorMessage(e)
+                    }
+                    _uiState.update {
+                        it.copy(
+                            isDeleting = false,
+                            showDeleteDialog = false,
+                            farmToDelete = null,
+                            errorMessage = errorMsg,
+                        )
+                    }
+                }
         }
     }
 

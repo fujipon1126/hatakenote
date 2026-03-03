@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Agriculture
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.Refresh
@@ -75,11 +76,14 @@ internal fun FarmSelectRoute(
         onCreateClick = viewModel::showCreateDialog,
         onJoinClick = viewModel::showJoinDialog,
         onInviteClick = viewModel::showInviteDialog,
+        onDeleteClick = viewModel::showDeleteDialog,
         onCreateDismiss = viewModel::hideCreateDialog,
         onJoinDismiss = viewModel::hideJoinDialog,
         onInviteDismiss = viewModel::hideInviteDialog,
+        onDeleteDismiss = viewModel::hideDeleteDialog,
         onCreateConfirm = viewModel::createFarm,
         onJoinConfirm = viewModel::joinFarm,
+        onDeleteConfirm = viewModel::deleteFarm,
         onRegenerateCode = viewModel::regenerateInviteCode,
         onErrorDismiss = viewModel::clearError,
         onSuccessDismiss = viewModel::clearSuccess,
@@ -93,11 +97,14 @@ internal fun FarmSelectScreen(
     onCreateClick: () -> Unit,
     onJoinClick: () -> Unit,
     onInviteClick: (Farm) -> Unit,
+    onDeleteClick: (Farm) -> Unit,
     onCreateDismiss: () -> Unit,
     onJoinDismiss: () -> Unit,
     onInviteDismiss: () -> Unit,
+    onDeleteDismiss: () -> Unit,
     onCreateConfirm: (String) -> Unit,
     onJoinConfirm: (String) -> Unit,
+    onDeleteConfirm: (Farm) -> Unit,
     onRegenerateCode: (String) -> Unit,
     onErrorDismiss: () -> Unit,
     onSuccessDismiss: () -> Unit,
@@ -166,6 +173,7 @@ internal fun FarmSelectScreen(
                                     isSelected = farm.id == uiState.selectedFarmId,
                                     onClick = { onFarmClick(farm) },
                                     onInviteClick = { onInviteClick(farm) },
+                                    onDeleteClick = { onDeleteClick(farm) },
                                 )
                             }
                         }
@@ -224,6 +232,16 @@ internal fun FarmSelectScreen(
             farmId = uiState.selectedFarmId ?: "",
             onDismiss = onInviteDismiss,
             onRegenerateCode = onRegenerateCode,
+        )
+    }
+
+    // Delete Dialog
+    if (uiState.showDeleteDialog && uiState.farmToDelete != null) {
+        DeleteFarmDialog(
+            farm = uiState.farmToDelete,
+            isLoading = uiState.isDeleting,
+            onDismiss = onDeleteDismiss,
+            onConfirm = { onDeleteConfirm(uiState.farmToDelete) },
         )
     }
 }
@@ -285,6 +303,7 @@ private fun FarmCard(
     isSelected: Boolean,
     onClick: () -> Unit,
     onInviteClick: () -> Unit,
+    onDeleteClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -342,6 +361,13 @@ private fun FarmCard(
                 Icon(
                     imageVector = Icons.Default.GroupAdd,
                     contentDescription = stringResource(R.string.farm_invite_title),
+                )
+            }
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.farm_delete_title),
+                    tint = MaterialTheme.colorScheme.error,
                 )
             }
             if (isSelected) {
@@ -437,6 +463,49 @@ private fun JoinFarmDialog(
                     )
                 } else {
                     Text(stringResource(R.string.farm_join_button))
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isLoading,
+            ) {
+                Text(stringResource(R.string.farm_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun DeleteFarmDialog(
+    farm: Farm,
+    isLoading: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = { if (!isLoading) onDismiss() },
+        title = { Text(stringResource(R.string.farm_delete_title)) },
+        text = {
+            Text(stringResource(R.string.farm_delete_confirmation, farm.name))
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = !isLoading,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                ),
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onError,
+                    )
+                } else {
+                    Text(stringResource(R.string.farm_delete_button))
                 }
             }
         },

@@ -27,6 +27,10 @@
     <string name="farm_invite_copied">コピーしました</string>
     <string name="farm_invite_regenerate">新しいコードを生成</string>
 
+    <string name="farm_delete_title">畑を削除</string>
+    <string name="farm_delete_confirmation">「%s」を削除しますか？\n\nこの操作は取り消せません。</string>
+    <string name="farm_delete_button">削除</string>
+
     <string name="farm_members_title">メンバー</string>
     <string name="farm_members_count">%d人のメンバー</string>
     <string name="farm_owner">オーナー</string>
