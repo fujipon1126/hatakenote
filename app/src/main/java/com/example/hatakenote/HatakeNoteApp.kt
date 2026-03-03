@@ -1,15 +1,21 @@
 package com.example.hatakenote
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -26,10 +32,56 @@ import com.example.hatakenote.navigation.HatakeNoteNavHost
 import com.example.hatakenote.navigation.TopLevelDestination
 
 @Composable
-fun HatakeNoteApp() {
+fun HatakeNoteApp(
+    viewModel: MainViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+
+    // Handle authentication state navigation
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            MainUiState.NotLoggedIn -> {
+                if (currentDestination?.hasRoute<LoginRoute>() != true) {
+                    navController.navigate(LoginRoute) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            }
+            MainUiState.NoFarmSelected -> {
+                if (currentDestination?.hasRoute<FarmSelectRoute>() != true &&
+                    currentDestination?.hasRoute<LoginRoute>() != true
+                ) {
+                    navController.navigate(FarmSelectRoute) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            }
+            MainUiState.Ready -> {
+                if (currentDestination?.hasRoute<LoginRoute>() == true ||
+                    currentDestination?.hasRoute<FarmSelectRoute>() == true
+                ) {
+                    navController.navigate(HomeRoute) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            }
+            MainUiState.Loading -> { /* Do nothing while loading */ }
+        }
+    }
+
+    // Show loading indicator while determining auth state
+    if (uiState == MainUiState.Loading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
 
     // Determine if bottom navigation should be shown
     val shouldShowBottomBar = currentDestination?.let { destination ->

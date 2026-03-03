@@ -1,16 +1,22 @@
 package com.example.hatakenote.core.firestore.di
 
+import com.example.hatakenote.core.domain.repository.CropFamilyRepository
 import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.FarmRepository
+import com.example.hatakenote.core.domain.repository.FertilizerScheduleRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.ReminderRepository
+import com.example.hatakenote.core.domain.repository.RotationIncompatibilityRepository
 import com.example.hatakenote.core.domain.repository.WorkLogRepository
+import com.example.hatakenote.core.firestore.FirestoreCropFamilyRepository
 import com.example.hatakenote.core.firestore.FirestoreCropRepository
 import com.example.hatakenote.core.firestore.FirestoreFarmRepository
+import com.example.hatakenote.core.firestore.FirestoreFertilizerScheduleRepository
 import com.example.hatakenote.core.firestore.FirestorePlantingRepository
 import com.example.hatakenote.core.firestore.FirestorePlotRepository
 import com.example.hatakenote.core.firestore.FirestoreReminderRepository
+import com.example.hatakenote.core.firestore.FirestoreRotationIncompatibilityRepository
 import com.example.hatakenote.core.firestore.FirestoreWorkLogRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Binds
@@ -54,4 +60,16 @@ abstract class FirestoreBindsModule {
     @Binds
     @Singleton
     abstract fun bindReminderRepository(impl: FirestoreReminderRepository): ReminderRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCropFamilyRepository(impl: FirestoreCropFamilyRepository): CropFamilyRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFertilizerScheduleRepository(impl: FirestoreFertilizerScheduleRepository): FertilizerScheduleRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRotationIncompatibilityRepository(impl: FirestoreRotationIncompatibilityRepository): RotationIncompatibilityRepository
 }

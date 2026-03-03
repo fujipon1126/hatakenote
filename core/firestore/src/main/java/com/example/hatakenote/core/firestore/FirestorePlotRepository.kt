@@ -1,5 +1,8 @@
 package com.example.hatakenote.core.firestore
 
+import com.example.hatakenote.core.domain.model.Crop
+import com.example.hatakenote.core.domain.model.Planting
+import com.example.hatakenote.core.domain.model.PlantingWithCrop
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.repository.FarmRepository
@@ -8,11 +11,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,6 +29,12 @@ class FirestorePlotRepository @Inject constructor(
 
     private fun plotsCollection(farmId: String) =
         firestore.collection("farms").document(farmId).collection("plots")
+
+    private fun plantingsCollection(farmId: String) =
+        firestore.collection("farms").document(farmId).collection("plantings")
+
+    private fun cropsCollection(farmId: String) =
+        firestore.collection("farms").document(farmId).collection("crops")
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getAll(): Flow<List<Plot>> {
@@ -44,13 +55,38 @@ class FirestorePlotRepository @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getAllWithCurrentPlantings(): Flow<List<PlotWithCurrentPlanting>> {
-        // TODO: Implement with plantings join
-        return getAll().map { plots ->
-            plots.map { plot ->
-                PlotWithCurrentPlanting(
-                    plot = plot,
-                    currentPlantings = emptyList(),
-                )
+        return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
+            if (farmId == null) {
+                flowOf(emptyList())
+            } else {
+                val plotsFlow = plotsCollection(farmId).snapshots().map { snapshot ->
+                    snapshot.documents.mapNotNull { it.toPlot() }
+                }
+                val plantingsFlow = plantingsCollection(farmId)
+                    .whereEqualTo("isActive", true)
+                    .snapshots()
+                    .map { snapshot ->
+                        snapshot.documents.mapNotNull { it.toPlantingWithPlotIds() }
+                    }
+                val cropsFlow = cropsCollection(farmId).snapshots().map { snapshot ->
+                    snapshot.documents.mapNotNull { it.toCrop() }
+                }
+
+                combine(plotsFlow, plantingsFlow, cropsFlow) { plots, plantings, crops ->
+                    val cropsMap = crops.associateBy { it.id }
+                    plots.map { plot ->
+                        val currentPlantings = plantings
+                            .filter { (planting, plotIds) -> plot.id in plotIds }
+                            .mapNotNull { (planting, _) ->
+                                val crop = cropsMap[planting.cropId] ?: return@mapNotNull null
+                                PlantingWithCrop(planting = planting, crop = crop)
+                            }
+                        PlotWithCurrentPlanting(
+                            plot = plot,
+                            currentPlantings = currentPlantings,
+                        )
+                    }
+                }
             }
         }
     }
@@ -67,11 +103,37 @@ class FirestorePlotRepository @Inject constructor(
     }
 
     override suspend fun getByIdWithCurrentPlantings(id: Long): PlotWithCurrentPlanting? {
+        val farmId = farmRepository.getCurrentFarmId().first() ?: return null
         val plot = getById(id) ?: return null
-        // TODO: Implement with plantings join
+
+        // Get active plantings that include this plot
+        val plantingsSnapshot = plantingsCollection(farmId)
+            .whereEqualTo("isActive", true)
+            .whereArrayContains("plotIds", id)
+            .get()
+            .await()
+
+        val plantingsWithPlotIds = plantingsSnapshot.documents.mapNotNull { it.toPlantingWithPlotIds() }
+
+        // Get all crops for the plantings
+        val cropIds = plantingsWithPlotIds.map { it.first.cropId }.distinct()
+        val cropsMap = if (cropIds.isNotEmpty()) {
+            val cropsSnapshot = cropsCollection(farmId).get().await()
+            cropsSnapshot.documents.mapNotNull { it.toCrop() }
+                .filter { it.id in cropIds }
+                .associateBy { it.id }
+        } else {
+            emptyMap()
+        }
+
+        val currentPlantings = plantingsWithPlotIds.mapNotNull { (planting, _) ->
+            val crop = cropsMap[planting.cropId] ?: return@mapNotNull null
+            PlantingWithCrop(planting = planting, crop = crop)
+        }
+
         return PlotWithCurrentPlanting(
             plot = plot,
-            currentPlantings = emptyList(),
+            currentPlantings = currentPlantings,
         )
     }
 
@@ -159,6 +221,41 @@ class FirestorePlotRepository @Inject constructor(
                 gridY = (data["gridY"] as? Long)?.toInt() ?: 0,
                 width = (data["width"] as? Long)?.toInt() ?: 1,
                 height = (data["height"] as? Long)?.toInt() ?: 1,
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun com.google.firebase.firestore.DocumentSnapshot.toPlantingWithPlotIds(): Pair<Planting, List<Long>>? {
+        return try {
+            val data = this.data ?: return null
+            val planting = Planting(
+                id = (data["id"] as? Long) ?: return null,
+                cropId = (data["cropId"] as? Long) ?: return null,
+                plantedDate = (data["plantedDate"] as? String)?.let { LocalDate.parse(it) }
+                    ?: return null,
+                harvestedDate = (data["harvestedDate"] as? String)?.let { LocalDate.parse(it) },
+                note = data["note"] as? String,
+                isActive = data["isActive"] as? Boolean ?: true,
+            )
+            val plotIds = (data["plotIds"] as? List<Long>) ?: emptyList()
+            Pair(planting, plotIds)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun com.google.firebase.firestore.DocumentSnapshot.toCrop(): Crop? {
+        return try {
+            val data = this.data ?: return null
+            Crop(
+                id = (data["id"] as? Long) ?: return null,
+                name = data["name"] as? String ?: "",
+                familyId = (data["familyId"] as? Long) ?: 0,
+                colorHex = data["colorHex"] as? String ?: "#4CAF50",
+                isActive = data["isActive"] as? Boolean ?: true,
             )
         } catch (e: Exception) {
             null

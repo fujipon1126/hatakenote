@@ -12,26 +12,9 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class DataModule {
 
-    @Binds
-    @Singleton
-    abstract fun bindCropFamilyRepository(
-        impl: CropFamilyRepositoryImpl
-    ): CropFamilyRepository
-
     // Note: CropRepository, PlotRepository, PlantingRepository, WorkLogRepository,
-    // ReminderRepository are now bound in FirestoreModule
-
-    @Binds
-    @Singleton
-    abstract fun bindRotationIncompatibilityRepository(
-        impl: RotationIncompatibilityRepositoryImpl
-    ): RotationIncompatibilityRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindFertilizerScheduleRepository(
-        impl: FertilizerScheduleRepositoryImpl
-    ): FertilizerScheduleRepository
+    // ReminderRepository, CropFamilyRepository, FertilizerScheduleRepository,
+    // RotationIncompatibilityRepository are now bound in FirestoreModule
 
     @Binds
     @Singleton
