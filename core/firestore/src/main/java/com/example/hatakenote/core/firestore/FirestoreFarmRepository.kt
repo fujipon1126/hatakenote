@@ -58,18 +58,27 @@ class FirestoreFarmRepository @Inject constructor(
             val userId = auth.currentUser?.uid
                 ?: return Result.failure(Exception("User not signed in"))
 
+            val inviteCode = generateRandomCode()
+            val now = Clock.System.now()
+
             val farmData = hashMapOf(
                 "name" to name,
                 "ownerId" to userId,
                 "memberIds" to listOf(userId),
-                "inviteCode" to generateRandomCode(),
+                "inviteCode" to inviteCode,
                 "createdAt" to FieldValue.serverTimestamp(),
             )
 
             val docRef = farmsCollection.add(farmData).await()
-            val snapshot = docRef.get().await()
-            val farm = snapshot.toFarm()
-                ?: return Result.failure(Exception("Failed to create farm"))
+
+            val farm = Farm(
+                id = docRef.id,
+                name = name,
+                ownerId = userId,
+                memberIds = listOf(userId),
+                inviteCode = inviteCode,
+                createdAt = now,
+            )
 
             currentFarmIdFlow.value = farm.id
             Result.success(farm)
