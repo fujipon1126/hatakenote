@@ -15,6 +15,33 @@ val localProperties = Properties().apply {
     }
 }
 
+// バージョン管理
+val versionPropertiesFile = rootProject.file("version.properties")
+val versionProperties = Properties().apply {
+    if (versionPropertiesFile.exists()) {
+        load(versionPropertiesFile.inputStream())
+    }
+}
+
+var appVersionCode = versionProperties.getProperty("VERSION_CODE", "1").toInt()
+var appVersionName = versionProperties.getProperty("VERSION_NAME", "1.0.0")
+
+// -PbumpVersion=true が指定された場合にバージョンをインクリメント
+if (project.hasProperty("bumpVersion") && project.property("bumpVersion") == "true") {
+    appVersionCode += 1
+    // VERSION_NAME の patch バージョンをインクリメント (例: 1.0.0 -> 1.0.1)
+    val versionParts = appVersionName.split(".")
+    if (versionParts.size == 3) {
+        val patch = versionParts[2].toIntOrNull() ?: 0
+        appVersionName = "${versionParts[0]}.${versionParts[1]}.${patch + 1}"
+    }
+    // ファイルに保存
+    versionProperties.setProperty("VERSION_CODE", appVersionCode.toString())
+    versionProperties.setProperty("VERSION_NAME", appVersionName)
+    versionPropertiesFile.outputStream().use { versionProperties.store(it, null) }
+    println("Version bumped to: versionCode=$appVersionCode, versionName=$appVersionName")
+}
+
 android {
     namespace = "com.example.hatakenote"
 
@@ -32,8 +59,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.hatakenote"
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
