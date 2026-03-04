@@ -14,6 +14,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.datetime)
 
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     // Firebase Firestore
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)

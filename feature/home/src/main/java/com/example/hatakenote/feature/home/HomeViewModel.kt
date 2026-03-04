@@ -15,11 +15,10 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -80,11 +79,9 @@ class HomeViewModel @Inject constructor(
             ) { plots, reminders ->
                 Pair(plots, reminders)
             }
-                .stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = Pair(emptyList(), emptyList())
-                )
+                .catch { e ->
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                }
                 .collect { (plots, reminders) ->
                     val maxPosition = plotRepository.getMaxGridPosition()
                     _uiState.value = _uiState.value.copy(

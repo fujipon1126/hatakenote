@@ -1,13 +1,20 @@
 package com.example.hatakenote.core.firestore
 
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import com.example.hatakenote.core.domain.model.Farm
 import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.Clock
@@ -16,13 +23,18 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.random.Random
 
+private val Context.farmDataStore: DataStore<Preferences> by preferencesDataStore(name = "farm_settings")
+
 @Singleton
 class FirestoreFarmRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth,
+    @ApplicationContext private val context: Context,
 ) : FarmRepository {
 
-    private val currentFarmIdFlow = MutableStateFlow<String?>(null)
+    private object PreferencesKeys {
+        val CURRENT_FARM_ID = stringPreferencesKey("current_farm_id")
+    }
 
     private val farmsCollection = firestore.collection("farms")
 
@@ -47,10 +59,22 @@ class FirestoreFarmRepository @Inject constructor(
             }
     }
 
-    override fun getCurrentFarmId(): Flow<String?> = currentFarmIdFlow
+    override fun getCurrentFarmId(): Flow<String?> {
+        return context.farmDataStore.data.map { preferences ->
+            preferences[PreferencesKeys.CURRENT_FARM_ID]
+        }
+    }
 
     override suspend fun setCurrentFarmId(farmId: String) {
-        currentFarmIdFlow.value = farmId
+        context.farmDataStore.edit { preferences ->
+            preferences[PreferencesKeys.CURRENT_FARM_ID] = farmId
+        }
+    }
+
+    private suspend fun clearCurrentFarmId() {
+        context.farmDataStore.edit { preferences ->
+            preferences.remove(PreferencesKeys.CURRENT_FARM_ID)
+        }
     }
 
     override suspend fun createFarm(name: String): Result<Farm> {
@@ -80,7 +104,7 @@ class FirestoreFarmRepository @Inject constructor(
                 createdAt = now,
             )
 
-            currentFarmIdFlow.value = farm.id
+            setCurrentFarmId(farm.id)
             Result.success(farm)
         } catch (e: Exception) {
             Result.failure(e)
@@ -108,7 +132,7 @@ class FirestoreFarmRepository @Inject constructor(
             val farm = updatedSnapshot.toFarm()
                 ?: return Result.failure(Exception("Failed to join farm"))
 
-            currentFarmIdFlow.value = farm.id
+            setCurrentFarmId(farm.id)
             Result.success(farm)
         } catch (e: Exception) {
             Result.failure(e)
@@ -124,8 +148,8 @@ class FirestoreFarmRepository @Inject constructor(
                 .update("memberIds", FieldValue.arrayRemove(userId))
                 .await()
 
-            if (currentFarmIdFlow.value == farmId) {
-                currentFarmIdFlow.value = null
+            if (getCurrentFarmId().first() == farmId) {
+                clearCurrentFarmId()
             }
 
             Result.success(Unit)
@@ -148,8 +172,8 @@ class FirestoreFarmRepository @Inject constructor(
 
             farmsCollection.document(farmId).delete().await()
 
-            if (currentFarmIdFlow.value == farmId) {
-                currentFarmIdFlow.value = null
+            if (getCurrentFarmId().first() == farmId) {
+                clearCurrentFarmId()
             }
 
             Result.success(Unit)

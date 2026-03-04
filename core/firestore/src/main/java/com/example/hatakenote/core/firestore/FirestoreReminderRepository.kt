@@ -74,14 +74,15 @@ class FirestoreReminderRepository @Inject constructor(
             if (farmId == null) {
                 flowOf(emptyList())
             } else {
+                // 複合インデックスを避けるため、クライアント側でフィルタリング
                 remindersCollection(farmId)
                     .whereEqualTo("isCompleted", false)
-                    .whereGreaterThanOrEqualTo("scheduledDate", today.toString())
-                    .whereLessThanOrEqualTo("scheduledDate", endDate.toString())
                     .snapshots()
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
                             doc.toReminder()
+                        }.filter { reminder ->
+                            reminder.scheduledDate >= today && reminder.scheduledDate <= endDate
                         }
                     }
             }
