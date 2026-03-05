@@ -3,6 +3,7 @@ package com.example.hatakenote.feature.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hatakenote.core.domain.model.Plot
+import com.example.hatakenote.core.domain.model.PlotSide
 import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.model.Reminder
 import com.example.hatakenote.core.domain.model.Weather
@@ -25,8 +26,7 @@ import javax.inject.Inject
 data class HomeUiState(
     val farmName: String = "",
     val plots: List<PlotWithCurrentPlanting> = emptyList(),
-    val gridColumns: Int = 4,
-    val gridRows: Int = 3,
+    val maxNumber: Int = 0,
     val upcomingReminders: List<Reminder> = emptyList(),
     val weather: Weather? = null,
     val weatherLocationName: String = "",
@@ -83,11 +83,10 @@ class HomeViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(isLoading = false)
                 }
                 .collect { (plots, reminders) ->
-                    val maxPosition = plotRepository.getMaxGridPosition()
+                    val maxNumber = plotRepository.getMaxNumber()
                     _uiState.value = _uiState.value.copy(
                         plots = plots,
-                        gridColumns = maxOf(4, maxPosition.first + 1),
-                        gridRows = maxOf(3, maxPosition.second + 1),
+                        maxNumber = maxNumber,
                         upcomingReminders = reminders,
                         isLoading = false,
                     )
@@ -147,7 +146,7 @@ class HomeViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(showAddPlotDialog = false, editingPlot = null)
     }
 
-    fun savePlot(name: String, gridX: Int, gridY: Int, width: Int, height: Int) {
+    fun savePlot(name: String, side: PlotSide, number: Int) {
         viewModelScope.launch {
             try {
                 val editingPlot = _uiState.value.editingPlot
@@ -155,20 +154,16 @@ class HomeViewModel @Inject constructor(
                     plotRepository.update(
                         editingPlot.copy(
                             name = name,
-                            gridX = gridX,
-                            gridY = gridY,
-                            width = width,
-                            height = height,
+                            side = side,
+                            number = number,
                         )
                     )
                 } else {
                     plotRepository.insert(
                         Plot(
                             name = name,
-                            gridX = gridX,
-                            gridY = gridY,
-                            width = width,
-                            height = height,
+                            side = side,
+                            number = number,
                         )
                     )
                 }

@@ -97,6 +97,6 @@ class PlotRepositoryImpl @Inject constructor(
     override suspend fun delete(plot: Plot) =
         plotDao.delete(plot.toEntity())
 
-    override suspend fun getMaxGridPosition(): Pair<Int, Int> =
-        Pair(plotDao.getMaxGridX(), plotDao.getMaxGridY())
+    override suspend fun getMaxNumber(): Int =
+        plotDao.getMaxNumber()
 }

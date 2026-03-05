@@ -56,6 +56,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.feature.plot.R
 import com.example.hatakenote.core.domain.model.Plot
+import com.example.hatakenote.core.domain.model.PlotSide
 import com.example.hatakenote.core.domain.model.PlantingWithCrop
 import com.example.hatakenote.core.domain.model.WorkLog
 import com.example.hatakenote.core.domain.model.WorkType
@@ -100,7 +101,7 @@ internal fun PlotDetailScreen(
     onDeleteClick: () -> Unit,
     onDismissEditDialog: () -> Unit,
     onDismissDeleteDialog: () -> Unit,
-    onUpdatePlot: (String, Int, Int, Int, Int) -> Unit,
+    onUpdatePlot: (String, PlotSide, Int) -> Unit,
     onConfirmDelete: () -> Unit,
 ) {
     Scaffold(
@@ -228,13 +229,7 @@ private fun PlotInfoCard(plot: Plot) {
                 style = MaterialTheme.typography.titleMedium,
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                InfoItem(label = stringResource(R.string.plot_detail_position), value = "(${plot.gridX}, ${plot.gridY})")
-                InfoItem(label = stringResource(R.string.plot_detail_size), value = "${plot.width} x ${plot.height}")
-            }
+            InfoItem(label = stringResource(R.string.plot_detail_position), value = "${plot.side.displayName()}${plot.number}")
         }
     }
 }
@@ -468,13 +463,12 @@ private fun getWorkTypeName(workType: WorkType): String = when (workType) {
 private fun EditPlotDialog(
     plot: Plot,
     onDismiss: () -> Unit,
-    onSave: (String, Int, Int, Int, Int) -> Unit,
+    onSave: (String, PlotSide, Int) -> Unit,
 ) {
-    var name by remember { mutableStateOf(plot.name) }
-    var gridX by remember { mutableStateOf(plot.gridX.toString()) }
-    var gridY by remember { mutableStateOf(plot.gridY.toString()) }
-    var width by remember { mutableStateOf(plot.width.toString()) }
-    var height by remember { mutableStateOf(plot.height.toString()) }
+    var selectedSide by remember { mutableStateOf(plot.side) }
+    var number by remember { mutableStateOf(plot.number.toString()) }
+
+    val autoName = "${selectedSide.displayName()}${number.toIntOrNull() ?: 1}"
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -483,67 +477,69 @@ private fun EditPlotDialog(
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.plot_name)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                // Side selection
+                Text(
+                    text = stringResource(R.string.plot_side),
+                    style = MaterialTheme.typography.labelMedium,
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    OutlinedTextField(
-                        value = gridX,
-                        onValueChange = { gridX = it.filter { c -> c.isDigit() } },
-                        label = { Text(stringResource(R.string.plot_x)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                    )
-                    OutlinedTextField(
-                        value = gridY,
-                        onValueChange = { gridY = it.filter { c -> c.isDigit() } },
-                        label = { Text(stringResource(R.string.plot_y)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                    )
+                    PlotSide.entries.forEach { side ->
+                        val isSelected = selectedSide == side
+                        TextButton(
+                            onClick = { selectedSide = side },
+                            modifier = Modifier
+                                .weight(1f)
+                                .then(
+                                    if (isSelected) {
+                                        Modifier.background(
+                                            MaterialTheme.colorScheme.primaryContainer,
+                                            RoundedCornerShape(8.dp),
+                                        )
+                                    } else {
+                                        Modifier.background(
+                                            MaterialTheme.colorScheme.surfaceVariant,
+                                            RoundedCornerShape(8.dp),
+                                        )
+                                    }
+                                ),
+                        ) {
+                            Text(
+                                text = side.displayName(),
+                                color = if (isSelected) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            )
+                        }
+                    }
                 }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    OutlinedTextField(
-                        value = width,
-                        onValueChange = { width = it.filter { c -> c.isDigit() } },
-                        label = { Text(stringResource(R.string.plot_width)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                    )
-                    OutlinedTextField(
-                        value = height,
-                        onValueChange = { height = it.filter { c -> c.isDigit() } },
-                        label = { Text(stringResource(R.string.plot_height)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+
+                OutlinedTextField(
+                    value = number,
+                    onValueChange = { number = it.filter { c -> c.isDigit() } },
+                    label = { Text(stringResource(R.string.plot_number)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Text(
+                    text = stringResource(R.string.plot_name_preview, autoName),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    val x = gridX.toIntOrNull() ?: 0
-                    val y = gridY.toIntOrNull() ?: 0
-                    val w = maxOf(1, width.toIntOrNull() ?: 1)
-                    val h = maxOf(1, height.toIntOrNull() ?: 1)
-                    if (name.isNotBlank()) {
-                        onSave(name, x, y, w, h)
-                    }
+                    val n = number.toIntOrNull() ?: 1
+                    onSave(autoName, selectedSide, n)
                 },
-                enabled = name.isNotBlank(),
+                enabled = (number.toIntOrNull() ?: 0) >= 1,
             ) {
                 Text(stringResource(R.string.save))
             }

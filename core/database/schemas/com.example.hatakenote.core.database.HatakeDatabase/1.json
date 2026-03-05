@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "88cc7a061154ffdca37e158c7219b865",
+    "identityHash": "801ccebaaf82385dca95083f36b4c5c4",
     "entities": [
       {
         "tableName": "crop_families",
@@ -260,7 +260,7 @@
       },
       {
         "tableName": "plots",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `gridX` INTEGER NOT NULL, `gridY` INTEGER NOT NULL, `width` INTEGER NOT NULL, `height` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `side` TEXT NOT NULL, `number` INTEGER NOT NULL, `width` INTEGER NOT NULL, `height` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -275,14 +275,14 @@
             "notNull": true
           },
           {
-            "fieldPath": "gridX",
-            "columnName": "gridX",
-            "affinity": "INTEGER",
+            "fieldPath": "side",
+            "columnName": "side",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "gridY",
-            "columnName": "gridY",
+            "fieldPath": "number",
+            "columnName": "number",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -701,7 +701,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '88cc7a061154ffdca37e158c7219b865')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '801ccebaaf82385dca95083f36b4c5c4')"
     ]
   }
 }

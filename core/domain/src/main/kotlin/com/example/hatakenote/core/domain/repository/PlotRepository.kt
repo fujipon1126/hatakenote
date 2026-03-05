@@ -12,5 +12,5 @@ interface PlotRepository {
     suspend fun insert(plot: Plot): Long
     suspend fun update(plot: Plot)
     suspend fun delete(plot: Plot)
-    suspend fun getMaxGridPosition(): Pair<Int, Int>
+    suspend fun getMaxNumber(): Int
 }

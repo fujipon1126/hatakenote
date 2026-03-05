@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.hatakenote.core.domain.model.Planting
 import com.example.hatakenote.core.domain.model.Plot
+import com.example.hatakenote.core.domain.model.PlotSide
 import com.example.hatakenote.core.domain.model.PlantingWithCrop
 import com.example.hatakenote.core.domain.model.WorkLog
 import com.example.hatakenote.core.domain.repository.PlantingRepository
@@ -88,15 +89,13 @@ class PlotDetailViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(showDeleteConfirmDialog = false)
     }
 
-    fun updatePlot(name: String, gridX: Int, gridY: Int, width: Int, height: Int) {
+    fun updatePlot(name: String, side: PlotSide, number: Int) {
         viewModelScope.launch {
             val currentPlot = _uiState.value.plot ?: return@launch
             val updatedPlot = currentPlot.copy(
                 name = name,
-                gridX = gridX,
-                gridY = gridY,
-                width = width,
-                height = height,
+                side = side,
+                number = number,
             )
             plotRepository.update(updatedPlot)
             _uiState.value = _uiState.value.copy(

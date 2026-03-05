@@ -65,6 +65,7 @@ import com.example.hatakenote.feature.home.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.core.domain.model.DailyForecast
 import com.example.hatakenote.core.domain.model.Plot
+import com.example.hatakenote.core.domain.model.PlotSide
 import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.model.Reminder
 import com.example.hatakenote.core.domain.model.Weather
@@ -104,7 +105,7 @@ internal fun HomeScreen(
     onNavigateToFarmSelect: () -> Unit,
     onAddPlotClick: () -> Unit,
     onDismissPlotDialog: () -> Unit,
-    onSavePlot: (String, Int, Int, Int, Int) -> Unit,
+    onSavePlot: (String, PlotSide, Int) -> Unit,
     onCompleteReminder: (Long) -> Unit,
     onRefreshWeather: () -> Unit,
     onClearError: () -> Unit,
@@ -195,8 +196,6 @@ internal fun HomeScreen(
                 } else {
                     PlotGrid(
                         plots = uiState.plots,
-                        gridColumns = uiState.gridColumns,
-                        gridRows = uiState.gridRows,
                         onPlotClick = onPlotClick,
                     )
                 }
@@ -238,50 +237,80 @@ private fun EmptyPlotMessage(onAddPlotClick: () -> Unit) {
 @Composable
 private fun PlotGrid(
     plots: List<PlotWithCurrentPlanting>,
-    gridColumns: Int,
-    gridRows: Int,
     onPlotClick: (Long) -> Unit,
 ) {
-    // Create a grid layout
-    val cellSize = 80.dp
-    val gap = 4.dp
+    val gap = 8.dp
 
-    // Create 2D array to track occupied cells
-    val occupiedCells = Array(gridRows) { BooleanArray(gridColumns) }
+    // Group plots by side
+    val leftPlots = plots
+        .filter { it.plot.side == PlotSide.LEFT }
+        .sortedBy { it.plot.number }
+    val rightPlots = plots
+        .filter { it.plot.side == PlotSide.RIGHT }
+        .sortedBy { it.plot.number }
 
-    // Mark occupied cells
-    plots.forEach { plotWithPlanting ->
-        val plot = plotWithPlanting.plot
-        for (y in plot.gridY until minOf(plot.gridY + plot.height, gridRows)) {
-            for (x in plot.gridX until minOf(plot.gridX + plot.width, gridColumns)) {
-                occupiedCells[y][x] = true
-            }
-        }
-    }
+    val maxNumber = maxOf(
+        leftPlots.maxOfOrNull { it.plot.number } ?: 0,
+        rightPlots.maxOfOrNull { it.plot.number } ?: 0,
+    )
 
     Column(
         verticalArrangement = Arrangement.spacedBy(gap),
     ) {
-        for (row in 0 until gridRows) {
+        // Header row
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(gap),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "左",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "右",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        for (number in 1..maxNumber) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(gap),
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                for (col in 0 until gridColumns) {
-                    // Find if there's a plot starting at this cell
-                    val plotAtCell = plots.find { it.plot.gridX == col && it.plot.gridY == row }
+                // Left cell
+                val leftPlot = leftPlots.find { it.plot.number == number }
+                if (leftPlot != null) {
+                    PlotCell(
+                        plotWithPlanting = leftPlot,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onPlotClick(leftPlot.plot.id) },
+                    )
+                } else {
+                    EmptyCell(modifier = Modifier.weight(1f))
+                }
 
-                    if (plotAtCell != null) {
-                        PlotCell(
-                            plotWithPlanting = plotAtCell,
-                            cellSize = cellSize,
-                            gap = gap,
-                            onClick = { onPlotClick(plotAtCell.plot.id) },
-                        )
-                    } else if (!occupiedCells[row][col]) {
-                        // Empty cell (not occupied by any plot)
-                        EmptyCell(cellSize = cellSize)
-                    }
-                    // Skip cells that are part of a multi-cell plot but not the starting cell
+                // Right cell
+                val rightPlot = rightPlots.find { it.plot.number == number }
+                if (rightPlot != null) {
+                    PlotCell(
+                        plotWithPlanting = rightPlot,
+                        modifier = Modifier.weight(1f),
+                        onClick = { onPlotClick(rightPlot.plot.id) },
+                    )
+                } else {
+                    EmptyCell(modifier = Modifier.weight(1f))
                 }
             }
         }
@@ -291,18 +320,12 @@ private fun PlotGrid(
 @Composable
 private fun PlotCell(
     plotWithPlanting: PlotWithCurrentPlanting,
-    cellSize: androidx.compose.ui.unit.Dp,
-    gap: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     val plot = plotWithPlanting.plot
     val currentPlantings = plotWithPlanting.currentPlantings
 
-    // Calculate cell dimensions including gaps for multi-cell plots
-    val width = cellSize * plot.width + gap * (plot.width - 1)
-    val height = cellSize * plot.height + gap * (plot.height - 1)
-
-    // Determine background color based on planted crops
     val backgroundColor = if (currentPlantings.isNotEmpty()) {
         parseColorSafe(currentPlantings.first().crop.colorHex, MaterialTheme.colorScheme.primaryContainer)
     } else {
@@ -310,9 +333,8 @@ private fun PlotCell(
     }
 
     Card(
-        modifier = Modifier
-            .width(width)
-            .height(height)
+        modifier = modifier
+            .aspectRatio(1.6f)
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor,
@@ -322,7 +344,7 @@ private fun PlotCell(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(4.dp),
+                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -365,10 +387,10 @@ private fun PlotCell(
 }
 
 @Composable
-private fun EmptyCell(cellSize: androidx.compose.ui.unit.Dp) {
+private fun EmptyCell(modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
-            .size(cellSize)
+        modifier = modifier
+            .aspectRatio(1.6f)
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
             .border(
@@ -383,13 +405,13 @@ private fun EmptyCell(cellSize: androidx.compose.ui.unit.Dp) {
 private fun AddEditPlotDialog(
     editingPlot: Plot?,
     onDismiss: () -> Unit,
-    onSave: (String, Int, Int, Int, Int) -> Unit,
+    onSave: (String, PlotSide, Int) -> Unit,
 ) {
-    var name by remember { mutableStateOf(editingPlot?.name ?: "") }
-    var gridX by remember { mutableStateOf(editingPlot?.gridX?.toString() ?: "0") }
-    var gridY by remember { mutableStateOf(editingPlot?.gridY?.toString() ?: "0") }
-    var width by remember { mutableStateOf(editingPlot?.width?.toString() ?: "1") }
-    var height by remember { mutableStateOf(editingPlot?.height?.toString() ?: "1") }
+    var selectedSide by remember { mutableStateOf(editingPlot?.side ?: PlotSide.LEFT) }
+    var number by remember { mutableStateOf(editingPlot?.number?.toString() ?: "1") }
+
+    // Auto-generate name from side + number
+    val autoName = "${selectedSide.displayName()}${number.toIntOrNull() ?: 1}"
 
     val isEdit = editingPlot != null
     val title = if (isEdit) stringResource(R.string.home_edit_plot) else stringResource(R.string.home_add_plot)
@@ -401,68 +423,71 @@ private fun AddEditPlotDialog(
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.home_plot_name)) },
-                    placeholder = { Text(stringResource(R.string.home_plot_name_hint)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                // Side selection (left/right)
+                Text(
+                    text = stringResource(R.string.home_plot_side),
+                    style = MaterialTheme.typography.labelMedium,
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    OutlinedTextField(
-                        value = gridX,
-                        onValueChange = { gridX = it.filter { c -> c.isDigit() } },
-                        label = { Text(stringResource(R.string.home_plot_x)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                    )
-                    OutlinedTextField(
-                        value = gridY,
-                        onValueChange = { gridY = it.filter { c -> c.isDigit() } },
-                        label = { Text(stringResource(R.string.home_plot_y)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                    )
+                    PlotSide.entries.forEach { side ->
+                        val isSelected = selectedSide == side
+                        TextButton(
+                            onClick = { selectedSide = side },
+                            modifier = Modifier
+                                .weight(1f)
+                                .then(
+                                    if (isSelected) {
+                                        Modifier.background(
+                                            MaterialTheme.colorScheme.primaryContainer,
+                                            RoundedCornerShape(8.dp),
+                                        )
+                                    } else {
+                                        Modifier.background(
+                                            MaterialTheme.colorScheme.surfaceVariant,
+                                            RoundedCornerShape(8.dp),
+                                        )
+                                    }
+                                ),
+                        ) {
+                            Text(
+                                text = side.displayName(),
+                                color = if (isSelected) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            )
+                        }
+                    }
                 }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    OutlinedTextField(
-                        value = width,
-                        onValueChange = { width = it.filter { c -> c.isDigit() } },
-                        label = { Text(stringResource(R.string.home_plot_width)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                    )
-                    OutlinedTextField(
-                        value = height,
-                        onValueChange = { height = it.filter { c -> c.isDigit() } },
-                        label = { Text(stringResource(R.string.home_plot_height)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+
+                // Number input
+                OutlinedTextField(
+                    value = number,
+                    onValueChange = { number = it.filter { c -> c.isDigit() } },
+                    label = { Text(stringResource(R.string.home_plot_number)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                // Auto-generated name preview
+                Text(
+                    text = stringResource(R.string.home_plot_name_preview, autoName),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    val x = gridX.toIntOrNull() ?: 0
-                    val y = gridY.toIntOrNull() ?: 0
-                    val w = maxOf(1, width.toIntOrNull() ?: 1)
-                    val h = maxOf(1, height.toIntOrNull() ?: 1)
-                    if (name.isNotBlank()) {
-                        onSave(name, x, y, w, h)
-                    }
+                    val n = number.toIntOrNull() ?: 1
+                    onSave(autoName, selectedSide, n)
                 },
-                enabled = name.isNotBlank(),
+                enabled = (number.toIntOrNull() ?: 0) >= 1,
             ) {
                 Text(stringResource(R.string.save))
             }

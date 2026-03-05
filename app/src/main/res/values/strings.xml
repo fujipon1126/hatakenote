@@ -22,9 +22,10 @@
     <string name="home_add_plot">区画を追加</string>
     <string name="home_edit_plot">区画を編集</string>
     <string name="home_plot_name">区画名</string>
-    <string name="home_plot_name_hint">例: A-1</string>
-    <string name="home_plot_x">X座標</string>
-    <string name="home_plot_y">Y座標</string>
+    <string name="home_plot_name_hint">例: 左1</string>
+    <string name="home_plot_side">左右</string>
+    <string name="home_plot_number">番号</string>
+    <string name="home_plot_name_preview">区画名: %s</string>
     <string name="home_plot_width">幅</string>
     <string name="home_plot_height">高さ</string>
     <string name="home_no_plots">区画がありません</string>

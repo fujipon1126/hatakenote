@@ -20,8 +20,9 @@
     <string name="plot_not_found">区画が見つかりません</string>
     <string name="plot_planted_date">植付: %s</string>
     <string name="plot_name">区画名</string>
-    <string name="plot_x">X座標</string>
-    <string name="plot_y">Y座標</string>
+    <string name="plot_side">左右</string>
+    <string name="plot_number">番号</string>
+    <string name="plot_name_preview">区画名: %s</string>
     <string name="plot_width">幅</string>
     <string name="plot_height">高さ</string>
 

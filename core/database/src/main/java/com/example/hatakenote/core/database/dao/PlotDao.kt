@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PlotDao {
-    @Query("SELECT * FROM plots ORDER BY gridY, gridX")
+    @Query("SELECT * FROM plots ORDER BY side, number")
     fun getAll(): Flow<List<PlotEntity>>
 
     @Query("SELECT * FROM plots WHERE id = :id")
@@ -26,9 +26,6 @@ interface PlotDao {
     @Delete
     suspend fun delete(plot: PlotEntity)
 
-    @Query("SELECT COALESCE(MAX(gridX + width - 1), 0) FROM plots")
-    suspend fun getMaxGridX(): Int
-
-    @Query("SELECT COALESCE(MAX(gridY + height - 1), 0) FROM plots")
-    suspend fun getMaxGridY(): Int
+    @Query("SELECT COALESCE(MAX(number), 0) FROM plots")
+    suspend fun getMaxNumber(): Int
 }

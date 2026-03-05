@@ -4,6 +4,7 @@ import com.example.hatakenote.core.domain.model.Crop
 import com.example.hatakenote.core.domain.model.Planting
 import com.example.hatakenote.core.domain.model.PlantingWithCrop
 import com.example.hatakenote.core.domain.model.Plot
+import com.example.hatakenote.core.domain.model.PlotSide
 import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
@@ -145,8 +146,8 @@ class FirestorePlotRepository @Inject constructor(
         val plotData = hashMapOf(
             "id" to newId,
             "name" to plot.name,
-            "gridX" to plot.gridX,
-            "gridY" to plot.gridY,
+            "side" to plot.side.name,
+            "number" to plot.number,
             "width" to plot.width,
             "height" to plot.height,
         )
@@ -170,8 +171,8 @@ class FirestorePlotRepository @Inject constructor(
         docRef.update(
             mapOf(
                 "name" to plot.name,
-                "gridX" to plot.gridX,
-                "gridY" to plot.gridY,
+                "side" to plot.side.name,
+                "number" to plot.number,
                 "width" to plot.width,
                 "height" to plot.height,
             )
@@ -190,25 +191,21 @@ class FirestorePlotRepository @Inject constructor(
         snapshot.documents.firstOrNull()?.reference?.delete()?.await()
     }
 
-    override suspend fun getMaxGridPosition(): Pair<Int, Int> {
+    override suspend fun getMaxNumber(): Int {
         val farmId = farmRepository.getCurrentFarmId().first()
-            ?: return Pair(0, 0)
+            ?: return 0
 
         val snapshot = plotsCollection(farmId).get().await()
-        var maxX = 0
-        var maxY = 0
+        var maxNumber = 0
 
         snapshot.documents.forEach { doc ->
             val plot = doc.toPlot()
-            if (plot != null) {
-                val endX = plot.gridX + plot.width - 1
-                val endY = plot.gridY + plot.height - 1
-                if (endX > maxX) maxX = endX
-                if (endY > maxY) maxY = endY
+            if (plot != null && plot.number > maxNumber) {
+                maxNumber = plot.number
             }
         }
 
-        return Pair(maxX, maxY)
+        return maxNumber
     }
 
     private fun com.google.firebase.firestore.DocumentSnapshot.toPlot(): Plot? {
@@ -217,8 +214,8 @@ class FirestorePlotRepository @Inject constructor(
             Plot(
                 id = (data["id"] as? Long) ?: return null,
                 name = data["name"] as? String ?: "",
-                gridX = (data["gridX"] as? Long)?.toInt() ?: 0,
-                gridY = (data["gridY"] as? Long)?.toInt() ?: 0,
+                side = (data["side"] as? String)?.let { PlotSide.valueOf(it) } ?: PlotSide.LEFT,
+                number = (data["number"] as? Long)?.toInt() ?: 1,
                 width = (data["width"] as? Long)?.toInt() ?: 1,
                 height = (data["height"] as? Long)?.toInt() ?: 1,
             )
