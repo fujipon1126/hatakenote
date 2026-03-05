@@ -197,6 +197,7 @@ internal fun PlotDetailScreen(
         if (uiState.showEditDialog && uiState.plot != null) {
             EditPlotDialog(
                 plot = uiState.plot,
+                errorMessage = uiState.editDialogError,
                 onDismiss = onDismissEditDialog,
                 onSave = onUpdatePlot,
             )
@@ -462,6 +463,7 @@ private fun getWorkTypeName(workType: WorkType): String = when (workType) {
 @Composable
 private fun EditPlotDialog(
     plot: Plot,
+    errorMessage: String? = null,
     onDismiss: () -> Unit,
     onSave: (String, PlotSide, Int) -> Unit,
 ) {
@@ -531,6 +533,14 @@ private fun EditPlotDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
         },
         confirmButton = {

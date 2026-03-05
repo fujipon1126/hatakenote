@@ -112,7 +112,7 @@ internal fun HomeScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState.errorMessage) {
+    LaunchedEffect(uiState.errorId) {
         uiState.errorMessage?.let {
             snackbarHostState.showSnackbar(it)
             onClearError()
@@ -205,6 +205,7 @@ internal fun HomeScreen(
         if (uiState.showAddPlotDialog) {
             AddEditPlotDialog(
                 editingPlot = uiState.editingPlot,
+                errorMessage = uiState.plotDialogError,
                 onDismiss = onDismissPlotDialog,
                 onSave = onSavePlot,
             )
@@ -404,6 +405,7 @@ private fun EmptyCell(modifier: Modifier = Modifier) {
 @Composable
 private fun AddEditPlotDialog(
     editingPlot: Plot?,
+    errorMessage: String? = null,
     onDismiss: () -> Unit,
     onSave: (String, PlotSide, Int) -> Unit,
 ) {
@@ -479,6 +481,14 @@ private fun AddEditPlotDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
         },
         confirmButton = {

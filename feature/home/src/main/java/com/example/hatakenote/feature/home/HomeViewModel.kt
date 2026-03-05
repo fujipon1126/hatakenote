@@ -34,7 +34,9 @@ data class HomeUiState(
     val isLoading: Boolean = true,
     val showAddPlotDialog: Boolean = false,
     val editingPlot: Plot? = null,
+    val plotDialogError: String? = null,
     val errorMessage: String? = null,
+    val errorId: Long = 0,
 )
 
 @HiltViewModel
@@ -127,29 +129,37 @@ class HomeViewModel @Inject constructor(
             try {
                 reminderRepository.markCompleted(reminderId)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = "リマインダーの完了に失敗しました"
-                )
+                showError("リマインダーの完了に失敗しました")
             }
         }
     }
 
     fun showAddPlotDialog() {
-        _uiState.value = _uiState.value.copy(showAddPlotDialog = true, editingPlot = null)
+        _uiState.value = _uiState.value.copy(showAddPlotDialog = true, editingPlot = null, plotDialogError = null)
     }
 
     fun showEditPlotDialog(plot: Plot) {
-        _uiState.value = _uiState.value.copy(showAddPlotDialog = true, editingPlot = plot)
+        _uiState.value = _uiState.value.copy(showAddPlotDialog = true, editingPlot = plot, plotDialogError = null)
     }
 
     fun dismissPlotDialog() {
-        _uiState.value = _uiState.value.copy(showAddPlotDialog = false, editingPlot = null)
+        _uiState.value = _uiState.value.copy(showAddPlotDialog = false, editingPlot = null, plotDialogError = null)
     }
 
     fun savePlot(name: String, side: PlotSide, number: Int) {
         viewModelScope.launch {
             try {
                 val editingPlot = _uiState.value.editingPlot
+                val duplicate = _uiState.value.plots.any {
+                    it.plot.side == side && it.plot.number == number && it.plot.id != (editingPlot?.id ?: 0)
+                }
+                if (duplicate) {
+                    _uiState.value = _uiState.value.copy(
+                        plotDialogError = "${side.displayName()}${number} は登録済みです"
+                    )
+                    return@launch
+                }
+
                 if (editingPlot != null) {
                     plotRepository.update(
                         editingPlot.copy(
@@ -169,9 +179,7 @@ class HomeViewModel @Inject constructor(
                 }
                 dismissPlotDialog()
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = "区画の保存に失敗しました"
-                )
+                showError("区画の保存に失敗しました")
             }
         }
     }
@@ -181,14 +189,19 @@ class HomeViewModel @Inject constructor(
             try {
                 plotRepository.delete(plot)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = "区画の削除に失敗しました"
-                )
+                showError("区画の削除に失敗しました")
             }
         }
     }
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+
+    private fun showError(message: String) {
+        _uiState.value = _uiState.value.copy(
+            errorMessage = message,
+            errorId = _uiState.value.errorId + 1,
+        )
     }
 }

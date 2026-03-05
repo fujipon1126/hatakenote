@@ -29,6 +29,7 @@ data class PlotDetailUiState(
     val isLoading: Boolean = true,
     val showEditDialog: Boolean = false,
     val showDeleteConfirmDialog: Boolean = false,
+    val editDialogError: String? = null,
 )
 
 @HiltViewModel
@@ -74,11 +75,11 @@ class PlotDetailViewModel @Inject constructor(
     }
 
     fun showEditDialog() {
-        _uiState.value = _uiState.value.copy(showEditDialog = true)
+        _uiState.value = _uiState.value.copy(showEditDialog = true, editDialogError = null)
     }
 
     fun dismissEditDialog() {
-        _uiState.value = _uiState.value.copy(showEditDialog = false)
+        _uiState.value = _uiState.value.copy(showEditDialog = false, editDialogError = null)
     }
 
     fun showDeleteConfirmDialog() {
@@ -92,6 +93,19 @@ class PlotDetailViewModel @Inject constructor(
     fun updatePlot(name: String, side: PlotSide, number: Int) {
         viewModelScope.launch {
             val currentPlot = _uiState.value.plot ?: return@launch
+
+            // 重複チェック（自分自身は除く）
+            val allPlots = plotRepository.getAll().first()
+            val duplicate = allPlots.any {
+                it.side == side && it.number == number && it.id != currentPlot.id
+            }
+            if (duplicate) {
+                _uiState.value = _uiState.value.copy(
+                    editDialogError = "${side.displayName()}${number} は登録済みです"
+                )
+                return@launch
+            }
+
             val updatedPlot = currentPlot.copy(
                 name = name,
                 side = side,
@@ -104,6 +118,7 @@ class PlotDetailViewModel @Inject constructor(
             )
         }
     }
+
 
     fun deletePlot(onDeleted: () -> Unit) {
         viewModelScope.launch {
