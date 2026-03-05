@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,6 +36,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -590,15 +593,24 @@ private fun CropSelectorDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.planting_select_crop)) },
         text = {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                items(crops) { crop ->
-                    CropItem(
-                        crop = crop,
-                        isSelected = crop.id == selectedCrop?.id,
-                        onClick = { onCropSelected(crop) },
-                    )
+            if (crops.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.planting_no_crops),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    crops.forEach { crop ->
+                        CropItem(
+                            crop = crop,
+                            isSelected = crop.id == selectedCrop?.id,
+                            onClick = { onCropSelected(crop) },
+                        )
+                    }
                 }
             }
         },

@@ -9,6 +9,7 @@ import com.example.hatakenote.core.domain.model.Reminder
 import com.example.hatakenote.core.domain.model.Weather
 import com.example.hatakenote.core.domain.repository.AppSettingsRepository
 import com.example.hatakenote.core.domain.repository.FarmRepository
+import com.example.hatakenote.core.domain.repository.MasterDataInitializer
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.ReminderRepository
 import com.example.hatakenote.core.domain.repository.WeatherRepository
@@ -46,15 +47,27 @@ class HomeViewModel @Inject constructor(
     private val weatherRepository: WeatherRepository,
     private val appSettingsRepository: AppSettingsRepository,
     private val farmRepository: FarmRepository,
+    private val masterDataInitializer: MasterDataInitializer,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
+        initializeMasterData()
         loadData()
         loadWeatherWithSettings()
         observeCurrentFarm()
+    }
+
+    private fun initializeMasterData() {
+        viewModelScope.launch {
+            try {
+                masterDataInitializer.initializeIfNeeded()
+            } catch (_: Exception) {
+                // マスタデータ初期化失敗は致命的ではないので無視
+            }
+        }
     }
 
     private fun observeCurrentFarm() {
