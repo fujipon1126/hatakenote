@@ -19,6 +19,7 @@ fun NavGraphBuilder.plotDetailScreen(
     onAddPlantingClick: (Long) -> Unit,
     onPlantingClick: (Long) -> Unit,
     onWorkLogClick: (Long?, Long?) -> Unit,
+    onWorkLogEditClick: (workLogId: Long, plotId: Long) -> Unit,
 ) {
     composable<PlotDetailRoute> {
         PlotDetailRoute(
@@ -26,6 +27,7 @@ fun NavGraphBuilder.plotDetailScreen(
             onAddPlantingClick = onAddPlantingClick,
             onPlantingClick = onPlantingClick,
             onWorkLogClick = onWorkLogClick,
+            onWorkLogEditClick = onWorkLogEditClick,
         )
     }
 }

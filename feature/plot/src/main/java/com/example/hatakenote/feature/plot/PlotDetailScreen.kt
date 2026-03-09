@@ -69,6 +69,7 @@ internal fun PlotDetailRoute(
     onAddPlantingClick: (Long) -> Unit,
     onPlantingClick: (Long) -> Unit,
     onWorkLogClick: (Long?, Long?) -> Unit,
+    onWorkLogEditClick: (workLogId: Long, plotId: Long) -> Unit,
     viewModel: PlotDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -85,6 +86,7 @@ internal fun PlotDetailRoute(
         onAddPlantingClick = onAddPlantingClick,
         onPlantingClick = onPlantingClick,
         onWorkLogClick = onWorkLogClick,
+        onWorkLogEditClick = onWorkLogEditClick,
         onEditClick = viewModel::showEditDialog,
         onDeleteClick = viewModel::showDeleteConfirmDialog,
         onDismissEditDialog = viewModel::dismissEditDialog,
@@ -106,6 +108,7 @@ internal fun PlotDetailScreen(
     onAddPlantingClick: (Long) -> Unit,
     onPlantingClick: (Long) -> Unit,
     onWorkLogClick: (Long?, Long?) -> Unit,
+    onWorkLogEditClick: (workLogId: Long, plotId: Long) -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onDismissEditDialog: () -> Unit,
@@ -202,6 +205,7 @@ internal fun PlotDetailScreen(
                     workLogs = uiState.workLogs,
                     plotId = plotId,
                     onAddWorkLogClick = { onWorkLogClick(null, plotId) },
+                    onWorkLogClick = { workLogId -> onWorkLogEditClick(workLogId, plotId) },
                 )
             }
         }
@@ -378,6 +382,7 @@ private fun WorkLogSection(
     workLogs: List<WorkLog>,
     plotId: Long,
     onAddWorkLogClick: () -> Unit,
+    onWorkLogClick: (Long) -> Unit,
 ) {
     Column {
         Row(
@@ -430,7 +435,10 @@ private fun WorkLogSection(
             }
         } else {
             workLogs.take(5).forEach { workLog ->
-                WorkLogItem(workLog = workLog)
+                WorkLogItem(
+                    workLog = workLog,
+                    onClick = { onWorkLogClick(workLog.id) },
+                )
                 Spacer(modifier = Modifier.height(4.dp))
             }
             if (workLogs.size > 5) {
@@ -446,9 +454,14 @@ private fun WorkLogSection(
 }
 
 @Composable
-private fun WorkLogItem(workLog: WorkLog) {
+private fun WorkLogItem(
+    workLog: WorkLog,
+    onClick: () -> Unit,
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),

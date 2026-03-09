@@ -111,7 +111,11 @@ class WorkLogViewModel @Inject constructor(
                         } else null
                         val selectedPlot = if (workLog.plotId != null) {
                             plots.find { it.id == workLog.plotId }
+                        } else if (initialPlotId != null) {
+                            plots.find { it.id == initialPlotId }
                         } else null
+
+                        val hasPlotContext = selectedPlot != null || initialPlotId != null
 
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
@@ -124,6 +128,8 @@ class WorkLogViewModel @Inject constructor(
                             selectedPlanting = selectedPlanting,
                             availablePlots = plots,
                             selectedPlot = selectedPlot,
+                            isPlotLocked = hasPlotContext,
+                            isPlantingLocked = selectedPlanting != null,
                         )
                     } else {
                         _uiState.value = _uiState.value.copy(

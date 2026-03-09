@@ -66,6 +66,9 @@ fun HatakeNoteNavHost(
             onWorkLogClick = { plantingId, plotId ->
                 navController.navigateToWorkLog(plantingId = plantingId, plotId = plotId)
             },
+            onWorkLogEditClick = { workLogId, plotId ->
+                navController.navigateToWorkLog(workLogId = workLogId, plotId = plotId)
+            },
         )
 
         plantingScreen(
