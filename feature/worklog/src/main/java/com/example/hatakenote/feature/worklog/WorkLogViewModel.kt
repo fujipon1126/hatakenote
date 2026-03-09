@@ -45,6 +45,7 @@ data class WorkLogUiState(
     // For plot-bound work types
     val availablePlots: List<Plot> = emptyList(),
     val selectedPlot: Plot? = null,
+    val isPlotLocked: Boolean = false,
     // Dialog states
     val showDatePicker: Boolean = false,
     val showPlantingSelector: Boolean = false,
@@ -154,6 +155,7 @@ class WorkLogViewModel @Inject constructor(
                         selectedPlanting = selectedPlanting,
                         availablePlots = plots,
                         selectedPlot = selectedPlot,
+                        isPlotLocked = initialPlotId != null,
                     )
                 }
             } catch (e: Exception) {

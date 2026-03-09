@@ -222,6 +222,7 @@ internal fun WorkLogScreen(
                         OutlinedButton(
                             onClick = onPlotSelectorClick,
                             modifier = Modifier.fillMaxWidth(),
+                            enabled = !uiState.isPlotLocked,
                         ) {
                             Text(
                                 text = uiState.selectedPlot?.name ?: stringResource(R.string.worklog_select_plot),
