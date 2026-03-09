@@ -46,6 +46,7 @@ data class WorkLogUiState(
     val availablePlots: List<Plot> = emptyList(),
     val selectedPlot: Plot? = null,
     val isPlotLocked: Boolean = false,
+    val isPlantingLocked: Boolean = false,
     // Dialog states
     val showDatePicker: Boolean = false,
     val showPlantingSelector: Boolean = false,
@@ -146,16 +147,32 @@ class WorkLogViewModel @Inject constructor(
                         plots.find { it.id == initialPlotId }
                     } else null
 
+                    // Filter plantings to only those in the specified plot
+                    val filteredPlantings = if (initialPlotId != null) {
+                        plantingsWithCropAndPlots.filter { pwc ->
+                            pwc.plots.any { it.id == initialPlotId }
+                        }
+                    } else {
+                        plantingsWithCropAndPlots
+                    }
+
+                    // Auto-select planting if only one is available for this plot
+                    val autoSelectedPlanting = selectedPlanting
+                        ?: if (initialPlotId != null && filteredPlantings.size == 1) {
+                            filteredPlantings.first()
+                        } else null
+
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isEditMode = false,
                         selectedWorkType = initialWorkType,
                         workDate = initialWorkDate ?: Clock.System.todayIn(TimeZone.currentSystemDefault()),
-                        availablePlantings = plantingsWithCropAndPlots,
-                        selectedPlanting = selectedPlanting,
+                        availablePlantings = filteredPlantings,
+                        selectedPlanting = autoSelectedPlanting,
                         availablePlots = plots,
                         selectedPlot = selectedPlot,
                         isPlotLocked = initialPlotId != null,
+                        isPlantingLocked = initialPlotId != null && filteredPlantings.size <= 1,
                     )
                 }
             } catch (e: Exception) {

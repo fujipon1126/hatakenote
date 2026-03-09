@@ -203,6 +203,7 @@ internal fun WorkLogScreen(
                         OutlinedButton(
                             onClick = onPlantingSelectorClick,
                             modifier = Modifier.fillMaxWidth(),
+                            enabled = !uiState.isPlantingLocked,
                         ) {
                             Text(
                                 text = uiState.selectedPlanting?.let { planting ->
