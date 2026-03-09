@@ -5,6 +5,7 @@ import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.example.hatakenote.core.domain.repository.FertilizerScheduleRepository
 import com.example.hatakenote.core.domain.repository.MasterDataInitializer
+import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.ReminderRepository
@@ -15,6 +16,7 @@ import com.example.hatakenote.core.firestore.FirestoreCropRepository
 import com.example.hatakenote.core.firestore.FirestoreFarmRepository
 import com.example.hatakenote.core.firestore.FirestoreFertilizerScheduleRepository
 import com.example.hatakenote.core.firestore.FirestoreMasterDataInitializer
+import com.example.hatakenote.core.firestore.FirestorePlantingPhotoRepository
 import com.example.hatakenote.core.firestore.FirestorePlantingRepository
 import com.example.hatakenote.core.firestore.FirestorePlotRepository
 import com.example.hatakenote.core.firestore.FirestoreReminderRepository
@@ -74,6 +76,10 @@ abstract class FirestoreBindsModule {
     @Binds
     @Singleton
     abstract fun bindRotationIncompatibilityRepository(impl: FirestoreRotationIncompatibilityRepository): RotationIncompatibilityRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPlantingPhotoRepository(impl: FirestorePlantingPhotoRepository): PlantingPhotoRepository
 
     @Binds
     @Singleton

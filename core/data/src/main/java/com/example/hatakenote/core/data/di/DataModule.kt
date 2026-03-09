@@ -14,13 +14,7 @@ abstract class DataModule {
 
     // Note: CropRepository, PlotRepository, PlantingRepository, WorkLogRepository,
     // ReminderRepository, CropFamilyRepository, FertilizerScheduleRepository,
-    // RotationIncompatibilityRepository are now bound in FirestoreModule
-
-    @Binds
-    @Singleton
-    abstract fun bindPlantingPhotoRepository(
-        impl: PlantingPhotoRepositoryImpl
-    ): PlantingPhotoRepository
+    // RotationIncompatibilityRepository, PlantingPhotoRepository are now bound in FirestoreModule
 
     @Binds
     @Singleton
