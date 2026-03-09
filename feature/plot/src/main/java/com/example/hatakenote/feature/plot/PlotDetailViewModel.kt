@@ -59,8 +59,18 @@ class PlotDetailViewModel @Inject constructor(
                 val allPlantings = plantingRepository.getHistoryByPlotId(plotId).first()
                 val pastPlantings = allPlantings.filter { !it.isActive }
 
-                // Get work logs for this plot
-                val workLogs = workLogRepository.getByPlotId(plotId).first()
+                // Get work logs for this plot (plot-bound: TILL, BASE_FERTILIZE)
+                val plotWorkLogs = workLogRepository.getByPlotId(plotId).first()
+
+                // Get work logs for plantings in this plot (planting-bound: FERTILIZE, OTHER)
+                val plantingIds = plotWithPlantings.currentPlantings.map { it.planting.id }
+                val plantingWorkLogs = plantingIds.flatMap { plantingId ->
+                    workLogRepository.getByPlantingId(plantingId).first()
+                }
+
+                val workLogs = (plotWorkLogs + plantingWorkLogs)
+                    .distinctBy { it.id }
+                    .sortedByDescending { it.workDate }
 
                 _uiState.value = _uiState.value.copy(
                     plot = plotWithPlantings.plot,

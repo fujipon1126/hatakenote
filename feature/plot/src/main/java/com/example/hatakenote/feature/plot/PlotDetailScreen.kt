@@ -401,10 +401,7 @@ private fun WorkLogSection(
         }
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Filter only plot-level work logs (TILL, BASE_FERTILIZE)
-        val plotWorkLogs = workLogs.filter { it.workType.bindToPlot() }
-
-        if (plotWorkLogs.isEmpty()) {
+        if (workLogs.isEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -432,13 +429,13 @@ private fun WorkLogSection(
                 }
             }
         } else {
-            plotWorkLogs.take(5).forEach { workLog ->
+            workLogs.take(5).forEach { workLog ->
                 WorkLogItem(workLog = workLog)
                 Spacer(modifier = Modifier.height(4.dp))
             }
-            if (plotWorkLogs.size > 5) {
+            if (workLogs.size > 5) {
                 Text(
-                    text = stringResource(R.string.plot_detail_more_items, plotWorkLogs.size - 5),
+                    text = stringResource(R.string.plot_detail_more_items, workLogs.size - 5),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 8.dp),
