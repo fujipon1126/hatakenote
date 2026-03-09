@@ -17,3 +17,14 @@ fun parseColorSafe(colorHex: String, default: Color = Color.Gray): Color {
         default
     }
 }
+
+/**
+ * 背景色に対して読みやすい前景色（白 or 黒）を返す。
+ * W3Cの相対輝度の計算に基づき、明るい背景なら黒、暗い背景なら白を返す。
+ */
+fun contrastTextColor(backgroundColor: Color): Color {
+    val luminance = 0.299 * backgroundColor.red +
+            0.587 * backgroundColor.green +
+            0.114 * backgroundColor.blue
+    return if (luminance > 0.5) Color.Black else Color.White
+}

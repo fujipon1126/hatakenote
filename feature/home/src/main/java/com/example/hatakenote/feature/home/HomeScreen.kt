@@ -70,6 +70,7 @@ import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.model.Reminder
 import com.example.hatakenote.core.domain.model.Weather
 import com.example.hatakenote.core.domain.model.WeatherCode
+import com.example.hatakenote.core.ui.util.contrastTextColor
 import com.example.hatakenote.core.ui.util.parseColorSafe
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -333,6 +334,12 @@ private fun PlotCell(
         MaterialTheme.colorScheme.surfaceVariant
     }
 
+    val textColor = if (currentPlantings.isNotEmpty()) {
+        contrastTextColor(backgroundColor)
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
     Card(
         modifier = modifier
             .aspectRatio(1.6f)
@@ -352,7 +359,7 @@ private fun PlotCell(
             Text(
                 text = plot.name,
                 style = MaterialTheme.typography.labelMedium,
-                color = if (currentPlantings.isNotEmpty()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = textColor,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -363,7 +370,7 @@ private fun PlotCell(
                     Text(
                         text = plantingWithCrop.crop.name,
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
-                        color = Color.White.copy(alpha = 0.9f),
+                        color = textColor.copy(alpha = 0.9f),
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -373,7 +380,7 @@ private fun PlotCell(
                     Text(
                         text = "+${currentPlantings.size - 2}",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 9.sp),
-                        color = Color.White.copy(alpha = 0.7f),
+                        color = textColor.copy(alpha = 0.7f),
                     )
                 }
             } else {
