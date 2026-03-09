@@ -53,6 +53,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.feature.plot.R
 import com.example.hatakenote.core.domain.model.Plot
@@ -71,6 +72,11 @@ internal fun PlotDetailRoute(
     viewModel: PlotDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.refreshData()
+        onPauseOrDispose {}
+    }
 
     PlotDetailScreen(
         uiState = uiState,

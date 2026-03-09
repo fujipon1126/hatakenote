@@ -75,6 +75,10 @@ class PlotDetailViewModel @Inject constructor(
         }
     }
 
+    fun refreshData() {
+        loadPlotDetails()
+    }
+
     fun showEditDialog() {
         _uiState.value = _uiState.value.copy(showEditDialog = true, editDialogError = null)
     }
