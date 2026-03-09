@@ -30,6 +30,7 @@ data class PlotDetailUiState(
     val showEditDialog: Boolean = false,
     val showDeleteConfirmDialog: Boolean = false,
     val editDialogError: String? = null,
+    val plantingToDelete: PlantingWithCrop? = null,
 )
 
 @HiltViewModel
@@ -119,6 +120,25 @@ class PlotDetailViewModel @Inject constructor(
         }
     }
 
+
+    fun showDeletePlantingDialog(plantingWithCrop: PlantingWithCrop) {
+        _uiState.value = _uiState.value.copy(plantingToDelete = plantingWithCrop)
+    }
+
+    fun dismissDeletePlantingDialog() {
+        _uiState.value = _uiState.value.copy(plantingToDelete = null)
+    }
+
+    fun deletePlanting() {
+        val plantingWithCrop = _uiState.value.plantingToDelete ?: return
+        viewModelScope.launch {
+            plantingRepository.delete(plantingWithCrop.planting)
+            _uiState.value = _uiState.value.copy(
+                currentPlantings = _uiState.value.currentPlantings - plantingWithCrop,
+                plantingToDelete = null,
+            )
+        }
+    }
 
     fun deletePlot(onDeleted: () -> Unit) {
         viewModelScope.launch {

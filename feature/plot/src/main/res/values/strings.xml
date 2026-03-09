@@ -11,6 +11,9 @@
     <string name="plot_detail_delete_title">区画を削除</string>
     <string name="plot_detail_delete_message">「%s」を削除しますか？この操作は取り消せません。</string>
     <string name="plot_detail_add_planting">作付けを追加</string>
+    <string name="plot_detail_delete_planting">作付けを削除</string>
+    <string name="plot_detail_delete_planting_title">作付けを削除</string>
+    <string name="plot_detail_delete_planting_message">「%s」の作付けを削除しますか？この操作は取り消せません。</string>
     <string name="plot_detail_plot_info">区画情報</string>
     <string name="plot_detail_position">位置</string>
     <string name="plot_detail_size">サイズ</string>

@@ -85,6 +85,9 @@ internal fun PlotDetailRoute(
         onDismissDeleteDialog = viewModel::dismissDeleteConfirmDialog,
         onUpdatePlot = viewModel::updatePlot,
         onConfirmDelete = { viewModel.deletePlot(onBackClick) },
+        onDeletePlantingClick = viewModel::showDeletePlantingDialog,
+        onDismissDeletePlantingDialog = viewModel::dismissDeletePlantingDialog,
+        onConfirmDeletePlanting = viewModel::deletePlanting,
     )
 }
 
@@ -103,6 +106,9 @@ internal fun PlotDetailScreen(
     onDismissDeleteDialog: () -> Unit,
     onUpdatePlot: (String, PlotSide, Int) -> Unit,
     onConfirmDelete: () -> Unit,
+    onDeletePlantingClick: (PlantingWithCrop) -> Unit = {},
+    onDismissDeletePlantingDialog: () -> Unit = {},
+    onConfirmDeletePlanting: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -180,6 +186,7 @@ internal fun PlotDetailScreen(
                 CurrentPlantingsSection(
                     plantings = uiState.currentPlantings,
                     onPlantingClick = onPlantingClick,
+                    onDeletePlantingClick = onDeletePlantingClick,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -200,6 +207,15 @@ internal fun PlotDetailScreen(
                 errorMessage = uiState.editDialogError,
                 onDismiss = onDismissEditDialog,
                 onSave = onUpdatePlot,
+            )
+        }
+
+        // Delete Planting Confirmation Dialog
+        if (uiState.plantingToDelete != null) {
+            DeletePlantingConfirmDialog(
+                cropName = uiState.plantingToDelete.crop.name,
+                onDismiss = onDismissDeletePlantingDialog,
+                onConfirm = onConfirmDeletePlanting,
             )
         }
 
@@ -254,6 +270,7 @@ private fun InfoItem(label: String, value: String) {
 private fun CurrentPlantingsSection(
     plantings: List<PlantingWithCrop>,
     onPlantingClick: (Long) -> Unit,
+    onDeletePlantingClick: (PlantingWithCrop) -> Unit,
 ) {
     Column {
         Text(
@@ -294,6 +311,7 @@ private fun CurrentPlantingsSection(
                 PlantingCard(
                     plantingWithCrop = plantingWithCrop,
                     onClick = { onPlantingClick(plantingWithCrop.planting.id) },
+                    onDeleteClick = { onDeletePlantingClick(plantingWithCrop) },
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -305,6 +323,7 @@ private fun CurrentPlantingsSection(
 private fun PlantingCard(
     plantingWithCrop: PlantingWithCrop,
     onClick: () -> Unit,
+    onDeleteClick: () -> Unit,
 ) {
     val cropColor = parseColorSafe(plantingWithCrop.crop.colorHex, MaterialTheme.colorScheme.primary)
 
@@ -316,7 +335,7 @@ private fun PlantingCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
@@ -335,6 +354,13 @@ private fun PlantingCard(
                     text = stringResource(R.string.plot_planted_date, plantingWithCrop.planting.plantedDate.toString()),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.plot_detail_delete_planting),
+                    tint = MaterialTheme.colorScheme.error,
                 )
             }
         }
@@ -552,6 +578,31 @@ private fun EditPlotDialog(
                 enabled = (number.toIntOrNull() ?: 0) >= 1,
             ) {
                 Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun DeletePlantingConfirmDialog(
+    cropName: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.plot_detail_delete_planting_title)) },
+        text = {
+            Text(stringResource(R.string.plot_detail_delete_planting_message, cropName))
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
             }
         },
         dismissButton = {
