@@ -31,6 +31,7 @@ class FirestoreCropRepository @Inject constructor(
                 flowOf(emptyList())
             } else {
                 cropsCollection(farmId)
+                    .orderBy("name")
                     .snapshots()
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
@@ -49,6 +50,7 @@ class FirestoreCropRepository @Inject constructor(
             } else {
                 cropsCollection(farmId)
                     .whereEqualTo("isActive", true)
+                    .orderBy("name")
                     .snapshots()
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
@@ -78,6 +80,7 @@ class FirestoreCropRepository @Inject constructor(
             } else {
                 cropsCollection(farmId)
                     .whereEqualTo("familyId", familyId)
+                    .orderBy("name")
                     .snapshots()
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
