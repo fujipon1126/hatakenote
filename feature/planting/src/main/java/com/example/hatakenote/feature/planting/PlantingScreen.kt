@@ -261,11 +261,13 @@ internal fun PlantingScreen(
 
                 // Plot Selection
                 item {
+                    val isHarvested = uiState.existingPlanting?.isActive == false
                     SectionCard(title = stringResource(R.string.planting_plot)) {
                         PlotSelector(
                             plots = uiState.plots,
                             selectedPlotIds = uiState.selectedPlotIds,
                             onPlotToggle = onPlotToggle,
+                            enabled = !isHarvested,
                         )
                     }
                 }
@@ -420,6 +422,7 @@ private fun PlotSelector(
     plots: List<Plot>,
     selectedPlotIds: Set<Long>,
     onPlotToggle: (Long) -> Unit,
+    enabled: Boolean = true,
 ) {
     if (plots.isEmpty()) {
         Text(
@@ -438,6 +441,7 @@ private fun PlotSelector(
                     selected = isSelected,
                     onClick = { onPlotToggle(plot.id) },
                     label = { Text(plot.name) },
+                    enabled = enabled,
                     leadingIcon = if (isSelected) {
                         { Icon(Icons.Default.Check, contentDescription = stringResource(R.string.planting_selected), modifier = Modifier.size(18.dp)) }
                     } else null,

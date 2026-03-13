@@ -21,7 +21,10 @@
     <string name="plot_detail_delete">削除</string>
     <string name="plot_detail_edit_plot">編集</string>
     <string name="plot_not_found">区画が見つかりません</string>
+    <string name="plot_detail_harvest_history">収穫履歴</string>
+    <string name="plot_detail_no_harvest_history">収穫履歴はありません</string>
     <string name="plot_planted_date">植付: %s</string>
+    <string name="plot_harvested_date">収穫: %s</string>
     <string name="plot_name">区画名</string>
     <string name="plot_side">左右</string>
     <string name="plot_number">番号</string>

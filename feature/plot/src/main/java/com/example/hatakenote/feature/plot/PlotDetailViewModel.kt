@@ -9,6 +9,7 @@ import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlotSide
 import com.example.hatakenote.core.domain.model.PlantingWithCrop
 import com.example.hatakenote.core.domain.model.WorkLog
+import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.WorkLogRepository
@@ -38,6 +39,7 @@ class PlotDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val plotRepository: PlotRepository,
     private val plantingRepository: PlantingRepository,
+    private val cropRepository: CropRepository,
     private val workLogRepository: WorkLogRepository,
 ) : ViewModel() {
 
@@ -75,7 +77,12 @@ class PlotDetailViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     plot = plotWithPlantings.plot,
                     currentPlantings = plotWithPlantings.currentPlantings,
-                    pastPlantings = emptyList(), // Will be populated with crops later
+                    pastPlantings = pastPlantings.map { planting ->
+                        PlantingWithCrop(
+                            planting = planting,
+                            crop = cropRepository.getById(planting.cropId) ?: return@launch,
+                        )
+                    },
                     workLogs = workLogs,
                     isLoading = false,
                 )

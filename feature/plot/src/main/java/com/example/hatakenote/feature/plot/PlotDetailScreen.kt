@@ -200,6 +200,14 @@ internal fun PlotDetailScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Past Plantings (Harvest History) Section
+                PastPlantingsSection(
+                    plantings = uiState.pastPlantings,
+                    onPlantingClick = onPlantingClick,
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 // Work Log Section (for plot-level work)
                 WorkLogSection(
                     workLogs = uiState.workLogs,
@@ -324,6 +332,108 @@ private fun CurrentPlantingsSection(
                     onDeleteClick = { onDeletePlantingClick(plantingWithCrop) },
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun PastPlantingsSection(
+    plantings: List<PlantingWithCrop>,
+    onPlantingClick: (Long) -> Unit,
+) {
+    Column {
+        Text(
+            text = stringResource(R.string.plot_detail_harvest_history),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (plantings.isEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                ),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Grass,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.plot_detail_no_harvest_history),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        } else {
+            plantings.forEach { plantingWithCrop ->
+                PastPlantingCard(
+                    plantingWithCrop = plantingWithCrop,
+                    onClick = { onPlantingClick(plantingWithCrop.planting.id) },
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun PastPlantingCard(
+    plantingWithCrop: PlantingWithCrop,
+    onClick: () -> Unit,
+) {
+    val cropColor = parseColorSafe(plantingWithCrop.crop.colorHex, MaterialTheme.colorScheme.primary)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(cropColor.copy(alpha = 0.6f)),
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = plantingWithCrop.crop.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.plot_planted_date, plantingWithCrop.planting.plantedDate.toString()),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                plantingWithCrop.planting.harvestedDate?.let { harvestedDate ->
+                    Text(
+                        text = stringResource(R.string.plot_harvested_date, harvestedDate.toString()),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
