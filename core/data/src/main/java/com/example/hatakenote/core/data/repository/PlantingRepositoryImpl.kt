@@ -32,6 +32,11 @@ class PlantingRepositoryImpl @Inject constructor(
             entities.map { it.toDomain() }
         }
 
+    override fun getByCropId(cropId: Long): Flow<List<Planting>> =
+        plantingDao.getByCropId(cropId).map { entities ->
+            entities.map { it.toDomain() }
+        }
+
     override fun getHistoryByPlotId(plotId: Long): Flow<List<Planting>> =
         plantingDao.getHistoryByPlotId(plotId).map { entities ->
             entities.map { it.toDomain() }

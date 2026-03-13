@@ -91,6 +91,24 @@ class FirestorePlantingRepository @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getByCropId(cropId: Long): Flow<List<Planting>> {
+        return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
+            if (farmId == null) {
+                flowOf(emptyList())
+            } else {
+                plantingsCollection(farmId)
+                    .whereEqualTo("cropId", cropId)
+                    .snapshots()
+                    .map { snapshot ->
+                        snapshot.documents.mapNotNull { doc ->
+                            doc.toPlanting()
+                        }
+                    }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getHistoryByPlotId(plotId: Long): Flow<List<Planting>> {
         return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
             if (farmId == null) {

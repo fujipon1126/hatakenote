@@ -39,6 +39,9 @@ interface PlantingDao {
     """)
     fun getHistoryByPlotId(plotId: Long): Flow<List<PlantingEntity>>
 
+    @Query("SELECT * FROM plantings WHERE cropId = :cropId ORDER BY plantedDate DESC")
+    fun getByCropId(cropId: Long): Flow<List<PlantingEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(planting: PlantingEntity): Long
 

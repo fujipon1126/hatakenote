@@ -9,6 +9,7 @@ interface PlantingRepository {
     fun getActive(): Flow<List<Planting>>
     suspend fun getById(id: Long): Planting?
     fun getByPlotId(plotId: Long): Flow<List<Planting>>
+    fun getByCropId(cropId: Long): Flow<List<Planting>>
     fun getHistoryByPlotId(plotId: Long): Flow<List<Planting>>
     suspend fun insert(planting: Planting, plotIds: List<Long>): Long
     suspend fun update(planting: Planting)

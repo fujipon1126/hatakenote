@@ -20,6 +20,23 @@
     <string name="crop_delete">削除</string>
     <string name="crop_saved">保存しました</string>
 
+    <!-- Crop Detail -->
+    <string name="crop_detail_title">作物詳細</string>
+    <string name="crop_detail_not_found">作物が見つかりません</string>
+    <string name="crop_detail_info">基本情報</string>
+    <string name="crop_detail_family">科: %s</string>
+    <string name="crop_detail_rotation_years">連作年数: %d年</string>
+    <string name="crop_detail_current_plantings">現在の作付け</string>
+    <string name="crop_detail_no_current_plantings">現在の作付けはありません</string>
+    <string name="crop_detail_harvest_history">収穫履歴</string>
+    <string name="crop_detail_no_harvest_history">収穫履歴はありません</string>
+    <string name="crop_detail_photos">写真</string>
+    <string name="crop_detail_no_photos">写真はありません</string>
+    <string name="crop_detail_planted_date">植付: %s</string>
+    <string name="crop_detail_harvested_date">収穫: %s</string>
+    <string name="crop_detail_plots">区画: %s</string>
+    <string name="crop_detail_photo_date">%1$d/%2$d/%3$d</string>
+
     <!-- Common -->
     <string name="save">保存</string>
     <string name="cancel">キャンセル</string>

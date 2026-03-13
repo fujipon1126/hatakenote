@@ -74,6 +74,7 @@ internal fun CropListRoute(
     CropListScreen(
         uiState = uiState,
         onBackClick = onBackClick,
+        onCropClick = onCropClick,
         onAddClick = viewModel::showAddDialog,
         onEditClick = viewModel::showEditDialog,
         onDeleteClick = viewModel::showDeleteConfirmDialog,
@@ -92,6 +93,7 @@ internal fun CropListRoute(
 internal fun CropListScreen(
     uiState: CropListUiState,
     onBackClick: () -> Unit,
+    onCropClick: (Long) -> Unit,
     onAddClick: () -> Unit,
     onEditClick: (Crop) -> Unit,
     onDeleteClick: (Crop) -> Unit,
@@ -189,6 +191,7 @@ internal fun CropListScreen(
                     CropListItem(
                         crop = crop,
                         familyName = family?.name ?: unknownFamily,
+                        onClick = { onCropClick(crop.id) },
                         onEditClick = { onEditClick(crop) },
                         onDeleteClick = { onDeleteClick(crop) },
                         onToggleActive = { onToggleActive(crop) },
@@ -236,12 +239,15 @@ internal fun CropListScreen(
 private fun CropListItem(
     crop: Crop,
     familyName: String,
+    onClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onToggleActive: () -> Unit,
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = if (crop.isActive) {
                 MaterialTheme.colorScheme.surface

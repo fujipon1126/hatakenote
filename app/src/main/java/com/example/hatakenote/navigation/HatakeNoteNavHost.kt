@@ -11,7 +11,9 @@ import com.example.hatakenote.feature.auth.navigation.loginScreen
 import com.example.hatakenote.feature.calendar.navigation.calendarScreen
 import com.example.hatakenote.feature.farm.navigation.FarmSelectRoute
 import com.example.hatakenote.feature.farm.navigation.farmSelectScreen
+import com.example.hatakenote.feature.crop.navigation.cropDetailScreen
 import com.example.hatakenote.feature.crop.navigation.cropListScreen
+import com.example.hatakenote.feature.crop.navigation.navigateToCropDetail
 import com.example.hatakenote.feature.crop.navigation.navigateToCropList
 import com.example.hatakenote.feature.home.navigation.HomeRoute
 import com.example.hatakenote.feature.home.navigation.homeScreen
@@ -83,7 +85,12 @@ fun HatakeNoteNavHost(
 
         cropListScreen(
             onBackClick = { navController.popBackStack() },
-            onCropClick = { },
+            onCropClick = { cropId -> navController.navigateToCropDetail(cropId) },
+        )
+
+        cropDetailScreen(
+            onBackClick = { navController.popBackStack() },
+            onPlantingClick = { plantingId -> navController.navigateToPlanting(plantingId = plantingId) },
         )
 
         calendarScreen(
