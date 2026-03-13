@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,7 +25,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Grass
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -61,6 +64,8 @@ import com.example.hatakenote.core.domain.model.PlotSide
 import com.example.hatakenote.core.domain.model.PlantingWithCrop
 import com.example.hatakenote.core.domain.model.WorkLog
 import com.example.hatakenote.core.domain.model.WorkType
+import com.example.hatakenote.core.domain.usecase.CropAdvice
+import com.example.hatakenote.core.domain.usecase.RotationAdvice
 import com.example.hatakenote.core.ui.util.parseColorSafe
 
 @Composable
@@ -186,24 +191,11 @@ internal fun PlotDetailScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
             ) {
-                // Plot Info Card
-                PlotInfoCard(plot = uiState.plot)
-
-                Spacer(modifier = Modifier.height(16.dp))
-
                 // Current Plantings Section
                 CurrentPlantingsSection(
                     plantings = uiState.currentPlantings,
                     onPlantingClick = onPlantingClick,
                     onDeletePlantingClick = onDeletePlantingClick,
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Past Plantings (Harvest History) Section
-                PastPlantingsSection(
-                    plantings = uiState.pastPlantings,
-                    onPlantingClick = onPlantingClick,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -214,6 +206,20 @@ internal fun PlotDetailScreen(
                     plotId = plotId,
                     onAddWorkLogClick = { onWorkLogClick(null, plotId) },
                     onWorkLogClick = { workLogId -> onWorkLogEditClick(workLogId, plotId) },
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Rotation Advice Section
+                if (uiState.rotationAdvice != null) {
+                    RotationAdviceSection(rotationAdvice = uiState.rotationAdvice)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Past Plantings (Harvest History) Section
+                PastPlantingsSection(
+                    plantings = uiState.pastPlantings,
+                    onPlantingClick = onPlantingClick,
                 )
             }
         }
@@ -483,6 +489,168 @@ private fun PlantingCard(
                     tint = MaterialTheme.colorScheme.error,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun RotationAdviceSection(rotationAdvice: RotationAdvice) {
+    Column {
+        Text(
+            text = stringResource(R.string.plot_detail_rotation_advice),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (rotationAdvice.avoidCrops.isEmpty() && rotationAdvice.safeCrops.isEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                ),
+            ) {
+                Text(
+                    text = stringResource(R.string.plot_detail_rotation_no_history),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(16.dp),
+                )
+            }
+        } else {
+            // Avoid crops
+            if (rotationAdvice.avoidCrops.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.plot_detail_rotation_avoid),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 200.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    rotationAdvice.avoidCrops.forEach { advice ->
+                        AvoidCropCard(advice)
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Safe crops
+            if (rotationAdvice.safeCrops.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.plot_detail_rotation_safe),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 200.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    rotationAdvice.safeCrops.forEach { advice ->
+                        SafeCropCard(advice)
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AvoidCropCard(advice: CropAdvice) {
+    val cropColor = parseColorSafe(advice.crop.colorHex, MaterialTheme.colorScheme.error)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(cropColor),
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "${advice.crop.name}（${advice.familyName}）",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                )
+                advice.reason?.let { reason ->
+                    Text(
+                        text = reason,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SafeCropCard(advice: CropAdvice) {
+    val cropColor = parseColorSafe(advice.crop.colorHex, MaterialTheme.colorScheme.primary)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(cropColor),
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "${advice.crop.name}（${advice.familyName}）",
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
     }
 }

@@ -23,6 +23,10 @@
     <string name="plot_not_found">区画が見つかりません</string>
     <string name="plot_detail_harvest_history">収穫履歴</string>
     <string name="plot_detail_no_harvest_history">収穫履歴はありません</string>
+    <string name="plot_detail_rotation_advice">連作アドバイス</string>
+    <string name="plot_detail_rotation_safe">おすすめ（植えてOK）</string>
+    <string name="plot_detail_rotation_avoid">注意（避けた方がよい）</string>
+    <string name="plot_detail_rotation_no_history">作付け履歴がないため、すべての作物が植えられます</string>
     <string name="plot_planted_date">植付: %s</string>
     <string name="plot_harvested_date">収穫: %s</string>
     <string name="plot_name">区画名</string>

@@ -13,6 +13,8 @@ import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.WorkLogRepository
+import com.example.hatakenote.core.domain.usecase.GetRotationAdviceUseCase
+import com.example.hatakenote.core.domain.usecase.RotationAdvice
 import com.example.hatakenote.feature.plot.navigation.PlotDetailRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +34,7 @@ data class PlotDetailUiState(
     val showDeleteConfirmDialog: Boolean = false,
     val editDialogError: String? = null,
     val plantingToDelete: PlantingWithCrop? = null,
+    val rotationAdvice: RotationAdvice? = null,
 )
 
 @HiltViewModel
@@ -41,6 +44,7 @@ class PlotDetailViewModel @Inject constructor(
     private val plantingRepository: PlantingRepository,
     private val cropRepository: CropRepository,
     private val workLogRepository: WorkLogRepository,
+    private val getRotationAdviceUseCase: GetRotationAdviceUseCase,
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<PlotDetailRoute>()
@@ -74,6 +78,8 @@ class PlotDetailViewModel @Inject constructor(
                     .distinctBy { it.id }
                     .sortedByDescending { it.workDate }
 
+                val rotationAdvice = getRotationAdviceUseCase(plotId)
+
                 _uiState.value = _uiState.value.copy(
                     plot = plotWithPlantings.plot,
                     currentPlantings = plotWithPlantings.currentPlantings,
@@ -84,6 +90,7 @@ class PlotDetailViewModel @Inject constructor(
                         )
                     },
                     workLogs = workLogs,
+                    rotationAdvice = rotationAdvice,
                     isLoading = false,
                 )
             } else {
