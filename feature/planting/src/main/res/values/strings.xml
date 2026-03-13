@@ -23,6 +23,7 @@
     <string name="planting_add_photo">写真を追加</string>
     <string name="planting_photo_add">追加</string>
     <string name="planting_photo_remove">削除</string>
+    <string name="planting_photo_taken_date">%1$d/%2$d/%3$d</string>
     <string name="planting_status_growing">栽培中</string>
     <string name="planting_status_harvested">収穫済み</string>
     <string name="planting_filter_all">すべて</string>

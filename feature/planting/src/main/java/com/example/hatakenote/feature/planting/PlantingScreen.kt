@@ -536,14 +536,17 @@ private fun PhotoSection(
         items(existingPhotos) { photo ->
             PhotoItem(
                 uri = Uri.parse(photo.filePath),
+                takenDate = photo.takenDate,
                 onRemove = { onRemoveExistingPhoto(photo) },
             )
         }
 
         // Pending Photos
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         items(pendingPhotoUris) { uri ->
             PhotoItem(
                 uri = uri,
+                takenDate = today,
                 onRemove = { onRemovePendingPhoto(uri) },
             )
         }
@@ -553,36 +556,46 @@ private fun PhotoSection(
 @Composable
 private fun PhotoItem(
     uri: Uri,
+    takenDate: LocalDate,
     onRemove: () -> Unit,
 ) {
-    Box(
-        modifier = Modifier.size(100.dp),
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AsyncImage(
-            model = uri,
-            contentDescription = stringResource(R.string.planting_photo),
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop,
-        )
-        IconButton(
-            onClick = onRemove,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(24.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.error,
-                    shape = CircleShape,
-                ),
+        Box(
+            modifier = Modifier.size(100.dp),
         ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = stringResource(R.string.planting_photo_remove),
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.onError,
+            AsyncImage(
+                model = uri,
+                contentDescription = stringResource(R.string.planting_photo),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
             )
+            IconButton(
+                onClick = onRemove,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(24.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.error,
+                        shape = CircleShape,
+                    ),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(R.string.planting_photo_remove),
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onError,
+                )
+            }
         }
+        Text(
+            text = stringResource(R.string.planting_photo_taken_date, takenDate.year, takenDate.monthNumber, takenDate.dayOfMonth),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
