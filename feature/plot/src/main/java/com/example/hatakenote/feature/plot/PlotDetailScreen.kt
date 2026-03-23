@@ -1,5 +1,8 @@
 package com.example.hatakenote.feature.plot
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +28,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Grass
 import androidx.compose.material.icons.filled.Warning
@@ -210,17 +215,18 @@ internal fun PlotDetailScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Rotation Advice Section
-                if (uiState.rotationAdvice != null) {
-                    RotationAdviceSection(rotationAdvice = uiState.rotationAdvice)
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
                 // Past Plantings (Harvest History) Section
                 PastPlantingsSection(
                     plantings = uiState.pastPlantings,
                     onPlantingClick = onPlantingClick,
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Rotation Advice Section
+                if (uiState.rotationAdvice != null) {
+                    RotationAdviceSection(rotationAdvice = uiState.rotationAdvice)
+                }
             }
         }
 
@@ -517,11 +523,17 @@ private fun RotationAdviceSection(rotationAdvice: RotationAdvice) {
                 )
             }
         } else {
+            var avoidExpanded by remember { mutableStateOf(false) }
+            var safeExpanded by remember { mutableStateOf(false) }
+
             // Avoid crops
             if (rotationAdvice.avoidCrops.isNotEmpty()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(bottom = 4.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { avoidExpanded = !avoidExpanded }
+                        .padding(vertical = 4.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Warning,
@@ -534,17 +546,30 @@ private fun RotationAdviceSection(rotationAdvice: RotationAdvice) {
                         text = stringResource(R.string.plot_detail_rotation_avoid),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Icon(
+                        imageVector = if (avoidExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 200.dp)
-                        .verticalScroll(rememberScrollState()),
+                AnimatedVisibility(
+                    visible = avoidExpanded,
+                    enter = expandVertically(),
+                    exit = shrinkVertically(),
                 ) {
-                    rotationAdvice.avoidCrops.forEach { advice ->
-                        AvoidCropCard(advice)
-                        Spacer(modifier = Modifier.height(4.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        rotationAdvice.avoidCrops.forEach { advice ->
+                            AvoidCropCard(advice)
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
@@ -554,7 +579,10 @@ private fun RotationAdviceSection(rotationAdvice: RotationAdvice) {
             if (rotationAdvice.safeCrops.isNotEmpty()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(bottom = 4.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { safeExpanded = !safeExpanded }
+                        .padding(vertical = 4.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
@@ -567,17 +595,30 @@ private fun RotationAdviceSection(rotationAdvice: RotationAdvice) {
                         text = stringResource(R.string.plot_detail_rotation_safe),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Icon(
+                        imageVector = if (safeExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 200.dp)
-                        .verticalScroll(rememberScrollState()),
+                AnimatedVisibility(
+                    visible = safeExpanded,
+                    enter = expandVertically(),
+                    exit = shrinkVertically(),
                 ) {
-                    rotationAdvice.safeCrops.forEach { advice ->
-                        SafeCropCard(advice)
-                        Spacer(modifier = Modifier.height(4.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        rotationAdvice.safeCrops.forEach { advice ->
+                            SafeCropCard(advice)
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
                     }
                 }
             }
