@@ -65,18 +65,27 @@ class PlotDetailViewModel @Inject constructor(
                 val allPlantings = plantingRepository.getHistoryByPlotId(plotId).first()
                 val pastPlantings = allPlantings.filter { !it.isActive }
 
-                // Get work logs for this plot (plot-bound: TILL, BASE_FERTILIZE)
-                val plotWorkLogs = workLogRepository.getByPlotId(plotId).first()
-
-                // Get work logs for plantings in this plot (planting-bound: FERTILIZE, OTHER)
+                // 兄弟区画（同じ作付けを共有する区画）のIDを収集
                 val plantingIds = plotWithPlantings.currentPlantings.map { it.planting.id }
+                val siblingPlotIds = mutableSetOf(plotId)
+                for (plantingId in plantingIds) {
+                    val plotIds = plantingRepository.getPlotIdsForPlanting(plantingId)
+                    siblingPlotIds.addAll(plotIds)
+                }
+
+                // 全兄弟区画の plot-bound 作業記録を取得（TILL, BASE_FERTILIZE）
+                val plotWorkLogs = siblingPlotIds.flatMap { sibPlotId ->
+                    workLogRepository.getByPlotId(sibPlotId).first()
+                }
+
+                // planting-bound 作業記録を取得（FERTILIZE, OTHER）
                 val plantingWorkLogs = plantingIds.flatMap { plantingId ->
                     workLogRepository.getByPlantingId(plantingId).first()
                 }
 
                 val workLogs = (plotWorkLogs + plantingWorkLogs)
                     .distinctBy { it.id }
-                    .sortedByDescending { it.workDate }
+                    .sortedWith(compareByDescending<WorkLog> { it.workDate }.thenByDescending { it.id })
 
                 val rotationAdvice = getRotationAdviceUseCase(plotId)
 

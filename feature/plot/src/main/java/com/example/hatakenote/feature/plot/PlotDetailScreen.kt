@@ -753,20 +753,19 @@ private fun WorkLogSection(
                 }
             }
         } else {
-            workLogs.take(5).forEach { workLog ->
-                WorkLogItem(
-                    workLog = workLog,
-                    onClick = { onWorkLogClick(workLog.id) },
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-            if (workLogs.size > 5) {
-                Text(
-                    text = stringResource(R.string.plot_detail_more_items, workLogs.size - 5),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 8.dp),
-                )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 250.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                workLogs.forEach { workLog ->
+                    WorkLogItem(
+                        workLog = workLog,
+                        onClick = { onWorkLogClick(workLog.id) },
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
             }
         }
     }
