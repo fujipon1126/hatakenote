@@ -38,6 +38,8 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,9 +49,11 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -59,11 +63,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -118,8 +125,13 @@ internal fun PlantingRoute(
         onDateSelected = viewModel::setPlantedDate,
         onNoteChanged = viewModel::setNote,
         onPhotoAdded = viewModel::addPhotoUri,
-        onPhotoRemoved = viewModel::removePhotoUri,
+        onPendingPhotoRemoved = viewModel::removePendingPhoto,
         onExistingPhotoRemoved = viewModel::removeExistingPhoto,
+        onPhotoClick = viewModel::showPhotoDetail,
+        onPendingPhotoClick = viewModel::showPendingPhotoDetail,
+        onDismissPhotoDetail = viewModel::dismissPhotoDetail,
+        onUpdateExistingPhoto = viewModel::updateExistingPhoto,
+        onUpdatePendingPhoto = viewModel::updatePendingPhoto,
         onShowCropSelector = viewModel::showCropSelector,
         onDismissCropSelector = viewModel::dismissCropSelector,
         onShowPlotSelector = viewModel::showPlotSelector,
@@ -165,8 +177,13 @@ internal fun PlantingScreen(
     onDateSelected: (LocalDate) -> Unit,
     onNoteChanged: (String) -> Unit,
     onPhotoAdded: (Uri) -> Unit,
-    onPhotoRemoved: (Uri) -> Unit,
+    onPendingPhotoRemoved: (PendingPhotoMetadata) -> Unit,
     onExistingPhotoRemoved: (com.example.hatakenote.core.domain.model.PlantingPhoto) -> Unit,
+    onPhotoClick: (com.example.hatakenote.core.domain.model.PlantingPhoto) -> Unit,
+    onPendingPhotoClick: (PendingPhotoMetadata) -> Unit,
+    onDismissPhotoDetail: () -> Unit,
+    onUpdateExistingPhoto: (com.example.hatakenote.core.domain.model.PlantingPhoto) -> Unit,
+    onUpdatePendingPhoto: (PendingPhotoMetadata) -> Unit,
     onShowCropSelector: () -> Unit,
     onDismissCropSelector: () -> Unit,
     onShowPlotSelector: () -> Unit,
@@ -311,14 +328,14 @@ internal fun PlantingScreen(
                     SectionCard(title = stringResource(R.string.planting_photo)) {
                         PhotoSection(
                             existingPhotos = uiState.photos,
-                            pendingPhotoUris = uiState.pendingPhotoUris,
+                            pendingPhotos = uiState.pendingPhotos,
                             onAddPhoto = {
                                 photoPickerLauncher.launch(
                                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                 )
                             },
-                            onRemovePendingPhoto = onPhotoRemoved,
-                            onRemoveExistingPhoto = onExistingPhotoRemoved,
+                            onPhotoClick = onPhotoClick,
+                            onPendingPhotoClick = onPendingPhotoClick,
                         )
                     }
                 }
@@ -349,6 +366,36 @@ internal fun PlantingScreen(
             HarvestDialog(
                 onConfirm = onHarvest,
                 onDismiss = onDismissHarvestDialog,
+            )
+        }
+
+        // Photo Detail BottomSheet - Existing Photo
+        uiState.selectedPhotoForDetail?.let { photo ->
+            PhotoDetailBottomSheet(
+                imageUri = Uri.parse(photo.filePath),
+                initialDate = photo.takenDate,
+                initialComment = photo.comment ?: "",
+                onSave = { date, comment ->
+                    onUpdateExistingPhoto(photo.copy(takenDate = date, comment = comment.ifBlank { null }))
+                    onDismissPhotoDetail()
+                },
+                onDelete = { onExistingPhotoRemoved(photo) },
+                onDismiss = onDismissPhotoDetail,
+            )
+        }
+
+        // Photo Detail BottomSheet - Pending Photo
+        uiState.selectedPendingPhotoForDetail?.let { pending ->
+            PhotoDetailBottomSheet(
+                imageUri = pending.uri,
+                initialDate = pending.takenDate,
+                initialComment = pending.comment ?: "",
+                onSave = { date, comment ->
+                    onUpdatePendingPhoto(pending.copy(takenDate = date, comment = comment.ifBlank { null }))
+                    onDismissPhotoDetail()
+                },
+                onDelete = { onPendingPhotoRemoved(pending) },
+                onDismiss = onDismissPhotoDetail,
             )
         }
     }
@@ -490,10 +537,10 @@ private fun DateSelector(
 @Composable
 private fun PhotoSection(
     existingPhotos: List<com.example.hatakenote.core.domain.model.PlantingPhoto>,
-    pendingPhotoUris: List<Uri>,
+    pendingPhotos: List<PendingPhotoMetadata>,
     onAddPhoto: () -> Unit,
-    onRemovePendingPhoto: (Uri) -> Unit,
-    onRemoveExistingPhoto: (com.example.hatakenote.core.domain.model.PlantingPhoto) -> Unit,
+    onPhotoClick: (com.example.hatakenote.core.domain.model.PlantingPhoto) -> Unit,
+    onPendingPhotoClick: (PendingPhotoMetadata) -> Unit,
 ) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -537,17 +584,18 @@ private fun PhotoSection(
             PhotoItem(
                 uri = Uri.parse(photo.filePath),
                 takenDate = photo.takenDate,
-                onRemove = { onRemoveExistingPhoto(photo) },
+                hasComment = !photo.comment.isNullOrBlank(),
+                onClick = { onPhotoClick(photo) },
             )
         }
 
         // Pending Photos
-        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        items(pendingPhotoUris) { uri ->
+        items(pendingPhotos) { pending ->
             PhotoItem(
-                uri = uri,
-                takenDate = today,
-                onRemove = { onRemovePendingPhoto(uri) },
+                uri = pending.uri,
+                takenDate = pending.takenDate,
+                hasComment = !pending.comment.isNullOrBlank(),
+                onClick = { onPendingPhotoClick(pending) },
             )
         }
     }
@@ -557,13 +605,16 @@ private fun PhotoSection(
 private fun PhotoItem(
     uri: Uri,
     takenDate: LocalDate,
-    onRemove: () -> Unit,
+    hasComment: Boolean,
+    onClick: () -> Unit,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier.size(100.dp),
+            modifier = Modifier
+                .size(100.dp)
+                .clickable(onClick = onClick),
         ) {
             AsyncImage(
                 model = uri,
@@ -573,21 +624,19 @@ private fun PhotoItem(
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop,
             )
-            IconButton(
-                onClick = onRemove,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(24.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.error,
-                        shape = CircleShape,
-                    ),
-            ) {
+            if (hasComment) {
                 Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(R.string.planting_photo_remove),
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.onError,
+                    imageVector = Icons.Default.ChatBubbleOutline,
+                    contentDescription = stringResource(R.string.planting_photo_comment),
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(4.dp)
+                        .size(16.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            shape = CircleShape,
+                        ),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -596,6 +645,178 @@ private fun PhotoItem(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PhotoDetailBottomSheet(
+    imageUri: Uri,
+    initialDate: LocalDate,
+    initialComment: String,
+    onSave: (date: LocalDate, comment: String) -> Unit,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var editedDate by remember { mutableStateOf(initialDate) }
+    var editedComment by remember { mutableStateOf(initialComment) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val canSave = editedDate != initialDate || editedComment != initialComment
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            // Header
+            Text(
+                text = stringResource(R.string.planting_photo_detail),
+                style = MaterialTheme.typography.titleMedium,
+            )
+
+            // Photo preview
+            AsyncImage(
+                model = imageUri,
+                contentDescription = stringResource(R.string.planting_photo),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 300.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Fit,
+            )
+
+            // Date selector
+            Text(
+                text = stringResource(R.string.planting_photo_date),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showDatePicker = true },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth,
+                        contentDescription = stringResource(R.string.planting_select_date),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.planting_date_format, editedDate.year, editedDate.monthNumber, editedDate.dayOfMonth),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+            }
+
+            // Comment
+            Text(
+                text = stringResource(R.string.planting_photo_comment),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            OutlinedTextField(
+                value = editedComment,
+                onValueChange = { editedComment = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text(stringResource(R.string.planting_photo_comment_hint)) },
+                minLines = 2,
+                maxLines = 4,
+            )
+
+            // Save button
+            Button(
+                onClick = { onSave(editedDate, editedComment) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = canSave,
+            ) {
+                Text(stringResource(R.string.save))
+            }
+
+            HorizontalDivider()
+
+            // Delete button
+            TextButton(
+                onClick = onDelete,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.planting_photo_delete),
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+    }
+
+    if (showDatePicker) {
+        PhotoDatePickerDialog(
+            initialDate = editedDate,
+            onDateSelected = { date ->
+                editedDate = date
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PhotoDatePickerDialog(
+    initialDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDate.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
+    )
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val instant = Instant.fromEpochMilliseconds(millis)
+                        val localDate = instant.toLocalDateTime(TimeZone.UTC).date
+                        onDateSelected(localDate)
+                    }
+                }
+            ) {
+                Text(stringResource(R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    ) {
+        DatePicker(state = datePickerState)
     }
 }
 

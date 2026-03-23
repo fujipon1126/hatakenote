@@ -7,6 +7,7 @@ interface PlantingPhotoRepository {
     fun getByPlantingId(plantingId: Long): Flow<List<PlantingPhoto>>
     suspend fun getById(id: Long): PlantingPhoto?
     suspend fun insert(photo: PlantingPhoto): Long
+    suspend fun update(photo: PlantingPhoto)
     suspend fun delete(photo: PlantingPhoto)
     suspend fun deleteByPlantingId(plantingId: Long)
 }

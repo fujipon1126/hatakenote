@@ -24,6 +24,9 @@ class PlantingPhotoRepositoryImpl @Inject constructor(
     override suspend fun insert(photo: PlantingPhoto): Long =
         plantingPhotoDao.insert(photo.toEntity())
 
+    override suspend fun update(photo: PlantingPhoto) =
+        plantingPhotoDao.update(photo.toEntity())
+
     override suspend fun delete(photo: PlantingPhoto) =
         plantingPhotoDao.delete(photo.toEntity())
 

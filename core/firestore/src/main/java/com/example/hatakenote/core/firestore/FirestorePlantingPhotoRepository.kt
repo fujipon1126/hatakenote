@@ -64,10 +64,30 @@ class FirestorePlantingPhotoRepository @Inject constructor(
             "plantingId" to photo.plantingId,
             "filePath" to photo.filePath,
             "takenDate" to photo.takenDate.toString(),
+            "comment" to photo.comment,
         )
 
         photosCollection(farmId).add(photoData).await()
         return newId
+    }
+
+    override suspend fun update(photo: PlantingPhoto) {
+        val farmId = farmRepository.getCurrentFarmId().first()
+            ?: throw IllegalStateException("No farm selected")
+
+        val snapshot = photosCollection(farmId)
+            .whereEqualTo("id", photo.id)
+            .get()
+            .await()
+
+        val docRef = snapshot.documents.firstOrNull()?.reference
+            ?: throw IllegalStateException("Photo not found")
+
+        val updateData = mapOf(
+            "takenDate" to photo.takenDate.toString(),
+            "comment" to photo.comment,
+        )
+        docRef.update(updateData).await()
     }
 
     override suspend fun delete(photo: PlantingPhoto) {
@@ -105,6 +125,7 @@ class FirestorePlantingPhotoRepository @Inject constructor(
                 filePath = (data["filePath"] as? String) ?: return null,
                 takenDate = (data["takenDate"] as? String)?.let { LocalDate.parse(it) }
                     ?: return null,
+                comment = data["comment"] as? String,
             )
         } catch (e: Exception) {
             null

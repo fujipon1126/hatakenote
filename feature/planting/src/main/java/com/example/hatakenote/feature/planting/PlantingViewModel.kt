@@ -29,6 +29,15 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import javax.inject.Inject
 
+/**
+ * 追加予定の写真のメタデータ
+ */
+data class PendingPhotoMetadata(
+    val uri: Uri,
+    val takenDate: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+    val comment: String? = null,
+)
+
 data class PlantingUiState(
     val isLoading: Boolean = true,
     val isEditMode: Boolean = false,
@@ -39,13 +48,15 @@ data class PlantingUiState(
     val plantedDate: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
     val note: String = "",
     val photos: List<PlantingPhoto> = emptyList(),
-    val pendingPhotoUris: List<Uri> = emptyList(),
+    val pendingPhotos: List<PendingPhotoMetadata> = emptyList(),
     val existingPlanting: Planting? = null,
     val rotationWarnings: List<RotationWarning> = emptyList(),
     val showCropSelector: Boolean = false,
     val showPlotSelector: Boolean = false,
     val showDatePicker: Boolean = false,
     val showHarvestDialog: Boolean = false,
+    val selectedPhotoForDetail: PlantingPhoto? = null,
+    val selectedPendingPhotoForDetail: PendingPhotoMetadata? = null,
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
     val harvestSuccess: Boolean = false,
@@ -177,13 +188,14 @@ class PlantingViewModel @Inject constructor(
 
     fun addPhotoUri(uri: Uri) {
         _uiState.value = _uiState.value.copy(
-            pendingPhotoUris = _uiState.value.pendingPhotoUris + uri,
+            pendingPhotos = _uiState.value.pendingPhotos + PendingPhotoMetadata(uri = uri),
         )
     }
 
-    fun removePhotoUri(uri: Uri) {
+    fun removePendingPhoto(pending: PendingPhotoMetadata) {
         _uiState.value = _uiState.value.copy(
-            pendingPhotoUris = _uiState.value.pendingPhotoUris - uri,
+            pendingPhotos = _uiState.value.pendingPhotos - pending,
+            selectedPendingPhotoForDetail = null,
         )
     }
 
@@ -192,8 +204,47 @@ class PlantingViewModel @Inject constructor(
             plantingPhotoRepository.delete(photo)
             _uiState.value = _uiState.value.copy(
                 photos = _uiState.value.photos - photo,
+                selectedPhotoForDetail = null,
             )
         }
+    }
+
+    fun showPhotoDetail(photo: PlantingPhoto) {
+        _uiState.value = _uiState.value.copy(
+            selectedPhotoForDetail = photo,
+            selectedPendingPhotoForDetail = null,
+        )
+    }
+
+    fun showPendingPhotoDetail(pending: PendingPhotoMetadata) {
+        _uiState.value = _uiState.value.copy(
+            selectedPendingPhotoForDetail = pending,
+            selectedPhotoForDetail = null,
+        )
+    }
+
+    fun dismissPhotoDetail() {
+        _uiState.value = _uiState.value.copy(
+            selectedPhotoForDetail = null,
+            selectedPendingPhotoForDetail = null,
+        )
+    }
+
+    fun updateExistingPhoto(photo: PlantingPhoto) {
+        viewModelScope.launch {
+            plantingPhotoRepository.update(photo)
+            _uiState.value = _uiState.value.copy(
+                photos = _uiState.value.photos.map { if (it.id == photo.id) photo else it },
+            )
+        }
+    }
+
+    fun updatePendingPhoto(pending: PendingPhotoMetadata) {
+        _uiState.value = _uiState.value.copy(
+            pendingPhotos = _uiState.value.pendingPhotos.map {
+                if (it.uri == pending.uri) pending else it
+            },
+        )
     }
 
     fun showCropSelector() {
@@ -273,13 +324,14 @@ class PlantingViewModel @Inject constructor(
                 }
 
                 // Save pending photos
-                for (uri in state.pendingPhotoUris) {
-                    val filePath = onPhotoSaved(uri, plantingIdResult)
+                for (pending in state.pendingPhotos) {
+                    val filePath = onPhotoSaved(pending.uri, plantingIdResult)
                     if (filePath != null) {
                         val photo = PlantingPhoto(
                             plantingId = plantingIdResult,
                             filePath = filePath,
-                            takenDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                            takenDate = pending.takenDate,
+                            comment = pending.comment,
                         )
                         plantingPhotoRepository.insert(photo)
                     }

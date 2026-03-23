@@ -25,6 +25,7 @@ data class PlantingPhotoEntity(
     val plantingId: Long,
     val filePath: String,
     val takenDate: LocalDate,
+    val comment: String? = null,
 )
 
 fun PlantingPhotoEntity.toDomain(): PlantingPhoto = PlantingPhoto(
@@ -32,6 +33,7 @@ fun PlantingPhotoEntity.toDomain(): PlantingPhoto = PlantingPhoto(
     plantingId = plantingId,
     filePath = filePath,
     takenDate = takenDate,
+    comment = comment,
 )
 
 fun PlantingPhoto.toEntity(): PlantingPhotoEntity = PlantingPhotoEntity(
@@ -39,4 +41,5 @@ fun PlantingPhoto.toEntity(): PlantingPhotoEntity = PlantingPhotoEntity(
     plantingId = plantingId,
     filePath = filePath,
     takenDate = takenDate,
+    comment = comment,
 )

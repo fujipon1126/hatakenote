@@ -10,4 +10,5 @@ data class PlantingPhoto(
     val plantingId: Long,
     val filePath: String,
     val takenDate: LocalDate,
+    val comment: String? = null,
 )
