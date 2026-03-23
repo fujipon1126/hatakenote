@@ -225,9 +225,21 @@ internal fun WorkLogScreen(
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !uiState.isPlotLocked,
                         ) {
-                            Text(
-                                text = uiState.selectedPlot?.name ?: stringResource(R.string.worklog_select_plot),
-                            )
+                            val selectedPlot = uiState.selectedPlot
+                            if (selectedPlot != null) {
+                                val cropNames = uiState.availablePlantings
+                                    .filter { it.plots.any { plot -> plot.id == selectedPlot.id } }
+                                    .joinToString(", ") { it.crop.name }
+                                Text(
+                                    text = if (cropNames.isNotEmpty()) {
+                                        "${selectedPlot.name}（$cropNames）"
+                                    } else {
+                                        selectedPlot.name
+                                    },
+                                )
+                            } else {
+                                Text(text = stringResource(R.string.worklog_select_plot))
+                            }
                         }
                     }
                 }
@@ -347,8 +359,12 @@ internal fun WorkLogScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(uiState.availablePlots) { plot ->
+                            val cropNames = uiState.availablePlantings
+                                .filter { it.plots.any { p -> p.id == plot.id } }
+                                .joinToString(", ") { it.crop.name }
                             PlotSelectItem(
                                 plot = plot,
+                                cropNames = cropNames,
                                 isSelected = uiState.selectedPlot?.id == plot.id,
                                 onClick = { onPlotSelected(plot) },
                             )
@@ -427,6 +443,7 @@ private fun PlantingSelectItem(
 @Composable
 private fun PlotSelectItem(
     plot: Plot,
+    cropNames: String,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -448,11 +465,19 @@ private fun PlotSelectItem(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = plot.name,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f),
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = plot.name,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                if (cropNames.isNotEmpty()) {
+                    Text(
+                        text = cropNames,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Default.Check,
