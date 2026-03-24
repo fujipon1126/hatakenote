@@ -26,14 +26,20 @@ val versionProperties = Properties().apply {
 var appVersionCode = versionProperties.getProperty("VERSION_CODE", "1").toInt()
 var appVersionName = versionProperties.getProperty("VERSION_NAME", "1.0.0")
 
-// -PbumpVersion=true が指定された場合にバージョンをインクリメント
-if (project.hasProperty("bumpVersion") && project.property("bumpVersion") == "true") {
+// -PbumpVersion=patch|minor|major|true でバージョンをインクリメント
+if (project.hasProperty("bumpVersion")) {
+    val bumpType = project.property("bumpVersion").toString()
     appVersionCode += 1
-    // VERSION_NAME の patch バージョンをインクリメント (例: 1.0.0 -> 1.0.1)
     val versionParts = appVersionName.split(".")
     if (versionParts.size == 3) {
+        val major = versionParts[0].toIntOrNull() ?: 0
+        val minor = versionParts[1].toIntOrNull() ?: 0
         val patch = versionParts[2].toIntOrNull() ?: 0
-        appVersionName = "${versionParts[0]}.${versionParts[1]}.${patch + 1}"
+        appVersionName = when (bumpType) {
+            "major" -> "${major + 1}.0.0"
+            "minor" -> "$major.${minor + 1}.0"
+            else -> "$major.$minor.${patch + 1}" // "patch" or "true" (後方互換)
+        }
     }
     // ファイルに保存
     versionProperties.setProperty("VERSION_CODE", appVersionCode.toString())

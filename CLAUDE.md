@@ -20,7 +20,7 @@ HatakeNote（畑ノート）- Android app for home garden/rental farm management
 ./gradlew :app:connectedAndroidTest  # Instrumented tests
 ```
 
-Version bumping: `./gradlew :app:assembleRelease -PbumpVersion=true` (auto-increments in `version.properties`)
+Version bumping: `./gradlew :app:assembleRelease -PbumpVersion=patch|minor|major` (auto-increments in `version.properties`, `true` is also accepted as `patch`)
 
 ## Architecture
 
