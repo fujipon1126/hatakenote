@@ -95,7 +95,15 @@ class PlantingViewModel @Inject constructor(
                     // Edit mode
                     val planting = plantingRepository.getById(plantingId)
                     val plotIds = plantingRepository.getPlotIdsForPlanting(plantingId)
-                    val photos = plantingPhotoRepository.getByPlantingId(plantingId).first()
+                    val plantingPhotos = plantingPhotoRepository.getByPlantingId(plantingId).first()
+                    // 区画に紐づく写真も取得（カレンダーから登録された写真）
+                    val plotPhotos = plotIds.flatMap { plotId ->
+                        plantingPhotoRepository.getByPlotId(plotId).first()
+                    }
+                    // 重複を除いて統合（両方に紐づく写真がある場合）
+                    val photos = (plantingPhotos + plotPhotos)
+                        .distinctBy { it.id }
+                        .sortedByDescending { it.takenDate }
                     val crop = planting?.let { cropRepository.getById(it.cropId) }
 
                     _uiState.value = _uiState.value.copy(

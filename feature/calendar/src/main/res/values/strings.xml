@@ -12,6 +12,9 @@
     <string name="calendar_year_month">%1$d年%2$d月</string>
     <string name="calendar_date_format">%1$d年%2$d月%3$d日</string>
     <string name="calendar_completed">（完了）</string>
+    <string name="calendar_add_photo">写真</string>
+    <string name="calendar_photo">区画写真</string>
+    <string name="calendar_photo_with_plot">写真: %s</string>
 
     <!-- Day names -->
     <string name="calendar_day_sun">日</string>

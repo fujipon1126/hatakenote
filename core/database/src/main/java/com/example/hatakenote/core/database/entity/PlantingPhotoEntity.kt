@@ -17,12 +17,13 @@ import kotlinx.datetime.LocalDate
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("plantingId")]
+    indices = [Index("plantingId"), Index("plotId"), Index("takenDate")]
 )
 data class PlantingPhotoEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val plantingId: Long,
+    val plantingId: Long? = null,
+    val plotId: Long? = null,
     val filePath: String,
     val takenDate: LocalDate,
     val comment: String? = null,
@@ -31,6 +32,7 @@ data class PlantingPhotoEntity(
 fun PlantingPhotoEntity.toDomain(): PlantingPhoto = PlantingPhoto(
     id = id,
     plantingId = plantingId,
+    plotId = plotId,
     filePath = filePath,
     takenDate = takenDate,
     comment = comment,
@@ -39,6 +41,7 @@ fun PlantingPhotoEntity.toDomain(): PlantingPhoto = PlantingPhoto(
 fun PlantingPhoto.toEntity(): PlantingPhotoEntity = PlantingPhotoEntity(
     id = id,
     plantingId = plantingId,
+    plotId = plotId,
     filePath = filePath,
     takenDate = takenDate,
     comment = comment,

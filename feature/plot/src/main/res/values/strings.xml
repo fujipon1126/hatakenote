@@ -42,6 +42,15 @@
     <string name="work_type_fertilize">追肥</string>
     <string name="work_type_other">その他</string>
 
+    <!-- Plot Photo -->
+    <string name="plot_photo_title">区画写真を追加</string>
+    <string name="plot_photo_select_plot">区画を選択</string>
+    <string name="plot_photo_date">撮影日</string>
+    <string name="plot_photo_photos">写真</string>
+    <string name="plot_photo_comment">コメント（任意）</string>
+    <string name="plot_photo_add">追加</string>
+    <string name="plot_photo_current_crops">栽培中: %s</string>
+
     <!-- Common -->
     <string name="save">保存</string>
     <string name="cancel">キャンセル</string>

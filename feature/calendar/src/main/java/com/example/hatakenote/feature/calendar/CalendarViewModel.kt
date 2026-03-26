@@ -2,12 +2,14 @@ package com.example.hatakenote.feature.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.hatakenote.core.domain.model.Crop
 import com.example.hatakenote.core.domain.model.Planting
+import com.example.hatakenote.core.domain.model.PlantingPhoto
 import com.example.hatakenote.core.domain.model.Reminder
 import com.example.hatakenote.core.domain.model.WorkLog
 import com.example.hatakenote.core.domain.repository.CropRepository
+import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
+import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.ReminderRepository
 import com.example.hatakenote.core.domain.repository.WorkLogRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,12 +17,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
@@ -57,7 +57,21 @@ sealed class CalendarEvent {
         val cropName: String,
         val cropColor: String,
     ) : CalendarEvent()
+
+    data class PhotoEvent(
+        override val date: LocalDate,
+        val photo: PlantingPhoto,
+        val plotName: String?,
+    ) : CalendarEvent()
 }
+
+private data class CalendarRawData(
+    val plantings: List<Planting>,
+    val reminders: List<Reminder>,
+    val workLogs: List<WorkLog>,
+    val plots: List<com.example.hatakenote.core.domain.model.Plot>,
+    val photos: List<PlantingPhoto>,
+)
 
 data class CalendarUiState(
     val isLoading: Boolean = true,
@@ -74,6 +88,8 @@ class CalendarViewModel @Inject constructor(
     private val reminderRepository: ReminderRepository,
     private val workLogRepository: WorkLogRepository,
     private val cropRepository: CropRepository,
+    private val plantingPhotoRepository: PlantingPhotoRepository,
+    private val plotRepository: PlotRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CalendarUiState())
@@ -86,16 +102,24 @@ class CalendarViewModel @Inject constructor(
     private fun loadCalendarData() {
         viewModelScope.launch {
             combine(
-                plantingRepository.getAll(),
-                reminderRepository.getAll(),
-                workLogRepository.getAll(),
-            ) { plantings, reminders, workLogs ->
-                Triple(plantings, reminders, workLogs)
-            }.collect { (plantings, reminders, workLogs) ->
+                combine(
+                    plantingRepository.getAll(),
+                    reminderRepository.getAll(),
+                    workLogRepository.getAll(),
+                ) { plantings, reminders, workLogs ->
+                    Triple(plantings, reminders, workLogs)
+                },
+                plotRepository.getAll(),
+                plantingPhotoRepository.getAll(),
+            ) { (plantings, reminders, workLogs), plots, photos ->
+                CalendarRawData(plantings, reminders, workLogs, plots, photos)
+            }.collect { raw ->
+                val plotsById = raw.plots.associateBy { it.id }
+
                 val events = mutableMapOf<LocalDate, MutableList<CalendarEvent>>()
 
                 // 作付けイベント（植え付け日）
-                for (planting in plantings) {
+                for (planting in raw.plantings) {
                     val crop = cropRepository.getById(planting.cropId)
                     if (crop != null) {
                         val event = CalendarEvent.PlantingEvent(
@@ -120,7 +144,7 @@ class CalendarViewModel @Inject constructor(
                 }
 
                 // リマインダーイベント
-                for (reminder in reminders) {
+                for (reminder in raw.reminders) {
                     val event = CalendarEvent.ReminderEvent(
                         date = reminder.scheduledDate,
                         reminder = reminder,
@@ -129,7 +153,7 @@ class CalendarViewModel @Inject constructor(
                 }
 
                 // 作業記録イベント
-                for (workLog in workLogs) {
+                for (workLog in raw.workLogs) {
                     val cropName = workLog.plantingId?.let { plantingId ->
                         val planting = plantingRepository.getById(plantingId)
                         planting?.let { cropRepository.getById(it.cropId)?.name }
@@ -140,6 +164,19 @@ class CalendarViewModel @Inject constructor(
                         cropName = cropName,
                     )
                     events.getOrPut(workLog.workDate) { mutableListOf() }.add(event)
+                }
+
+                // 写真イベント（区画写真 — plotIdがある写真のみ）
+                for (photo in raw.photos) {
+                    if (photo.plotId != null) {
+                        val plotName = plotsById[photo.plotId]?.name
+                        val event = CalendarEvent.PhotoEvent(
+                            date = photo.takenDate,
+                            photo = photo,
+                            plotName = plotName,
+                        )
+                        events.getOrPut(photo.takenDate) { mutableListOf() }.add(event)
+                    }
                 }
 
                 val selectedDate = _uiState.value.selectedDate

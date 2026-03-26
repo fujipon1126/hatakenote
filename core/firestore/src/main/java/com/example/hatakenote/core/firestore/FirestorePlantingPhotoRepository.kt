@@ -26,6 +26,23 @@ class FirestorePlantingPhotoRepository @Inject constructor(
         firestore.collection("farms").document(farmId).collection("planting_photos")
 
     @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getAll(): Flow<List<PlantingPhoto>> {
+        return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
+            if (farmId == null) {
+                flowOf(emptyList())
+            } else {
+                photosCollection(farmId)
+                    .snapshots()
+                    .map { snapshot ->
+                        snapshot.documents.mapNotNull { doc ->
+                            doc.toPlantingPhoto()
+                        }
+                    }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getByPlantingId(plantingId: Long): Flow<List<PlantingPhoto>> {
         return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
             if (farmId == null) {
@@ -33,6 +50,42 @@ class FirestorePlantingPhotoRepository @Inject constructor(
             } else {
                 photosCollection(farmId)
                     .whereEqualTo("plantingId", plantingId)
+                    .snapshots()
+                    .map { snapshot ->
+                        snapshot.documents.mapNotNull { doc ->
+                            doc.toPlantingPhoto()
+                        }
+                    }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getByPlotId(plotId: Long): Flow<List<PlantingPhoto>> {
+        return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
+            if (farmId == null) {
+                flowOf(emptyList())
+            } else {
+                photosCollection(farmId)
+                    .whereEqualTo("plotId", plotId)
+                    .snapshots()
+                    .map { snapshot ->
+                        snapshot.documents.mapNotNull { doc ->
+                            doc.toPlantingPhoto()
+                        }
+                    }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getByDate(date: LocalDate): Flow<List<PlantingPhoto>> {
+        return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
+            if (farmId == null) {
+                flowOf(emptyList())
+            } else {
+                photosCollection(farmId)
+                    .whereEqualTo("takenDate", date.toString())
                     .snapshots()
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
@@ -62,6 +115,7 @@ class FirestorePlantingPhotoRepository @Inject constructor(
         val photoData = hashMapOf(
             "id" to newId,
             "plantingId" to photo.plantingId,
+            "plotId" to photo.plotId,
             "filePath" to photo.filePath,
             "takenDate" to photo.takenDate.toString(),
             "comment" to photo.comment,
@@ -121,7 +175,8 @@ class FirestorePlantingPhotoRepository @Inject constructor(
             val data = this.data ?: return null
             PlantingPhoto(
                 id = (data["id"] as? Long) ?: return null,
-                plantingId = (data["plantingId"] as? Long) ?: return null,
+                plantingId = data["plantingId"] as? Long,
+                plotId = data["plotId"] as? Long,
                 filePath = (data["filePath"] as? String) ?: return null,
                 takenDate = (data["takenDate"] as? String)?.let { LocalDate.parse(it) }
                     ?: return null,

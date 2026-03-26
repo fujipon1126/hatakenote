@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -71,6 +72,7 @@ import kotlinx.datetime.todayIn
 @Composable
 internal fun CalendarRoute(
     onAddWorkLogClick: (String) -> Unit,
+    onAddPlotPhotoClick: (String) -> Unit,
     viewModel: CalendarViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,6 +85,7 @@ internal fun CalendarRoute(
         onDateSelected = viewModel::selectDate,
         onDismissBottomSheet = viewModel::clearSelectedDate,
         onAddWorkLogClick = onAddWorkLogClick,
+        onAddPlotPhotoClick = onAddPlotPhotoClick,
     )
 }
 
@@ -96,6 +99,7 @@ internal fun CalendarScreen(
     onDateSelected: (LocalDate) -> Unit,
     onDismissBottomSheet: () -> Unit,
     onAddWorkLogClick: (String) -> Unit,
+    onAddPlotPhotoClick: (String) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -165,6 +169,10 @@ internal fun CalendarScreen(
                     onAddWorkLogClick = {
                         onDismissBottomSheet()
                         onAddWorkLogClick(uiState.selectedDate.toString())
+                    },
+                    onAddPlotPhotoClick = {
+                        onDismissBottomSheet()
+                        onAddPlotPhotoClick(uiState.selectedDate.toString())
                     },
                 )
             }
@@ -381,6 +389,7 @@ private fun getEventIndicatorColor(event: CalendarEvent): Color {
         is CalendarEvent.HarvestEvent -> parseColorSafe(event.cropColor, MaterialTheme.colorScheme.tertiary)
         is CalendarEvent.ReminderEvent -> MaterialTheme.colorScheme.error
         is CalendarEvent.WorkLogEvent -> MaterialTheme.colorScheme.secondary
+        is CalendarEvent.PhotoEvent -> MaterialTheme.colorScheme.tertiary
     }
 }
 
@@ -389,22 +398,24 @@ private fun EventBottomSheetContent(
     date: LocalDate,
     events: List<CalendarEvent>,
     onAddWorkLogClick: () -> Unit,
+    onAddPlotPhotoClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
     ) {
+        Text(
+            text = stringResource(R.string.calendar_date_format, date.year, date.monthNumber, date.dayOfMonth),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
-                text = stringResource(R.string.calendar_date_format, date.year, date.monthNumber, date.dayOfMonth),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-            )
             FilledTonalButton(onClick = onAddWorkLogClick) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -413,6 +424,15 @@ private fun EventBottomSheetContent(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(stringResource(R.string.calendar_add_work))
+            }
+            FilledTonalButton(onClick = onAddPlotPhotoClick) {
+                Icon(
+                    imageVector = Icons.Default.PhotoCamera,
+                    contentDescription = stringResource(R.string.calendar_add_photo),
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(stringResource(R.string.calendar_add_photo))
             }
         }
 
@@ -510,6 +530,19 @@ private fun EventCard(event: CalendarEvent) {
                 title = title,
                 subtitle = event.workLog.detail,
                 color = MaterialTheme.colorScheme.secondary,
+            )
+        }
+        is CalendarEvent.PhotoEvent -> {
+            val title = if (event.plotName != null) {
+                stringResource(R.string.calendar_photo_with_plot, event.plotName)
+            } else {
+                stringResource(R.string.calendar_photo)
+            }
+            EventCardData(
+                icon = Icons.Default.PhotoCamera,
+                title = title,
+                subtitle = event.photo.comment,
+                color = MaterialTheme.colorScheme.tertiary,
             )
         }
     }

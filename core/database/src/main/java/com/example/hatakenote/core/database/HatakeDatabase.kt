@@ -22,7 +22,7 @@ import com.example.hatakenote.core.database.entity.*
         WorkLogEntity::class,
         ReminderEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -31,6 +31,16 @@ abstract class HatakeDatabase : RoomDatabase() {
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE planting_photos ADD COLUMN comment TEXT DEFAULT NULL")
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add plotId column
+                db.execSQL("ALTER TABLE planting_photos ADD COLUMN plotId INTEGER DEFAULT NULL")
+                // Add indices for plotId and takenDate
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_planting_photos_plotId ON planting_photos (plotId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_planting_photos_takenDate ON planting_photos (takenDate)")
             }
         }
     }

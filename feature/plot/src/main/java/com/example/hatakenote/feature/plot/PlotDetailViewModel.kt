@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.hatakenote.core.domain.model.Planting
+import com.example.hatakenote.core.domain.model.PlantingPhoto
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlotSide
 import com.example.hatakenote.core.domain.model.PlantingWithCrop
@@ -12,6 +13,7 @@ import com.example.hatakenote.core.domain.model.WorkLog
 import com.example.hatakenote.core.domain.model.Fertilizer
 import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.FertilizerRepository
+import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.WorkLogRepository
@@ -32,6 +34,7 @@ data class PlotDetailUiState(
     val pastPlantings: List<PlantingWithCrop> = emptyList(),
     val workLogs: List<WorkLog> = emptyList(),
     val fertilizerMap: Map<Long, Fertilizer> = emptyMap(),
+    val photosByPlantingId: Map<Long, List<PlantingPhoto>> = emptyMap(),
     val isLoading: Boolean = true,
     val showEditDialog: Boolean = false,
     val showDeleteConfirmDialog: Boolean = false,
@@ -48,6 +51,7 @@ class PlotDetailViewModel @Inject constructor(
     private val cropRepository: CropRepository,
     private val workLogRepository: WorkLogRepository,
     private val fertilizerRepository: FertilizerRepository,
+    private val plantingPhotoRepository: PlantingPhotoRepository,
     private val getRotationAdviceUseCase: GetRotationAdviceUseCase,
 ) : ViewModel() {
 
@@ -97,6 +101,20 @@ class PlotDetailViewModel @Inject constructor(
                 val fertilizers = fertilizerRepository.getAll().first()
                 val fertilizerMap = fertilizers.associateBy { it.id }
 
+                // 現在の作付けに紐づく写真を取得（plantingId経由 + plotId経由）
+                val photosByPlantingId = mutableMapOf<Long, List<PlantingPhoto>>()
+                val plotPhotos = plantingPhotoRepository.getByPlotId(plotId).first()
+                for (pwc in plotWithPlantings.currentPlantings) {
+                    val pid = pwc.planting.id
+                    val plantingPhotos = plantingPhotoRepository.getByPlantingId(pid).first()
+                    val combined = (plantingPhotos + plotPhotos)
+                        .distinctBy { it.id }
+                        .sortedByDescending { it.takenDate }
+                    if (combined.isNotEmpty()) {
+                        photosByPlantingId[pid] = combined
+                    }
+                }
+
                 _uiState.value = _uiState.value.copy(
                     plot = plotWithPlantings.plot,
                     currentPlantings = plotWithPlantings.currentPlantings,
@@ -108,6 +126,7 @@ class PlotDetailViewModel @Inject constructor(
                     },
                     workLogs = workLogs,
                     fertilizerMap = fertilizerMap,
+                    photosByPlantingId = photosByPlantingId,
                     rotationAdvice = rotationAdvice,
                     isLoading = false,
                 )

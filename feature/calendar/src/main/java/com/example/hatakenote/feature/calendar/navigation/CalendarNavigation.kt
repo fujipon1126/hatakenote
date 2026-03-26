@@ -16,10 +16,12 @@ fun NavController.navigateToCalendar(navOptions: NavOptions? = null) {
 
 fun NavGraphBuilder.calendarScreen(
     onAddWorkLogClick: (String) -> Unit,
+    onAddPlotPhotoClick: (String) -> Unit,
 ) {
     composable<CalendarRoute> {
         CalendarRoute(
             onAddWorkLogClick = onAddWorkLogClick,
+            onAddPlotPhotoClick = onAddPlotPhotoClick,
         )
     }
 }

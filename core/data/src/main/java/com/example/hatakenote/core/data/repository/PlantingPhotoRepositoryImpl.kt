@@ -7,14 +7,30 @@ import com.example.hatakenote.core.domain.model.PlantingPhoto
 import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 
 class PlantingPhotoRepositoryImpl @Inject constructor(
     private val plantingPhotoDao: PlantingPhotoDao
 ) : PlantingPhotoRepository {
 
+    override fun getAll(): Flow<List<PlantingPhoto>> =
+        plantingPhotoDao.getAll().map { entities ->
+            entities.map { it.toDomain() }
+        }
+
     override fun getByPlantingId(plantingId: Long): Flow<List<PlantingPhoto>> =
         plantingPhotoDao.getByPlantingId(plantingId).map { entities ->
+            entities.map { it.toDomain() }
+        }
+
+    override fun getByPlotId(plotId: Long): Flow<List<PlantingPhoto>> =
+        plantingPhotoDao.getByPlotId(plotId).map { entities ->
+            entities.map { it.toDomain() }
+        }
+
+    override fun getByDate(date: LocalDate): Flow<List<PlantingPhoto>> =
+        plantingPhotoDao.getByDate(date).map { entities ->
             entities.map { it.toDomain() }
         }
 

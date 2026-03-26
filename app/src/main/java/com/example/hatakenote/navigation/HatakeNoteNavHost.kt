@@ -22,7 +22,9 @@ import com.example.hatakenote.feature.home.navigation.homeScreen
 import com.example.hatakenote.feature.planting.navigation.navigateToPlanting
 import com.example.hatakenote.feature.planting.navigation.plantingScreen
 import com.example.hatakenote.feature.plot.navigation.navigateToPlotDetail
+import com.example.hatakenote.feature.plot.navigation.navigateToPlotPhoto
 import com.example.hatakenote.feature.plot.navigation.plotDetailScreen
+import com.example.hatakenote.feature.plot.navigation.plotPhotoScreen
 import com.example.hatakenote.feature.settings.navigation.settingsScreen
 import com.example.hatakenote.feature.worklog.navigation.navigateToWorkLog
 import com.example.hatakenote.feature.worklog.navigation.workLogScreen
@@ -99,6 +101,14 @@ fun HatakeNoteNavHost(
             onAddWorkLogClick = { dateString ->
                 navController.navigateToWorkLog(workDate = dateString)
             },
+            onAddPlotPhotoClick = { dateString ->
+                navController.navigateToPlotPhoto(photoDate = dateString)
+            },
+        )
+
+        plotPhotoScreen(
+            onBackClick = { navController.popBackStack() },
+            onSaved = { navController.popBackStack() },
         )
 
         assistantScreen()

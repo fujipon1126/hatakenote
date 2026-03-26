@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,13 +60,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.example.hatakenote.feature.plot.R
+import com.example.hatakenote.core.domain.model.PlantingPhoto
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlotSide
 import com.example.hatakenote.core.domain.model.PlantingWithCrop
@@ -199,6 +205,7 @@ internal fun PlotDetailScreen(
                 // Current Plantings Section
                 CurrentPlantingsSection(
                     plantings = uiState.currentPlantings,
+                    photosByPlantingId = uiState.photosByPlantingId,
                     onPlantingClick = onPlantingClick,
                     onDeletePlantingClick = onDeletePlantingClick,
                 )
@@ -300,6 +307,7 @@ private fun InfoItem(label: String, value: String) {
 @Composable
 private fun CurrentPlantingsSection(
     plantings: List<PlantingWithCrop>,
+    photosByPlantingId: Map<Long, List<PlantingPhoto>>,
     onPlantingClick: (Long) -> Unit,
     onDeletePlantingClick: (PlantingWithCrop) -> Unit,
 ) {
@@ -339,8 +347,10 @@ private fun CurrentPlantingsSection(
             }
         } else {
             plantings.forEach { plantingWithCrop ->
+                val photos = photosByPlantingId[plantingWithCrop.planting.id] ?: emptyList()
                 PlantingCard(
                     plantingWithCrop = plantingWithCrop,
+                    photos = photos,
                     onClick = { onPlantingClick(plantingWithCrop.planting.id) },
                     onDeleteClick = { onDeletePlantingClick(plantingWithCrop) },
                 )
@@ -455,6 +465,7 @@ private fun PastPlantingCard(
 @Composable
 private fun PlantingCard(
     plantingWithCrop: PlantingWithCrop,
+    photos: List<PlantingPhoto>,
     onClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
@@ -495,6 +506,45 @@ private fun PlantingCard(
                     contentDescription = stringResource(R.string.plot_detail_delete_planting),
                     tint = MaterialTheme.colorScheme.error,
                 )
+            }
+        }
+
+        // Photos
+        if (photos.isNotEmpty()) {
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(photos.take(5)) { photo ->
+                    AsyncImage(
+                        model = photo.filePath,
+                        contentDescription = photo.comment,
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                if (photos.size > 5) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.plot_detail_more_items, photos.size - 5),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
             }
         }
     }

@@ -27,7 +27,7 @@ object DatabaseModule {
             HatakeDatabase::class.java,
             "hatake_database"
         )
-            .addMigrations(HatakeDatabase.MIGRATION_1_2)
+            .addMigrations(HatakeDatabase.MIGRATION_1_2, HatakeDatabase.MIGRATION_2_3)
             .addCallback(InitialDataCallback { database })
             .build()
         return database
