@@ -208,6 +208,7 @@ internal fun PlotDetailScreen(
                 // Work Log Section (for plot-level work)
                 WorkLogSection(
                     workLogs = uiState.workLogs,
+                    fertilizerMap = uiState.fertilizerMap,
                     plotId = plotId,
                     onAddWorkLogClick = { onWorkLogClick(null, plotId) },
                     onWorkLogClick = { workLogId -> onWorkLogEditClick(workLogId, plotId) },
@@ -699,6 +700,7 @@ private fun SafeCropCard(advice: CropAdvice) {
 @Composable
 private fun WorkLogSection(
     workLogs: List<WorkLog>,
+    fertilizerMap: Map<Long, com.example.hatakenote.core.domain.model.Fertilizer>,
     plotId: Long,
     onAddWorkLogClick: () -> Unit,
     onWorkLogClick: (Long) -> Unit,
@@ -762,6 +764,7 @@ private fun WorkLogSection(
                 workLogs.forEach { workLog ->
                     WorkLogItem(
                         workLog = workLog,
+                        fertilizerName = workLog.fertilizerId?.let { fertilizerMap[it]?.name },
                         onClick = { onWorkLogClick(workLog.id) },
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -774,6 +777,7 @@ private fun WorkLogSection(
 @Composable
 private fun WorkLogItem(
     workLog: WorkLog,
+    fertilizerName: String?,
     onClick: () -> Unit,
 ) {
     Card(
@@ -799,14 +803,28 @@ private fun WorkLogItem(
             Text(
                 text = workLog.workDate.toString(),
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.weight(1f),
             )
-            workLog.detail?.let { detail ->
-                Text(
-                    text = detail,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+                if (fertilizerName != null) {
+                    val fertilizerText = if (workLog.fertilizerAmount.isNullOrBlank()) {
+                        fertilizerName
+                    } else {
+                        "$fertilizerName ${workLog.fertilizerAmount}"
+                    }
+                    Text(
+                        text = fertilizerText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                workLog.detail?.let { detail ->
+                    Text(
+                        text = detail,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }

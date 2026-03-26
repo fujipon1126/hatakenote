@@ -9,7 +9,9 @@ import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlotSide
 import com.example.hatakenote.core.domain.model.PlantingWithCrop
 import com.example.hatakenote.core.domain.model.WorkLog
+import com.example.hatakenote.core.domain.model.Fertilizer
 import com.example.hatakenote.core.domain.repository.CropRepository
+import com.example.hatakenote.core.domain.repository.FertilizerRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.WorkLogRepository
@@ -29,6 +31,7 @@ data class PlotDetailUiState(
     val currentPlantings: List<PlantingWithCrop> = emptyList(),
     val pastPlantings: List<PlantingWithCrop> = emptyList(),
     val workLogs: List<WorkLog> = emptyList(),
+    val fertilizerMap: Map<Long, Fertilizer> = emptyMap(),
     val isLoading: Boolean = true,
     val showEditDialog: Boolean = false,
     val showDeleteConfirmDialog: Boolean = false,
@@ -44,6 +47,7 @@ class PlotDetailViewModel @Inject constructor(
     private val plantingRepository: PlantingRepository,
     private val cropRepository: CropRepository,
     private val workLogRepository: WorkLogRepository,
+    private val fertilizerRepository: FertilizerRepository,
     private val getRotationAdviceUseCase: GetRotationAdviceUseCase,
 ) : ViewModel() {
 
@@ -89,6 +93,10 @@ class PlotDetailViewModel @Inject constructor(
 
                 val rotationAdvice = getRotationAdviceUseCase(plotId)
 
+                // 肥料マスターをMapとして取得
+                val fertilizers = fertilizerRepository.getAll().first()
+                val fertilizerMap = fertilizers.associateBy { it.id }
+
                 _uiState.value = _uiState.value.copy(
                     plot = plotWithPlantings.plot,
                     currentPlantings = plotWithPlantings.currentPlantings,
@@ -99,6 +107,7 @@ class PlotDetailViewModel @Inject constructor(
                         )
                     },
                     workLogs = workLogs,
+                    fertilizerMap = fertilizerMap,
                     rotationAdvice = rotationAdvice,
                     isLoading = false,
                 )
