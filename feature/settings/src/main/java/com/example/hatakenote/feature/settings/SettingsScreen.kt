@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Grass
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -51,6 +52,7 @@ import com.example.hatakenote.feature.settings.R
 @Composable
 internal fun SettingsRoute(
     onCropListClick: () -> Unit,
+    onFertilizerListClick: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -58,6 +60,7 @@ internal fun SettingsRoute(
     SettingsScreen(
         uiState = uiState,
         onCropListClick = onCropListClick,
+        onFertilizerListClick = onFertilizerListClick,
         onShowLocationDialog = viewModel::showLocationDialog,
         onDismissLocationDialog = viewModel::dismissLocationDialog,
         onUpdateLocation = viewModel::updateLocation,
@@ -72,6 +75,7 @@ internal fun SettingsRoute(
 internal fun SettingsScreen(
     uiState: SettingsUiState,
     onCropListClick: () -> Unit,
+    onFertilizerListClick: () -> Unit,
     onShowLocationDialog: () -> Unit,
     onDismissLocationDialog: () -> Unit,
     onUpdateLocation: (String, String, String) -> Unit,
@@ -172,6 +176,12 @@ internal fun SettingsScreen(
                     title = stringResource(R.string.settings_crop_master),
                     subtitle = stringResource(R.string.settings_crop_master_description),
                     onClick = onCropListClick,
+                )
+                SettingsItem(
+                    icon = Icons.Default.Science,
+                    title = stringResource(R.string.settings_fertilizer_master),
+                    subtitle = stringResource(R.string.settings_fertilizer_master_description),
+                    onClick = onFertilizerListClick,
                 )
             }
 

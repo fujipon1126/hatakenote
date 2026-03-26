@@ -139,6 +139,8 @@ class FirestoreWorkLogRepository @Inject constructor(
             "workType" to workLog.workType.name,
             "workDate" to workLog.workDate.toString(),
             "detail" to workLog.detail,
+            "fertilizerId" to workLog.fertilizerId,
+            "fertilizerAmount" to workLog.fertilizerAmount,
         )
 
         workLogsCollection(farmId).add(workLogData).await()
@@ -164,6 +166,8 @@ class FirestoreWorkLogRepository @Inject constructor(
                 "workType" to workLog.workType.name,
                 "workDate" to workLog.workDate.toString(),
                 "detail" to workLog.detail,
+                "fertilizerId" to workLog.fertilizerId,
+                "fertilizerAmount" to workLog.fertilizerAmount,
             )
         ).await()
     }
@@ -192,6 +196,8 @@ class FirestoreWorkLogRepository @Inject constructor(
                 workDate = (data["workDate"] as? String)?.let { LocalDate.parse(it) }
                     ?: return null,
                 detail = data["detail"] as? String,
+                fertilizerId = data["fertilizerId"] as? Long,
+                fertilizerAmount = data["fertilizerAmount"] as? String,
             )
         } catch (e: Exception) {
             null

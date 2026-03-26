@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="fertilizer_list_title">肥料マスター</string>
+    <string name="fertilizer_list_add">肥料を追加</string>
+    <string name="fertilizer_list_edit">肥料を編集</string>
+    <string name="fertilizer_list_empty">肥料が登録されていません</string>
+    <string name="fertilizer_list_empty_hint">＋ボタンで肥料を追加できます</string>
+    <string name="fertilizer_list_delete_title">肥料を削除</string>
+    <string name="fertilizer_list_delete_message">「%s」を削除しますか？</string>
+    <string name="fertilizer_name">肥料名</string>
+    <string name="fertilizer_name_hint">例: 化成肥料 8-8-8</string>
+    <string name="fertilizer_default_amount">デフォルトの量</string>
+    <string name="fertilizer_default_amount_hint">例: 1株あたり30g</string>
+    <string name="fertilizer_note">備考</string>
+    <string name="fertilizer_note_hint">備考を入力</string>
+    <string name="fertilizer_back">戻る</string>
+    <string name="fertilizer_edit">編集</string>
+    <string name="fertilizer_delete">削除</string>
+    <string name="fertilizer_saved">保存しました</string>
+
+    <!-- Common -->
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="delete">削除</string>
+</resources>

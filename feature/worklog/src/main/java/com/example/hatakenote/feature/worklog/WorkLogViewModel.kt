@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.hatakenote.core.domain.model.Crop
+import com.example.hatakenote.core.domain.model.Fertilizer
 import com.example.hatakenote.core.domain.model.Planting
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.WorkLog
 import com.example.hatakenote.core.domain.model.WorkType
 import com.example.hatakenote.core.domain.repository.CropRepository
+import com.example.hatakenote.core.domain.repository.FertilizerRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.WorkLogRepository
@@ -47,6 +49,11 @@ data class WorkLogUiState(
     val selectedPlot: Plot? = null,
     val isPlotLocked: Boolean = false,
     val isPlantingLocked: Boolean = false,
+    // Fertilizer selection
+    val availableFertilizers: List<Fertilizer> = emptyList(),
+    val selectedFertilizer: Fertilizer? = null,
+    val fertilizerAmount: String = "",
+    val showFertilizerSelector: Boolean = false,
     // Dialog states
     val showDatePicker: Boolean = false,
     val showPlantingSelector: Boolean = false,
@@ -64,6 +71,7 @@ class WorkLogViewModel @Inject constructor(
     private val plantingRepository: PlantingRepository,
     private val plotRepository: PlotRepository,
     private val cropRepository: CropRepository,
+    private val fertilizerRepository: FertilizerRepository,
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<WorkLogRoute>()
@@ -102,6 +110,9 @@ class WorkLogViewModel @Inject constructor(
                     } else null
                 }
 
+                // Load available fertilizers
+                val fertilizers = fertilizerRepository.getAll().first()
+
                 if (workLogId != null) {
                     // Edit mode
                     val workLog = workLogRepository.getById(workLogId)
@@ -117,6 +128,10 @@ class WorkLogViewModel @Inject constructor(
 
                         val hasPlotContext = selectedPlot != null || initialPlotId != null
 
+                        val selectedFertilizer = if (workLog.fertilizerId != null) {
+                            fertilizers.find { it.id == workLog.fertilizerId }
+                        } else null
+
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             isEditMode = true,
@@ -130,6 +145,9 @@ class WorkLogViewModel @Inject constructor(
                             selectedPlot = selectedPlot,
                             isPlotLocked = hasPlotContext,
                             isPlantingLocked = selectedPlanting != null,
+                            availableFertilizers = fertilizers,
+                            selectedFertilizer = selectedFertilizer,
+                            fertilizerAmount = workLog.fertilizerAmount ?: "",
                         )
                     } else {
                         _uiState.value = _uiState.value.copy(
@@ -179,6 +197,7 @@ class WorkLogViewModel @Inject constructor(
                         selectedPlot = selectedPlot,
                         isPlotLocked = initialPlotId != null,
                         isPlantingLocked = initialPlotId != null && filteredPlantings.size <= 1,
+                        availableFertilizers = fertilizers,
                     )
                 }
             } catch (e: Exception) {
@@ -191,7 +210,11 @@ class WorkLogViewModel @Inject constructor(
     }
 
     fun selectWorkType(workType: WorkType) {
-        _uiState.value = _uiState.value.copy(selectedWorkType = workType)
+        _uiState.value = _uiState.value.copy(
+            selectedWorkType = workType,
+            selectedFertilizer = null,
+            fertilizerAmount = "",
+        )
     }
 
     fun setWorkDate(date: LocalDate) {
@@ -217,6 +240,33 @@ class WorkLogViewModel @Inject constructor(
             selectedPlot = plot,
             showPlotSelector = false,
         )
+    }
+
+    fun selectFertilizer(fertilizer: Fertilizer) {
+        _uiState.value = _uiState.value.copy(
+            selectedFertilizer = fertilizer,
+            fertilizerAmount = fertilizer.defaultAmount,
+            showFertilizerSelector = false,
+        )
+    }
+
+    fun clearFertilizer() {
+        _uiState.value = _uiState.value.copy(
+            selectedFertilizer = null,
+            fertilizerAmount = "",
+        )
+    }
+
+    fun setFertilizerAmount(amount: String) {
+        _uiState.value = _uiState.value.copy(fertilizerAmount = amount)
+    }
+
+    fun showFertilizerSelector() {
+        _uiState.value = _uiState.value.copy(showFertilizerSelector = true)
+    }
+
+    fun dismissFertilizerSelector() {
+        _uiState.value = _uiState.value.copy(showFertilizerSelector = false)
     }
 
     fun showDatePicker() {
@@ -273,6 +323,8 @@ class WorkLogViewModel @Inject constructor(
                     workType = workType,
                     workDate = state.workDate,
                     detail = state.detail.ifBlank { null },
+                    fertilizerId = state.selectedFertilizer?.id,
+                    fertilizerAmount = state.fertilizerAmount.ifBlank { null },
                 )
 
                 if (state.isEditMode) {
@@ -322,5 +374,10 @@ class WorkLogViewModel @Inject constructor(
             WorkType.BASE_FERTILIZE -> "肥料の種類、量など"
             WorkType.OTHER -> "水やり、支柱立てなど"
         }
+    }
+
+    fun isFertilizerWorkType(): Boolean {
+        return _uiState.value.selectedWorkType == WorkType.FERTILIZE ||
+            _uiState.value.selectedWorkType == WorkType.BASE_FERTILIZE
     }
 }

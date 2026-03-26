@@ -12,4 +12,6 @@ data class WorkLog(
     val workType: WorkType,
     val workDate: LocalDate,
     val detail: String? = null,
+    val fertilizerId: Long? = null,
+    val fertilizerAmount: String? = null,
 )

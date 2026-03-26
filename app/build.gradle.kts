@@ -112,6 +112,7 @@ dependencies {
     implementation(project(":feature:planting"))
     implementation(project(":feature:worklog"))
     implementation(project(":feature:crop"))
+    implementation(project(":feature:fertilizer"))
     implementation(project(":feature:calendar"))
     implementation(project(":feature:assistant"))
     implementation(project(":feature:settings"))

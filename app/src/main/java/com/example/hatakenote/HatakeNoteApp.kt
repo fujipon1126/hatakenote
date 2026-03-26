@@ -24,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.hatakenote.feature.auth.navigation.LoginRoute
 import com.example.hatakenote.feature.crop.navigation.CropListRoute
 import com.example.hatakenote.feature.farm.navigation.FarmSelectRoute
+import com.example.hatakenote.feature.fertilizer.navigation.FertilizerListRoute
 import com.example.hatakenote.feature.home.navigation.HomeRoute
 import com.example.hatakenote.feature.planting.navigation.PlantingRoute
 import com.example.hatakenote.feature.plot.navigation.PlotDetailRoute
@@ -91,7 +92,8 @@ fun HatakeNoteApp(
             !destination.hasRoute<PlotDetailRoute>() &&
             !destination.hasRoute<PlantingRoute>() &&
             !destination.hasRoute<WorkLogRoute>() &&
-            !destination.hasRoute<CropListRoute>()
+            !destination.hasRoute<CropListRoute>() &&
+            !destination.hasRoute<FertilizerListRoute>()
     } ?: true
 
     Scaffold(

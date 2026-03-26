@@ -3,6 +3,7 @@ package com.example.hatakenote.core.firestore.di
 import com.example.hatakenote.core.domain.repository.CropFamilyRepository
 import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.FarmRepository
+import com.example.hatakenote.core.domain.repository.FertilizerRepository
 import com.example.hatakenote.core.domain.repository.FertilizerScheduleRepository
 import com.example.hatakenote.core.domain.repository.MasterDataInitializer
 import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
@@ -14,6 +15,7 @@ import com.example.hatakenote.core.domain.repository.WorkLogRepository
 import com.example.hatakenote.core.firestore.FirestoreCropFamilyRepository
 import com.example.hatakenote.core.firestore.FirestoreCropRepository
 import com.example.hatakenote.core.firestore.FirestoreFarmRepository
+import com.example.hatakenote.core.firestore.FirestoreFertilizerRepository
 import com.example.hatakenote.core.firestore.FirestoreFertilizerScheduleRepository
 import com.example.hatakenote.core.firestore.FirestoreMasterDataInitializer
 import com.example.hatakenote.core.firestore.FirestorePlantingPhotoRepository
@@ -68,6 +70,10 @@ abstract class FirestoreBindsModule {
     @Binds
     @Singleton
     abstract fun bindCropFamilyRepository(impl: FirestoreCropFamilyRepository): CropFamilyRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFertilizerRepository(impl: FirestoreFertilizerRepository): FertilizerRepository
 
     @Binds
     @Singleton

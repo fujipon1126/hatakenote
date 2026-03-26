@@ -15,6 +15,8 @@ import com.example.hatakenote.feature.crop.navigation.cropDetailScreen
 import com.example.hatakenote.feature.crop.navigation.cropListScreen
 import com.example.hatakenote.feature.crop.navigation.navigateToCropDetail
 import com.example.hatakenote.feature.crop.navigation.navigateToCropList
+import com.example.hatakenote.feature.fertilizer.navigation.fertilizerListScreen
+import com.example.hatakenote.feature.fertilizer.navigation.navigateToFertilizerList
 import com.example.hatakenote.feature.home.navigation.HomeRoute
 import com.example.hatakenote.feature.home.navigation.homeScreen
 import com.example.hatakenote.feature.planting.navigation.navigateToPlanting
@@ -101,8 +103,13 @@ fun HatakeNoteNavHost(
 
         assistantScreen()
 
+        fertilizerListScreen(
+            onBackClick = { navController.popBackStack() },
+        )
+
         settingsScreen(
             onCropListClick = { navController.navigateToCropList() },
+            onFertilizerListClick = { navController.navigateToFertilizerList() },
         )
     }
 }

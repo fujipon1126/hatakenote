@@ -21,6 +21,7 @@ class FirestoreMasterDataInitializer @Inject constructor(
     override suspend fun initializeIfNeeded() {
         val farmId = farmRepository.getCurrentFarmId().first() ?: return
         initializeForFarm(farmId)
+        initializeFertilizersIfNeeded(farmId)
         migratePlotsFromRoom(farmId)
     }
 
@@ -50,12 +51,39 @@ class FirestoreMasterDataInitializer @Inject constructor(
             batch.set(ref, crop)
         }
 
+        // 肥料マスタ
+        fertilizers.forEach { fertilizer ->
+            val ref = farmDoc.collection("fertilizers").document()
+            batch.set(ref, fertilizer)
+        }
+
         // 連作相性
         incompatibilities.forEach { incompatibility ->
             val ref = farmDoc.collection("rotationIncompatibilities").document()
             batch.set(ref, incompatibility)
         }
 
+        batch.commit().await()
+    }
+
+    /**
+     * 肥料マスタが存在しない場合に初期データを投入する。
+     * 既存ファーム向けのマイグレーション用。
+     */
+    private suspend fun initializeFertilizersIfNeeded(farmId: String) {
+        val farmDoc = firestore.collection("farms").document(farmId)
+        val existingFertilizers = farmDoc.collection("fertilizers")
+            .limit(1)
+            .get()
+            .await()
+
+        if (!existingFertilizers.isEmpty) return
+
+        val batch = firestore.batch()
+        fertilizers.forEach { fertilizer ->
+            val ref = farmDoc.collection("fertilizers").document()
+            batch.set(ref, fertilizer)
+        }
         batch.commit().await()
     }
 
@@ -159,6 +187,14 @@ class FirestoreMasterDataInitializer @Inject constructor(
             mapOf("id" to 31L, "name" to "とうもろこし", "familyId" to 12L, "colorHex" to "#FFC107", "isActive" to true),
             // ヒルガオ科
             mapOf("id" to 32L, "name" to "さつまいも", "familyId" to 13L, "colorHex" to "#AD1457", "isActive" to true),
+        )
+
+        private val fertilizers = listOf(
+            mapOf("id" to 1L, "name" to "牛糞", "defaultAmount" to "", "note" to ""),
+            mapOf("id" to 2L, "name" to "鶏糞", "defaultAmount" to "", "note" to ""),
+            mapOf("id" to 3L, "name" to "油粕", "defaultAmount" to "", "note" to ""),
+            mapOf("id" to 4L, "name" to "苦土石灰", "defaultAmount" to "", "note" to ""),
+            mapOf("id" to 5L, "name" to "ジャガイモの肥料", "defaultAmount" to "", "note" to ""),
         )
 
         private val incompatibilities = buildList {

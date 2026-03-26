@@ -17,6 +17,11 @@
     <string name="worklog_select_date">日付選択</string>
     <string name="worklog_selected">選択済み</string>
     <string name="worklog_planted_date">植付: %1$d/%2$d/%3$d</string>
+    <string name="worklog_fertilizer">肥料</string>
+    <string name="worklog_select_fertilizer">肥料を選択（任意）</string>
+    <string name="worklog_fertilizer_amount">施肥量</string>
+    <string name="worklog_fertilizer_amount_hint">例: 100g</string>
+    <string name="worklog_fertilizer_clear">選択解除</string>
 
     <!-- Common -->
     <string name="save">保存</string>

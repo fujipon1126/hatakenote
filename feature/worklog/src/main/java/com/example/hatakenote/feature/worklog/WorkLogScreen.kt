@@ -53,6 +53,7 @@ import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.feature.worklog.R
+import com.example.hatakenote.core.domain.model.Fertilizer
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.WorkType
 import kotlinx.datetime.Instant
@@ -89,6 +90,12 @@ internal fun WorkLogRoute(
         onPlotSelectorClick = viewModel::showPlotSelector,
         onPlotSelected = viewModel::selectPlot,
         onPlotSelectorDismiss = viewModel::dismissPlotSelector,
+        onFertilizerSelectorClick = viewModel::showFertilizerSelector,
+        onFertilizerSelected = viewModel::selectFertilizer,
+        onFertilizerSelectorDismiss = viewModel::dismissFertilizerSelector,
+        onFertilizerClear = viewModel::clearFertilizer,
+        onFertilizerAmountChanged = viewModel::setFertilizerAmount,
+        isFertilizerWorkType = viewModel.isFertilizerWorkType(),
         onSaveClick = viewModel::save,
         canSave = viewModel.canSave(),
         getWorkTypeLabel = viewModel::getWorkTypeLabel,
@@ -113,6 +120,12 @@ internal fun WorkLogScreen(
     onPlotSelectorClick: () -> Unit,
     onPlotSelected: (Plot) -> Unit,
     onPlotSelectorDismiss: () -> Unit,
+    onFertilizerSelectorClick: () -> Unit,
+    onFertilizerSelected: (Fertilizer) -> Unit,
+    onFertilizerSelectorDismiss: () -> Unit,
+    onFertilizerClear: () -> Unit,
+    onFertilizerAmountChanged: (String) -> Unit,
+    isFertilizerWorkType: Boolean,
     onSaveClick: () -> Unit,
     canSave: Boolean,
     getWorkTypeLabel: (WorkType) -> String,
@@ -262,6 +275,46 @@ internal fun WorkLogScreen(
                     }
                 }
 
+                // Fertilizer Selection (for FERTILIZE and BASE_FERTILIZE)
+                if (isFertilizerWorkType && uiState.availableFertilizers.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.worklog_fertilizer),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = onFertilizerSelectorClick,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = uiState.selectedFertilizer?.name
+                                    ?: stringResource(R.string.worklog_select_fertilizer),
+                            )
+                        }
+                        if (uiState.selectedFertilizer != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                OutlinedTextField(
+                                    value = uiState.fertilizerAmount,
+                                    onValueChange = onFertilizerAmountChanged,
+                                    modifier = Modifier.weight(1f),
+                                    label = { Text(stringResource(R.string.worklog_fertilizer_amount)) },
+                                    placeholder = { Text(stringResource(R.string.worklog_fertilizer_amount_hint)) },
+                                    singleLine = true,
+                                )
+                                TextButton(onClick = onFertilizerClear) {
+                                    Text(stringResource(R.string.worklog_fertilizer_clear))
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Detail Input
                 item {
                     Text(
@@ -379,6 +432,32 @@ internal fun WorkLogScreen(
             },
         )
     }
+
+    // Fertilizer Selector Dialog
+    if (uiState.showFertilizerSelector) {
+        AlertDialog(
+            onDismissRequest = onFertilizerSelectorDismiss,
+            title = { Text(stringResource(R.string.worklog_select_fertilizer)) },
+            text = {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(uiState.availableFertilizers) { fertilizer ->
+                        FertilizerSelectItem(
+                            fertilizer = fertilizer,
+                            isSelected = uiState.selectedFertilizer?.id == fertilizer.id,
+                            onClick = { onFertilizerSelected(fertilizer) },
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onFertilizerSelectorDismiss) {
+                    Text(stringResource(R.string.close))
+                }
+            },
+        )
+    }
 }
 
 @Composable
@@ -434,6 +513,54 @@ private fun PlantingSelectItem(
                     imageVector = Icons.Default.Check,
                     contentDescription = stringResource(R.string.worklog_selected),
                     tint = cropColor,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FertilizerSelectItem(
+    fertilizer: Fertilizer,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = fertilizer.name,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                if (fertilizer.defaultAmount.isNotEmpty()) {
+                    Text(
+                        text = fertilizer.defaultAmount,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = stringResource(R.string.worklog_selected),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }

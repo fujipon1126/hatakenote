@@ -20,6 +20,8 @@
     <string name="settings_master_data_section">マスターデータ管理</string>
     <string name="settings_crop_master">作物マスター</string>
     <string name="settings_crop_master_description">作物の追加・編集・削除</string>
+    <string name="settings_fertilizer_master">肥料マスター</string>
+    <string name="settings_fertilizer_master_description">肥料の追加・編集・削除</string>
     <string name="settings_app_info_section">アプリ情報</string>
     <string name="settings_app_name">畑ノート</string>
     <string name="settings_version">バージョン %s</string>
