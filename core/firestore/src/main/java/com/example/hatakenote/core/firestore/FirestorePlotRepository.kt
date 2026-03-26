@@ -48,7 +48,7 @@ class FirestorePlotRepository @Inject constructor(
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
                             doc.toPlot()
-                        }
+                        }.sortedWith(compareBy({ it.side }, { it.number }))
                     }
             }
         }
@@ -62,6 +62,7 @@ class FirestorePlotRepository @Inject constructor(
             } else {
                 val plotsFlow = plotsCollection(farmId).snapshots().map { snapshot ->
                     snapshot.documents.mapNotNull { it.toPlot() }
+                        .sortedWith(compareBy({ it.side }, { it.number }))
                 }
                 val plantingsFlow = plantingsCollection(farmId)
                     .whereEqualTo("isActive", true)
