@@ -1,8 +1,11 @@
 package com.example.hatakenote.core.firestore
 
+import com.example.hatakenote.core.database.dao.PlotDao
+import com.example.hatakenote.core.database.entity.toDomain
 import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.example.hatakenote.core.domain.repository.MasterDataInitializer
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -12,11 +15,13 @@ import javax.inject.Singleton
 class FirestoreMasterDataInitializer @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val farmRepository: FarmRepository,
+    private val plotDao: PlotDao,
 ) : MasterDataInitializer {
 
     override suspend fun initializeIfNeeded() {
         val farmId = farmRepository.getCurrentFarmId().first() ?: return
         initializeForFarm(farmId)
+        migratePlotsFromRoom(farmId)
     }
 
     suspend fun initializeForFarm(farmId: String) {
@@ -54,7 +59,44 @@ class FirestoreMasterDataInitializer @Inject constructor(
         batch.commit().await()
     }
 
+    /**
+     * Roomの区画データをFirestoreに一回限り移行する。
+     * Firestoreのplotsが空かつRoomにデータがある場合のみ実行。
+     */
+    private suspend fun migratePlotsFromRoom(farmId: String) {
+        val farmDoc = firestore.collection("farms").document(farmId)
+
+        // サーバーのみ確認（ローカルキャッシュを無視）
+        val existingPlots = farmDoc.collection("plots")
+            .limit(1)
+            .get(Source.SERVER)
+            .await()
+
+        if (!existingPlots.isEmpty) return
+
+        val roomPlots = plotDao.getAll().first()
+        if (roomPlots.isEmpty()) return
+
+        val batch = firestore.batch()
+        roomPlots.forEach { entity ->
+            val plot = entity.toDomain()
+            val ref = farmDoc.collection("plots").document()
+            batch.set(
+                ref, hashMapOf(
+                    "id" to plot.id,
+                    "name" to plot.name,
+                    "side" to plot.side.name,
+                    "number" to plot.number,
+                    "width" to plot.width,
+                    "height" to plot.height,
+                )
+            )
+        }
+        batch.commit().await()
+    }
+
     companion object {
+
         private val families = listOf(
             mapOf("id" to 1L, "name" to "ナス科", "rotationYears" to 4),
             mapOf("id" to 2L, "name" to "アブラナ科", "rotationYears" to 2),
