@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -236,29 +238,109 @@ private fun EmptyPlotMessage(onAddPlotClick: () -> Unit) {
     }
 }
 
+/**
+ * 隣接する同じ作物の区画をマージしたグループ
+ */
+private data class MergedPlotGroup(
+    val plots: List<PlotWithCurrentPlanting>,
+    val startRow: Int,
+    val startCol: Int,
+    val rowSpan: Int,
+    val colSpan: Int,
+)
+
+/**
+ * 隣接する同じ作物の区画をグループ化する。
+ * 縦方向を優先してマージし、次に横方向のマージを試みる。
+ */
+private fun computeMergedGroups(
+    plots: List<PlotWithCurrentPlanting>,
+    maxNumber: Int,
+): Pair<List<MergedPlotGroup>, List<Pair<Int, Int>>> {
+    val grid = Array(maxNumber) { arrayOfNulls<PlotWithCurrentPlanting>(2) }
+    for (p in plots) {
+        val row = p.plot.number - 1
+        val col = if (p.plot.side == PlotSide.LEFT) 0 else 1
+        if (row in 0 until maxNumber) grid[row][col] = p
+    }
+
+    fun cropKey(p: PlotWithCurrentPlanting?): Set<Long>? {
+        if (p == null || p.currentPlantings.isEmpty()) return null
+        return p.currentPlantings.map { it.crop.id }.toSortedSet()
+    }
+
+    val visited = Array(maxNumber) { BooleanArray(2) }
+    val groups = mutableListOf<MergedPlotGroup>()
+    val emptyCells = mutableListOf<Pair<Int, Int>>()
+
+    for (row in 0 until maxNumber) {
+        for (col in 0..1) {
+            if (visited[row][col]) continue
+            val plot = grid[row][col]
+            if (plot == null) {
+                emptyCells.add(row to col)
+                continue
+            }
+
+            visited[row][col] = true
+            val key = cropKey(plot)
+
+            if (key == null) {
+                groups.add(MergedPlotGroup(listOf(plot), row, col, 1, 1))
+                continue
+            }
+
+            // 縦方向に拡張
+            var maxRow = row
+            for (r in row + 1 until maxNumber) {
+                if (!visited[r][col] && cropKey(grid[r][col]) == key) {
+                    maxRow = r
+                } else break
+            }
+
+            // 横方向に拡張（縦の全範囲が同じ作物の場合のみ）
+            var maxCol = col
+            if (col == 0) {
+                var canExpandRight = true
+                for (r in row..maxRow) {
+                    if (visited[r][1] || cropKey(grid[r][1]) != key) {
+                        canExpandRight = false
+                        break
+                    }
+                }
+                if (canExpandRight) maxCol = 1
+            }
+
+            val mergedPlots = mutableListOf<PlotWithCurrentPlanting>()
+            for (r in row..maxRow) {
+                for (c in col..maxCol) {
+                    visited[r][c] = true
+                    grid[r][c]?.let { mergedPlots.add(it) }
+                }
+            }
+
+            groups.add(
+                MergedPlotGroup(mergedPlots, row, col, maxRow - row + 1, maxCol - col + 1),
+            )
+        }
+    }
+
+    return groups to emptyCells
+}
+
 @Composable
 private fun PlotGrid(
     plots: List<PlotWithCurrentPlanting>,
     onPlotClick: (Long) -> Unit,
 ) {
     val gap = 8.dp
+    val maxNumber = plots.maxOfOrNull { it.plot.number } ?: return
 
-    // Group plots by side
-    val leftPlots = plots
-        .filter { it.plot.side == PlotSide.LEFT }
-        .sortedBy { it.plot.number }
-    val rightPlots = plots
-        .filter { it.plot.side == PlotSide.RIGHT }
-        .sortedBy { it.plot.number }
+    val (mergedGroups, emptyCells) = remember(plots) {
+        computeMergedGroups(plots, maxNumber)
+    }
 
-    val maxNumber = maxOf(
-        leftPlots.maxOfOrNull { it.plot.number } ?: 0,
-        rightPlots.maxOfOrNull { it.plot.number } ?: 0,
-    )
-
-    Column(
-        verticalArrangement = Arrangement.spacedBy(gap),
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(gap)) {
         // Header row
         Row(
             horizontalArrangement = Arrangement.spacedBy(gap),
@@ -286,33 +368,48 @@ private fun PlotGrid(
             }
         }
 
-        for (number in 1..maxNumber) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(gap),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                // Left cell
-                val leftPlot = leftPlots.find { it.plot.number == number }
-                if (leftPlot != null) {
-                    PlotCell(
-                        plotWithPlanting = leftPlot,
-                        modifier = Modifier.weight(1f),
-                        onClick = { onPlotClick(leftPlot.plot.id) },
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val cellWidth = (maxWidth - gap) / 2
+            val cellHeight = cellWidth / 1.6f
+            val totalHeight = cellHeight * maxNumber + gap * (maxNumber - 1)
+
+            Box(modifier = Modifier.fillMaxWidth().height(totalHeight)) {
+                // 区画のないセル
+                for ((row, col) in emptyCells) {
+                    EmptyCell(
+                        modifier = Modifier
+                            .offset(
+                                x = if (col == 0) 0.dp else cellWidth + gap,
+                                y = (cellHeight + gap) * row,
+                            )
+                            .size(width = cellWidth, height = cellHeight),
                     )
-                } else {
-                    EmptyCell(modifier = Modifier.weight(1f))
                 }
 
-                // Right cell
-                val rightPlot = rightPlots.find { it.plot.number == number }
-                if (rightPlot != null) {
-                    PlotCell(
-                        plotWithPlanting = rightPlot,
-                        modifier = Modifier.weight(1f),
-                        onClick = { onPlotClick(rightPlot.plot.id) },
-                    )
-                } else {
-                    EmptyCell(modifier = Modifier.weight(1f))
+                // マージされたグループと単独セル
+                for (group in mergedGroups) {
+                    val x = if (group.startCol == 0) 0.dp else cellWidth + gap
+                    val y = (cellHeight + gap) * group.startRow
+                    val w = cellWidth * group.colSpan + gap * (group.colSpan - 1)
+                    val h = cellHeight * group.rowSpan + gap * (group.rowSpan - 1)
+
+                    if (group.plots.size == 1) {
+                        PlotCell(
+                            plotWithPlanting = group.plots.first(),
+                            modifier = Modifier
+                                .offset(x = x, y = y)
+                                .size(width = w, height = h),
+                            onClick = { onPlotClick(group.plots.first().plot.id) },
+                        )
+                    } else {
+                        MergedPlotCell(
+                            group = group,
+                            modifier = Modifier
+                                .offset(x = x, y = y)
+                                .size(width = w, height = h),
+                            onClick = { onPlotClick(group.plots.first().plot.id) },
+                        )
+                    }
                 }
             }
         }
@@ -342,7 +439,6 @@ private fun PlotCell(
 
     Card(
         modifier = modifier
-            .aspectRatio(1.6f)
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor,
@@ -395,10 +491,69 @@ private fun PlotCell(
 }
 
 @Composable
+private fun MergedPlotCell(
+    group: MergedPlotGroup,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    val firstPlot = group.plots.first()
+    val currentPlantings = firstPlot.currentPlantings
+
+    val backgroundColor = parseColorSafe(
+        currentPlantings.first().crop.colorHex,
+        MaterialTheme.colorScheme.primaryContainer,
+    )
+    val textColor = contrastTextColor(backgroundColor)
+
+    Card(
+        modifier = modifier
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        shape = RoundedCornerShape(8.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            // 区画名を列挙
+            Text(
+                text = group.plots.joinToString(" · ") { it.plot.name },
+                style = MaterialTheme.typography.labelMedium,
+                color = textColor,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            // 作物名（グループ内で共通）
+            currentPlantings.take(2).forEach { plantingWithCrop ->
+                Text(
+                    text = plantingWithCrop.crop.name,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+                    color = textColor.copy(alpha = 0.9f),
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (currentPlantings.size > 2) {
+                Text(
+                    text = "+${currentPlantings.size - 2}",
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 9.sp),
+                    color = textColor.copy(alpha = 0.7f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun EmptyCell(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .aspectRatio(1.6f)
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
             .border(

@@ -30,6 +30,7 @@ import javax.inject.Inject
 
 data class PlotDetailUiState(
     val plot: Plot? = null,
+    val siblingPlots: List<Plot> = emptyList(),
     val currentPlantings: List<PlantingWithCrop> = emptyList(),
     val pastPlantings: List<PlantingWithCrop> = emptyList(),
     val workLogs: List<WorkLog> = emptyList(),
@@ -81,6 +82,13 @@ class PlotDetailViewModel @Inject constructor(
                     siblingPlotIds.addAll(plotIds)
                 }
 
+                // 兄弟区画のPlotオブジェクトを取得（名前表示用）
+                val allPlots = plotRepository.getAll().first()
+                val siblingPlots = siblingPlotIds
+                    .filter { it != plotId }
+                    .mapNotNull { sibId -> allPlots.find { it.id == sibId } }
+                    .sortedWith(compareBy({ it.side }, { it.number }))
+
                 // 全兄弟区画の plot-bound 作業記録を取得（TILL, BASE_FERTILIZE）
                 val plotWorkLogs = siblingPlotIds.flatMap { sibPlotId ->
                     workLogRepository.getByPlotId(sibPlotId).first()
@@ -117,6 +125,7 @@ class PlotDetailViewModel @Inject constructor(
 
                 _uiState.value = _uiState.value.copy(
                     plot = plotWithPlantings.plot,
+                    siblingPlots = siblingPlots,
                     currentPlantings = plotWithPlantings.currentPlantings,
                     pastPlantings = pastPlantings.map { planting ->
                         PlantingWithCrop(

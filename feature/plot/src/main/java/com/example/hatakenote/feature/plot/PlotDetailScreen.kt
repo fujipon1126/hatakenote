@@ -139,7 +139,14 @@ internal fun PlotDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(uiState.plot?.name ?: stringResource(R.string.plot_detail_title)) },
+                title = {
+                    val title = if (uiState.plot != null && uiState.siblingPlots.isNotEmpty()) {
+                        (listOf(uiState.plot) + uiState.siblingPlots).joinToString(" · ") { it.name }
+                    } else {
+                        uiState.plot?.name ?: stringResource(R.string.plot_detail_title)
+                    }
+                    Text(title)
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
