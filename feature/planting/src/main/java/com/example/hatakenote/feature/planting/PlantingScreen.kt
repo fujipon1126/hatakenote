@@ -100,6 +100,7 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import androidx.core.content.FileProvider
+import com.example.hatakenote.core.ui.component.FullScreenPhotoViewer
 import java.io.File
 import java.io.FileOutputStream
 
@@ -763,6 +764,7 @@ private fun PhotoDetailBottomSheet(
     var editedDate by remember { mutableStateOf(initialDate) }
     var editedComment by remember { mutableStateOf(initialComment) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showFullScreenPhoto by remember { mutableStateOf(false) }
 
     val canSave = editedDate != initialDate || editedComment != initialComment
 
@@ -791,7 +793,8 @@ private fun PhotoDetailBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(max = 300.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { showFullScreenPhoto = true },
                 contentScale = ContentScale.Fit,
             )
 
@@ -881,6 +884,14 @@ private fun PhotoDetailBottomSheet(
                 showDatePicker = false
             },
             onDismiss = { showDatePicker = false },
+        )
+    }
+
+    if (showFullScreenPhoto) {
+        FullScreenPhotoViewer(
+            model = imageUri,
+            contentDescription = stringResource(R.string.planting_photo),
+            onDismiss = { showFullScreenPhoto = false },
         )
     }
 }

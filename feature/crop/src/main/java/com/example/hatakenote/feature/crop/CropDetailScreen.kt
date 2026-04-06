@@ -3,6 +3,7 @@ package com.example.hatakenote.feature.crop
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.example.hatakenote.core.ui.component.FullScreenPhotoViewer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -305,6 +309,8 @@ private fun PlantingCard(
 
 @Composable
 private fun PhotosSection(photos: List<PlantingPhoto>) {
+    var fullScreenPhotoUri by remember { mutableStateOf<Uri?>(null) }
+
     Column {
         Text(
             text = stringResource(R.string.crop_detail_photos),
@@ -327,7 +333,8 @@ private fun PhotosSection(photos: List<PlantingPhoto>) {
                             contentDescription = null,
                             modifier = Modifier
                                 .size(100.dp)
-                                .clip(RoundedCornerShape(8.dp)),
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { fullScreenPhotoUri = Uri.parse(photo.filePath) },
                             contentScale = ContentScale.Crop,
                         )
                         Text(
@@ -344,6 +351,14 @@ private fun PhotosSection(photos: List<PlantingPhoto>) {
                 }
             }
         }
+    }
+
+    fullScreenPhotoUri?.let { uri ->
+        FullScreenPhotoViewer(
+            model = uri,
+            contentDescription = null,
+            onDismiss = { fullScreenPhotoUri = null },
+        )
     }
 }
 

@@ -5,6 +5,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.example.hatakenote.core.ui.component.FullScreenPhotoViewer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -510,6 +511,8 @@ private fun PlantingCard(
         }
 
         // Photos
+        var fullScreenPhotoPath by remember { mutableStateOf<String?>(null) }
+
         if (photos.isNotEmpty()) {
             LazyRow(
                 modifier = Modifier
@@ -524,7 +527,8 @@ private fun PlantingCard(
                         contentDescription = photo.comment,
                         modifier = Modifier
                             .size(64.dp)
-                            .clip(RoundedCornerShape(8.dp)),
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { fullScreenPhotoPath = photo.filePath },
                         contentScale = ContentScale.Crop,
                     )
                 }
@@ -546,6 +550,14 @@ private fun PlantingCard(
                     }
                 }
             }
+        }
+
+        fullScreenPhotoPath?.let { path ->
+            FullScreenPhotoViewer(
+                model = path,
+                contentDescription = null,
+                onDismiss = { fullScreenPhotoPath = null },
+            )
         }
     }
 }
