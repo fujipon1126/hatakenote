@@ -622,6 +622,16 @@ private fun DateSelector(
     }
 }
 
+private sealed interface PhotoListItem {
+    val takenDate: LocalDate
+    data class Existing(val photo: com.example.hatakenote.core.domain.model.PlantingPhoto) : PhotoListItem {
+        override val takenDate: LocalDate get() = photo.takenDate
+    }
+    data class Pending(val metadata: PendingPhotoMetadata) : PhotoListItem {
+        override val takenDate: LocalDate get() = metadata.takenDate
+    }
+}
+
 @Composable
 private fun PhotoSection(
     existingPhotos: List<com.example.hatakenote.core.domain.model.PlantingPhoto>,
@@ -630,6 +640,12 @@ private fun PhotoSection(
     onPhotoClick: (com.example.hatakenote.core.domain.model.PlantingPhoto) -> Unit,
     onPendingPhotoClick: (PendingPhotoMetadata) -> Unit,
 ) {
+    val sortedPhotos = remember(existingPhotos, pendingPhotos) {
+        val existing = existingPhotos.map { PhotoListItem.Existing(it) }
+        val pending = pendingPhotos.map { PhotoListItem.Pending(it) }
+        (existing + pending).sortedByDescending { it.takenDate }
+    }
+
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -667,24 +683,21 @@ private fun PhotoSection(
             }
         }
 
-        // Existing Photos
-        items(existingPhotos) { photo ->
-            PhotoItem(
-                uri = Uri.parse(photo.filePath),
-                takenDate = photo.takenDate,
-                hasComment = !photo.comment.isNullOrBlank(),
-                onClick = { onPhotoClick(photo) },
-            )
-        }
-
-        // Pending Photos
-        items(pendingPhotos) { pending ->
-            PhotoItem(
-                uri = pending.uri,
-                takenDate = pending.takenDate,
-                hasComment = !pending.comment.isNullOrBlank(),
-                onClick = { onPendingPhotoClick(pending) },
-            )
+        items(sortedPhotos) { item ->
+            when (item) {
+                is PhotoListItem.Existing -> PhotoItem(
+                    uri = Uri.parse(item.photo.filePath),
+                    takenDate = item.takenDate,
+                    hasComment = !item.photo.comment.isNullOrBlank(),
+                    onClick = { onPhotoClick(item.photo) },
+                )
+                is PhotoListItem.Pending -> PhotoItem(
+                    uri = item.metadata.uri,
+                    takenDate = item.takenDate,
+                    hasComment = !item.metadata.comment.isNullOrBlank(),
+                    onClick = { onPendingPhotoClick(item.metadata) },
+                )
+            }
         }
     }
 }

@@ -460,30 +460,6 @@ private fun PhotoSection(
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(photoUris) { uri ->
-                Box {
-                    AsyncImage(
-                        model = uri,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Crop,
-                    )
-                    IconButton(
-                        onClick = { onRemovePhoto(uri) },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .size(24.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.delete),
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                }
-            }
             item {
                 Card(
                     modifier = Modifier
@@ -512,6 +488,30 @@ private fun PhotoSection(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
+                    }
+                }
+            }
+            items(photoUris) { uri ->
+                Box {
+                    AsyncImage(
+                        model = uri,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
+                    IconButton(
+                        onClick = { onRemovePhoto(uri) },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(24.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.delete),
+                            modifier = Modifier.size(16.dp),
+                        )
                     }
                 }
             }
