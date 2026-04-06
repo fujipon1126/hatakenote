@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -62,6 +64,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -141,12 +144,23 @@ internal fun PlotPhotoScreen(
     canSave: Boolean,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    var showPhotoSourceDialog by remember { mutableStateOf(false) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
     ) { uris ->
         uris.forEach { uri ->
             onPhotoAdded(uri)
+        }
+    }
+
+    var cameraPhotoUri by remember { mutableStateOf<Uri?>(null) }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            cameraPhotoUri?.let { uri -> onPhotoAdded(uri) }
         }
     }
 
@@ -207,11 +221,7 @@ internal fun PlotPhotoScreen(
                 // Photo selector
                 PhotoSection(
                     photoUris = uiState.pendingPhotoUris,
-                    onAddPhoto = {
-                        photoPickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    },
+                    onAddPhoto = { showPhotoSourceDialog = true },
                     onRemovePhoto = onPhotoRemoved,
                 )
 
@@ -276,7 +286,86 @@ internal fun PlotPhotoScreen(
                 DatePicker(state = datePickerState)
             }
         }
+
+        // Photo Source Dialog
+        if (showPhotoSourceDialog) {
+            PhotoSourceDialog(
+                onDismiss = { showPhotoSourceDialog = false },
+                onCameraSelected = {
+                    showPhotoSourceDialog = false
+                    val photoFile = File(
+                        context.filesDir,
+                        "camera_photo_${System.currentTimeMillis()}.jpg"
+                    )
+                    val uri = FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        photoFile,
+                    )
+                    cameraPhotoUri = uri
+                    cameraLauncher.launch(uri)
+                },
+                onGallerySelected = {
+                    showPhotoSourceDialog = false
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+            )
+        }
     }
+}
+
+@Composable
+private fun PhotoSourceDialog(
+    onDismiss: () -> Unit,
+    onCameraSelected: () -> Unit,
+    onGallerySelected: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.photo_source_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(
+                    onClick = onCameraSelected,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoCamera,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.photo_source_camera),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                TextButton(
+                    onClick = onGallerySelected,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoLibrary,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.photo_source_gallery),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

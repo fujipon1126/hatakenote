@@ -49,6 +49,9 @@
     <string name="plot_photo_photos">写真</string>
     <string name="plot_photo_comment">コメント（任意）</string>
     <string name="plot_photo_add">追加</string>
+    <string name="photo_source_title">写真の追加方法</string>
+    <string name="photo_source_camera">カメラで撮影</string>
+    <string name="photo_source_gallery">ライブラリから選択</string>
     <string name="plot_photo_current_crops">栽培中: %s</string>
 
     <!-- Common -->

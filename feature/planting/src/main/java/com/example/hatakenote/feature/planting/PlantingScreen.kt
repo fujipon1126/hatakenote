@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.foundation.rememberScrollState
@@ -98,6 +99,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
+import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
 
@@ -200,12 +202,23 @@ internal fun PlantingScreen(
     canHarvest: Boolean,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    var showPhotoSourceDialog by remember { mutableStateOf(false) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
     ) { uris ->
         uris.forEach { uri ->
             onPhotoAdded(uri)
+        }
+    }
+
+    var cameraPhotoUri by remember { mutableStateOf<Uri?>(null) }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            cameraPhotoUri?.let { uri -> onPhotoAdded(uri) }
         }
     }
 
@@ -329,11 +342,7 @@ internal fun PlantingScreen(
                         PhotoSection(
                             existingPhotos = uiState.photos,
                             pendingPhotos = uiState.pendingPhotos,
-                            onAddPhoto = {
-                                photoPickerLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                            },
+                            onAddPhoto = { showPhotoSourceDialog = true },
                             onPhotoClick = onPhotoClick,
                             onPendingPhotoClick = onPendingPhotoClick,
                         )
@@ -399,6 +408,85 @@ internal fun PlantingScreen(
             )
         }
     }
+
+    // Photo Source Dialog
+    if (showPhotoSourceDialog) {
+        PhotoSourceDialog(
+            onDismiss = { showPhotoSourceDialog = false },
+            onCameraSelected = {
+                showPhotoSourceDialog = false
+                val photoFile = File(
+                    context.filesDir,
+                    "camera_photo_${System.currentTimeMillis()}.jpg"
+                )
+                val uri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    photoFile,
+                )
+                cameraPhotoUri = uri
+                cameraLauncher.launch(uri)
+            },
+            onGallerySelected = {
+                showPhotoSourceDialog = false
+                photoPickerLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            },
+        )
+    }
+}
+
+@Composable
+private fun PhotoSourceDialog(
+    onDismiss: () -> Unit,
+    onCameraSelected: () -> Unit,
+    onGallerySelected: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.photo_source_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(
+                    onClick = onCameraSelected,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoCamera,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.photo_source_camera),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                TextButton(
+                    onClick = onGallerySelected,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoLibrary,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.photo_source_gallery),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
 }
 
 @Composable

@@ -22,6 +22,9 @@
     <string name="planting_photo">写真</string>
     <string name="planting_add_photo">写真を追加</string>
     <string name="planting_photo_add">追加</string>
+    <string name="photo_source_title">写真の追加方法</string>
+    <string name="photo_source_camera">カメラで撮影</string>
+    <string name="photo_source_gallery">ライブラリから選択</string>
     <string name="planting_photo_remove">削除</string>
     <string name="planting_photo_taken_date">%1$d/%2$d/%3$d</string>
     <string name="planting_photo_detail">写真の詳細</string>
