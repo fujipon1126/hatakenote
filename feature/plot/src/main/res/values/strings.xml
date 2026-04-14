@@ -53,6 +53,8 @@
     <string name="photo_source_camera">カメラで撮影</string>
     <string name="photo_source_gallery">ライブラリから選択</string>
     <string name="plot_photo_current_crops">栽培中: %s</string>
+    <string name="plot_photo_select_planting">作付けを選択（任意）</string>
+    <string name="plot_photo_planting_none">指定しない（区画全体の写真）</string>
 
     <!-- Common -->
     <string name="save">保存</string>

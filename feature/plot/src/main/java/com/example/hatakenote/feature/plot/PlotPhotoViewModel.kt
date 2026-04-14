@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.hatakenote.core.domain.model.PlantingPhoto
+import com.example.hatakenote.core.domain.model.PlantingWithCrop
 import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
@@ -26,6 +27,7 @@ data class PlotPhotoUiState(
     val isLoading: Boolean = true,
     val plotsWithPlantings: List<PlotWithCurrentPlanting> = emptyList(),
     val selectedPlotId: Long? = null,
+    val selectedPlantingId: Long? = null,
     val photoDate: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
     val pendingPhotoUris: List<Uri> = emptyList(),
     val comment: String = "",
@@ -33,7 +35,14 @@ data class PlotPhotoUiState(
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
     val errorMessage: String? = null,
-)
+) {
+    /** 選択中の区画の作付けリスト */
+    val currentPlantingsForSelectedPlot: List<PlantingWithCrop>
+        get() = plotsWithPlantings
+            .find { it.plot.id == selectedPlotId }
+            ?.currentPlantings
+            ?: emptyList()
+}
 
 @HiltViewModel
 class PlotPhotoViewModel @Inject constructor(
@@ -75,7 +84,14 @@ class PlotPhotoViewModel @Inject constructor(
     }
 
     fun selectPlot(plotId: Long) {
-        _uiState.value = _uiState.value.copy(selectedPlotId = plotId)
+        _uiState.value = _uiState.value.copy(
+            selectedPlotId = plotId,
+            selectedPlantingId = null,
+        )
+    }
+
+    fun selectPlanting(plantingId: Long?) {
+        _uiState.value = _uiState.value.copy(selectedPlantingId = plantingId)
     }
 
     fun setPhotoDate(date: LocalDate) {
@@ -135,7 +151,7 @@ class PlotPhotoViewModel @Inject constructor(
                     val filePath = onPhotoSaved(uri)
                     if (filePath != null) {
                         val photo = PlantingPhoto(
-                            plantingId = null,
+                            plantingId = state.selectedPlantingId,
                             plotId = plotId,
                             filePath = filePath,
                             takenDate = state.photoDate,

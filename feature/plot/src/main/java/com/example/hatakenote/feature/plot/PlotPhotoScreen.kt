@@ -97,6 +97,7 @@ internal fun PlotPhotoRoute(
         uiState = uiState,
         onBackClick = onBackClick,
         onPlotSelected = viewModel::selectPlot,
+        onPlantingSelected = viewModel::selectPlanting,
         onDateSelected = viewModel::setPhotoDate,
         onCommentChanged = viewModel::setComment,
         onPhotoAdded = viewModel::addPhotoUri,
@@ -133,6 +134,7 @@ internal fun PlotPhotoScreen(
     uiState: PlotPhotoUiState,
     onBackClick: () -> Unit,
     onPlotSelected: (Long) -> Unit,
+    onPlantingSelected: (Long?) -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     onCommentChanged: (String) -> Unit,
     onPhotoAdded: (Uri) -> Unit,
@@ -211,6 +213,15 @@ internal fun PlotPhotoScreen(
                     selectedPlotId = uiState.selectedPlotId,
                     onPlotSelected = onPlotSelected,
                 )
+
+                // Planting selector (if the selected plot has plantings)
+                if (uiState.currentPlantingsForSelectedPlot.isNotEmpty()) {
+                    PlantingSelector(
+                        plantings = uiState.currentPlantingsForSelectedPlot,
+                        selectedPlantingId = uiState.selectedPlantingId,
+                        onPlantingSelected = onPlantingSelected,
+                    )
+                }
 
                 // Date selector
                 DateSelector(
@@ -417,6 +428,57 @@ private fun PlotSelector(
                     },
                     onClick = {
                         onPlotSelected(pwp.plot.id)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PlantingSelector(
+    plantings: List<com.example.hatakenote.core.domain.model.PlantingWithCrop>,
+    selectedPlantingId: Long?,
+    onPlantingSelected: (Long?) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = plantings.find { it.planting.id == selectedPlantingId }
+    val displayText = selected?.crop?.name
+        ?: stringResource(R.string.plot_photo_planting_none)
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+    ) {
+        OutlinedTextField(
+            value = displayText,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.plot_photo_select_planting)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            // 「指定しない」選択肢
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.plot_photo_planting_none)) },
+                onClick = {
+                    onPlantingSelected(null)
+                    expanded = false
+                },
+            )
+            plantings.forEach { pwc ->
+                DropdownMenuItem(
+                    text = { Text(pwc.crop.name) },
+                    onClick = {
+                        onPlantingSelected(pwc.planting.id)
                         expanded = false
                     },
                 )

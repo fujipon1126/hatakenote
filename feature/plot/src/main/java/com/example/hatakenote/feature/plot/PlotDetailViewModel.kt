@@ -112,10 +112,12 @@ class PlotDetailViewModel @Inject constructor(
                 // 現在の作付けに紐づく写真を取得（plantingId経由 + plotId経由）
                 val photosByPlantingId = mutableMapOf<Long, List<PlantingPhoto>>()
                 val plotPhotos = plantingPhotoRepository.getByPlotId(plotId).first()
+                // 区画写真のうち、作付けに紐づいていないもの（区画全体の写真）
+                val plotOnlyPhotos = plotPhotos.filter { it.plantingId == null }
                 for (pwc in plotWithPlantings.currentPlantings) {
                     val pid = pwc.planting.id
                     val plantingPhotos = plantingPhotoRepository.getByPlantingId(pid).first()
-                    val combined = (plantingPhotos + plotPhotos)
+                    val combined = (plantingPhotos + plotOnlyPhotos)
                         .distinctBy { it.id }
                         .sortedByDescending { it.takenDate }
                     if (combined.isNotEmpty()) {
