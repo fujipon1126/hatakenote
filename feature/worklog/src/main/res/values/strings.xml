@@ -22,6 +22,8 @@
     <string name="worklog_fertilizer_amount">施肥量</string>
     <string name="worklog_fertilizer_amount_hint">例: 100g</string>
     <string name="worklog_fertilizer_clear">選択解除</string>
+    <string name="worklog_fertilizer_remove">削除</string>
+    <string name="worklog_add_fertilizer">＋ 肥料を追加</string>
 
     <!-- Common -->
     <string name="save">保存</string>

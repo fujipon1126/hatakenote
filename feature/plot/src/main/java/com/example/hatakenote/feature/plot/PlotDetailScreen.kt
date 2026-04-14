@@ -70,6 +70,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.hatakenote.feature.plot.R
+import com.example.hatakenote.core.domain.model.Fertilizer
 import com.example.hatakenote.core.domain.model.PlantingPhoto
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.PlotSide
@@ -833,7 +834,7 @@ private fun WorkLogSection(
                 workLogs.forEach { workLog ->
                     WorkLogItem(
                         workLog = workLog,
-                        fertilizerName = workLog.fertilizerId?.let { fertilizerMap[it]?.name },
+                        fertilizerMap = fertilizerMap,
                         onClick = { onWorkLogClick(workLog.id) },
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -846,7 +847,7 @@ private fun WorkLogSection(
 @Composable
 private fun WorkLogItem(
     workLog: WorkLog,
-    fertilizerName: String?,
+    fertilizerMap: Map<Long, Fertilizer>,
     onClick: () -> Unit,
 ) {
     Card(
@@ -875,17 +876,20 @@ private fun WorkLogItem(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
-                if (fertilizerName != null) {
-                    val fertilizerText = if (workLog.fertilizerAmount.isNullOrBlank()) {
-                        fertilizerName
-                    } else {
-                        "$fertilizerName ${workLog.fertilizerAmount}"
+                workLog.fertilizers.forEach { entry ->
+                    val fertilizerName = fertilizerMap[entry.fertilizerId]?.name
+                    if (fertilizerName != null) {
+                        val fertilizerText = if (entry.amount.isBlank()) {
+                            fertilizerName
+                        } else {
+                            "$fertilizerName ${entry.amount}"
+                        }
+                        Text(
+                            text = fertilizerText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
-                    Text(
-                        text = fertilizerText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                 }
                 workLog.detail?.let { detail ->
                     Text(

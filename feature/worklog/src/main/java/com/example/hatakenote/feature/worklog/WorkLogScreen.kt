@@ -92,9 +92,9 @@ internal fun WorkLogRoute(
         onPlotSelected = viewModel::selectPlot,
         onPlotSelectorDismiss = viewModel::dismissPlotSelector,
         onFertilizerSelectorClick = viewModel::showFertilizerSelector,
-        onFertilizerSelected = viewModel::selectFertilizer,
+        onFertilizerSelected = viewModel::addFertilizer,
         onFertilizerSelectorDismiss = viewModel::dismissFertilizerSelector,
-        onFertilizerClear = viewModel::clearFertilizer,
+        onFertilizerRemove = viewModel::removeFertilizer,
         onFertilizerAmountChanged = viewModel::setFertilizerAmount,
         isFertilizerWorkType = viewModel.isFertilizerWorkType(),
         onSaveClick = viewModel::save,
@@ -124,8 +124,8 @@ internal fun WorkLogScreen(
     onFertilizerSelectorClick: () -> Unit,
     onFertilizerSelected: (Fertilizer) -> Unit,
     onFertilizerSelectorDismiss: () -> Unit,
-    onFertilizerClear: () -> Unit,
-    onFertilizerAmountChanged: (String) -> Unit,
+    onFertilizerRemove: (Int) -> Unit,
+    onFertilizerAmountChanged: (Int, String) -> Unit,
     isFertilizerWorkType: Boolean,
     onSaveClick: () -> Unit,
     canSave: Boolean,
@@ -277,7 +277,7 @@ internal fun WorkLogScreen(
                     }
                 }
 
-                // Fertilizer Selection (for FERTILIZE and BASE_FERTILIZE)
+                // Fertilizer Selection (for FERTILIZE and BASE_FERTILIZE) - multiple
                 if (isFertilizerWorkType && uiState.availableFertilizers.isNotEmpty()) {
                     item {
                         Text(
@@ -285,34 +285,48 @@ internal fun WorkLogScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedButton(
-                            onClick = onFertilizerSelectorClick,
+                    }
+                    // 登録済み肥料のリスト
+                    items(uiState.selectedFertilizers.size) { index ->
+                        val entry = uiState.selectedFertilizers[index]
+                        Card(
                             modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            ),
                         ) {
-                            Text(
-                                text = uiState.selectedFertilizer?.name
-                                    ?: stringResource(R.string.worklog_select_fertilizer),
-                            )
-                        }
-                        if (uiState.selectedFertilizer != null) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = entry.fertilizer.name,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    TextButton(onClick = { onFertilizerRemove(index) }) {
+                                        Text(stringResource(R.string.worklog_fertilizer_remove))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
                                 OutlinedTextField(
-                                    value = uiState.fertilizerAmount,
-                                    onValueChange = onFertilizerAmountChanged,
-                                    modifier = Modifier.weight(1f),
+                                    value = entry.amount,
+                                    onValueChange = { onFertilizerAmountChanged(index, it) },
+                                    modifier = Modifier.fillMaxWidth(),
                                     label = { Text(stringResource(R.string.worklog_fertilizer_amount)) },
                                     placeholder = { Text(stringResource(R.string.worklog_fertilizer_amount_hint)) },
                                     singleLine = true,
                                 )
-                                TextButton(onClick = onFertilizerClear) {
-                                    Text(stringResource(R.string.worklog_fertilizer_clear))
-                                }
                             }
+                        }
+                    }
+                    // 肥料追加ボタン
+                    item {
+                        OutlinedButton(
+                            onClick = onFertilizerSelectorClick,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(text = stringResource(R.string.worklog_add_fertilizer))
                         }
                     }
                 }
@@ -444,10 +458,11 @@ internal fun WorkLogScreen(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
+                    val selectedIds = uiState.selectedFertilizers.map { it.fertilizer.id }.toSet()
                     items(uiState.availableFertilizers) { fertilizer ->
                         FertilizerSelectItem(
                             fertilizer = fertilizer,
-                            isSelected = uiState.selectedFertilizer?.id == fertilizer.id,
+                            isSelected = fertilizer.id in selectedIds,
                             onClick = { onFertilizerSelected(fertilizer) },
                         )
                     }

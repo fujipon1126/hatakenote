@@ -1,5 +1,6 @@
 package com.example.hatakenote.core.firestore
 
+import com.example.hatakenote.core.domain.model.FertilizerEntry
 import com.example.hatakenote.core.domain.model.WorkLog
 import com.example.hatakenote.core.domain.model.WorkType
 import com.example.hatakenote.core.domain.repository.FarmRepository
@@ -132,6 +133,12 @@ class FirestoreWorkLogRepository @Inject constructor(
             ?: throw IllegalStateException("No farm selected")
 
         val newId = System.currentTimeMillis()
+        val fertilizersData = workLog.fertilizers.map { entry ->
+            hashMapOf(
+                "fertilizerId" to entry.fertilizerId,
+                "amount" to entry.amount,
+            )
+        }
         val workLogData = hashMapOf(
             "id" to newId,
             "plantingId" to workLog.plantingId,
@@ -139,8 +146,7 @@ class FirestoreWorkLogRepository @Inject constructor(
             "workType" to workLog.workType.name,
             "workDate" to workLog.workDate.toString(),
             "detail" to workLog.detail,
-            "fertilizerId" to workLog.fertilizerId,
-            "fertilizerAmount" to workLog.fertilizerAmount,
+            "fertilizers" to fertilizersData,
         )
 
         workLogsCollection(farmId).add(workLogData).await()
@@ -159,6 +165,12 @@ class FirestoreWorkLogRepository @Inject constructor(
         val docRef = snapshot.documents.firstOrNull()?.reference
             ?: throw IllegalStateException("WorkLog not found")
 
+        val fertilizersData = workLog.fertilizers.map { entry ->
+            hashMapOf(
+                "fertilizerId" to entry.fertilizerId,
+                "amount" to entry.amount,
+            )
+        }
         docRef.update(
             mapOf(
                 "plantingId" to workLog.plantingId,
@@ -166,8 +178,7 @@ class FirestoreWorkLogRepository @Inject constructor(
                 "workType" to workLog.workType.name,
                 "workDate" to workLog.workDate.toString(),
                 "detail" to workLog.detail,
-                "fertilizerId" to workLog.fertilizerId,
-                "fertilizerAmount" to workLog.fertilizerAmount,
+                "fertilizers" to fertilizersData,
             )
         ).await()
     }
@@ -184,9 +195,27 @@ class FirestoreWorkLogRepository @Inject constructor(
         snapshot.documents.firstOrNull()?.reference?.delete()?.await()
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun com.google.firebase.firestore.DocumentSnapshot.toWorkLog(): WorkLog? {
         return try {
             val data = this.data ?: return null
+
+            // 新フォーマット: fertilizers リスト
+            val fertilizers = (data["fertilizers"] as? List<Map<String, Any?>>)?.mapNotNull { map ->
+                val fId = map["fertilizerId"] as? Long ?: return@mapNotNull null
+                val amount = map["amount"] as? String ?: ""
+                FertilizerEntry(fertilizerId = fId, amount = amount)
+            }
+            // 旧フォーマット: 単一 fertilizerId / fertilizerAmount からの変換
+                ?: listOfNotNull(
+                    (data["fertilizerId"] as? Long)?.let { fId ->
+                        FertilizerEntry(
+                            fertilizerId = fId,
+                            amount = (data["fertilizerAmount"] as? String) ?: "",
+                        )
+                    }
+                )
+
             WorkLog(
                 id = (data["id"] as? Long) ?: return null,
                 plantingId = data["plantingId"] as? Long,
@@ -196,8 +225,7 @@ class FirestoreWorkLogRepository @Inject constructor(
                 workDate = (data["workDate"] as? String)?.let { LocalDate.parse(it) }
                     ?: return null,
                 detail = data["detail"] as? String,
-                fertilizerId = data["fertilizerId"] as? Long,
-                fertilizerAmount = data["fertilizerAmount"] as? String,
+                fertilizers = fertilizers,
             )
         } catch (e: Exception) {
             null

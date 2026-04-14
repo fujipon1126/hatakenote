@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.hatakenote.core.domain.model.Crop
 import com.example.hatakenote.core.domain.model.Fertilizer
+import com.example.hatakenote.core.domain.model.FertilizerEntry
 import com.example.hatakenote.core.domain.model.Planting
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.WorkLog
@@ -34,6 +35,14 @@ data class PlantingWithCropAndPlots(
     val plots: List<Plot>,
 )
 
+/**
+ * UI用の肥料エントリー（肥料マスタ + 施肥量）
+ */
+data class SelectedFertilizerEntry(
+    val fertilizer: Fertilizer,
+    val amount: String = "",
+)
+
 data class WorkLogUiState(
     val isLoading: Boolean = true,
     val isEditMode: Boolean = false,
@@ -49,10 +58,9 @@ data class WorkLogUiState(
     val selectedPlot: Plot? = null,
     val isPlotLocked: Boolean = false,
     val isPlantingLocked: Boolean = false,
-    // Fertilizer selection
+    // Fertilizer selection (multiple)
     val availableFertilizers: List<Fertilizer> = emptyList(),
-    val selectedFertilizer: Fertilizer? = null,
-    val fertilizerAmount: String = "",
+    val selectedFertilizers: List<SelectedFertilizerEntry> = emptyList(),
     val showFertilizerSelector: Boolean = false,
     // Dialog states
     val showDatePicker: Boolean = false,
@@ -128,9 +136,11 @@ class WorkLogViewModel @Inject constructor(
 
                         val hasPlotContext = selectedPlot != null || initialPlotId != null
 
-                        val selectedFertilizer = if (workLog.fertilizerId != null) {
-                            fertilizers.find { it.id == workLog.fertilizerId }
-                        } else null
+                        val selectedFertilizers = workLog.fertilizers.mapNotNull { entry ->
+                            fertilizers.find { it.id == entry.fertilizerId }?.let { fert ->
+                                SelectedFertilizerEntry(fertilizer = fert, amount = entry.amount)
+                            }
+                        }
 
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
@@ -146,8 +156,7 @@ class WorkLogViewModel @Inject constructor(
                             isPlotLocked = hasPlotContext,
                             isPlantingLocked = selectedPlanting != null,
                             availableFertilizers = fertilizers,
-                            selectedFertilizer = selectedFertilizer,
-                            fertilizerAmount = workLog.fertilizerAmount ?: "",
+                            selectedFertilizers = selectedFertilizers,
                         )
                     } else {
                         _uiState.value = _uiState.value.copy(
@@ -212,8 +221,7 @@ class WorkLogViewModel @Inject constructor(
     fun selectWorkType(workType: WorkType) {
         _uiState.value = _uiState.value.copy(
             selectedWorkType = workType,
-            selectedFertilizer = null,
-            fertilizerAmount = "",
+            selectedFertilizers = emptyList(),
         )
     }
 
@@ -242,23 +250,35 @@ class WorkLogViewModel @Inject constructor(
         )
     }
 
-    fun selectFertilizer(fertilizer: Fertilizer) {
+    fun addFertilizer(fertilizer: Fertilizer) {
+        val current = _uiState.value.selectedFertilizers
         _uiState.value = _uiState.value.copy(
-            selectedFertilizer = fertilizer,
-            fertilizerAmount = fertilizer.defaultAmount,
+            selectedFertilizers = current + SelectedFertilizerEntry(
+                fertilizer = fertilizer,
+                amount = fertilizer.defaultAmount,
+            ),
             showFertilizerSelector = false,
         )
     }
 
-    fun clearFertilizer() {
-        _uiState.value = _uiState.value.copy(
-            selectedFertilizer = null,
-            fertilizerAmount = "",
-        )
+    fun removeFertilizer(index: Int) {
+        val current = _uiState.value.selectedFertilizers
+        if (index in current.indices) {
+            _uiState.value = _uiState.value.copy(
+                selectedFertilizers = current.toMutableList().apply { removeAt(index) },
+            )
+        }
     }
 
-    fun setFertilizerAmount(amount: String) {
-        _uiState.value = _uiState.value.copy(fertilizerAmount = amount)
+    fun setFertilizerAmount(index: Int, amount: String) {
+        val current = _uiState.value.selectedFertilizers
+        if (index in current.indices) {
+            _uiState.value = _uiState.value.copy(
+                selectedFertilizers = current.toMutableList().apply {
+                    set(index, get(index).copy(amount = amount))
+                },
+            )
+        }
     }
 
     fun showFertilizerSelector() {
@@ -316,6 +336,12 @@ class WorkLogViewModel @Inject constructor(
             _uiState.value = state.copy(isSaving = true)
 
             try {
+                val fertilizerEntries = state.selectedFertilizers.map { entry ->
+                    FertilizerEntry(
+                        fertilizerId = entry.fertilizer.id,
+                        amount = entry.amount,
+                    )
+                }
                 val workLog = WorkLog(
                     id = state.existingWorkLog?.id ?: 0,
                     plantingId = if (workType.bindToPlanting()) state.selectedPlanting?.planting?.id else null,
@@ -323,8 +349,7 @@ class WorkLogViewModel @Inject constructor(
                     workType = workType,
                     workDate = state.workDate,
                     detail = state.detail.ifBlank { null },
-                    fertilizerId = state.selectedFertilizer?.id,
-                    fertilizerAmount = state.fertilizerAmount.ifBlank { null },
+                    fertilizers = fertilizerEntries,
                 )
 
                 if (state.isEditMode) {

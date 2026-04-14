@@ -3,6 +3,14 @@ package com.example.hatakenote.core.domain.model
 import kotlinx.datetime.LocalDate
 
 /**
+ * 作業で使用した肥料1件分
+ */
+data class FertilizerEntry(
+    val fertilizerId: Long,
+    val amount: String = "",
+)
+
+/**
  * 作業記録
  */
 data class WorkLog(
@@ -12,6 +20,5 @@ data class WorkLog(
     val workType: WorkType,
     val workDate: LocalDate,
     val detail: String? = null,
-    val fertilizerId: Long? = null,
-    val fertilizerAmount: String? = null,
+    val fertilizers: List<FertilizerEntry> = emptyList(),
 )
