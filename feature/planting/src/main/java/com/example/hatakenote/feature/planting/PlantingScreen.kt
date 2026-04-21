@@ -86,6 +86,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.feature.planting.R
 import coil.compose.AsyncImage
 import com.example.hatakenote.core.domain.model.Crop
+import com.example.hatakenote.core.domain.model.Harvest
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.usecase.RotationWarning
 import com.example.hatakenote.core.domain.usecase.WarningSeverity
@@ -144,7 +145,7 @@ internal fun PlantingRoute(
         onDismissDatePicker = viewModel::dismissDatePicker,
         onShowHarvestDialog = viewModel::showHarvestDialog,
         onDismissHarvestDialog = viewModel::dismissHarvestDialog,
-        onHarvest = viewModel::harvest,
+        onHarvest = { date, isFinal -> viewModel.harvest(date, isFinal) },
         onClearError = viewModel::clearError,
         onDismissRotationWarnings = viewModel::dismissRotationWarnings,
         onSave = {
@@ -196,7 +197,7 @@ internal fun PlantingScreen(
     onDismissDatePicker: () -> Unit,
     onShowHarvestDialog: () -> Unit,
     onDismissHarvestDialog: () -> Unit,
-    onHarvest: (LocalDate) -> Unit,
+    onHarvest: (LocalDate, Boolean) -> Unit,
     onClearError: () -> Unit,
     onDismissRotationWarnings: () -> Unit,
     onSave: () -> Unit,
@@ -351,6 +352,15 @@ internal fun PlantingScreen(
                         )
                     }
                 }
+
+                // Harvest History
+                if (uiState.isEditMode && uiState.harvests.isNotEmpty()) {
+                    item {
+                        SectionCard(title = stringResource(R.string.planting_harvest_history)) {
+                            HarvestHistorySection(harvests = uiState.harvests)
+                        }
+                    }
+                }
             }
         }
 
@@ -376,7 +386,8 @@ internal fun PlantingScreen(
         // Harvest Dialog
         if (uiState.showHarvestDialog) {
             HarvestDialog(
-                onConfirm = onHarvest,
+                onContinue = { date -> onHarvest(date, false) },
+                onFinal = { date -> onHarvest(date, true) },
                 onDismiss = onDismissHarvestDialog,
             )
         }
@@ -1062,7 +1073,8 @@ private fun PlantingDatePickerDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HarvestDialog(
-    onConfirm: (LocalDate) -> Unit,
+    onContinue: (LocalDate) -> Unit,
+    onFinal: (LocalDate) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
@@ -1078,16 +1090,32 @@ private fun HarvestDialog(
                     datePickerState.selectedDateMillis?.let { millis ->
                         val instant = Instant.fromEpochMilliseconds(millis)
                         val localDate = instant.toLocalDateTime(TimeZone.UTC).date
-                        onConfirm(localDate)
+                        onFinal(localDate)
                     }
                 }
             ) {
-                Text(stringResource(R.string.planting_harvest_confirm))
+                Text(
+                    stringResource(R.string.planting_harvest_final),
+                    color = MaterialTheme.colorScheme.error,
+                )
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+            Row {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.cancel))
+                }
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val instant = Instant.fromEpochMilliseconds(millis)
+                            val localDate = instant.toLocalDateTime(TimeZone.UTC).date
+                            onContinue(localDate)
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.planting_harvest_continue))
+                }
             }
         },
     ) {
@@ -1098,6 +1126,48 @@ private fun HarvestDialog(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
             )
             DatePicker(state = datePickerState)
+        }
+    }
+}
+
+@Composable
+private fun HarvestHistorySection(
+    harvests: List<Harvest>,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        harvests.forEachIndexed { index, harvest ->
+            val harvestNumber = harvests.size - index
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.planting_harvest_count, harvestNumber),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(
+                            R.string.planting_date_format,
+                            harvest.harvestedDate.year,
+                            harvest.harvestedDate.monthNumber,
+                            harvest.harvestedDate.dayOfMonth,
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
         }
     }
 }

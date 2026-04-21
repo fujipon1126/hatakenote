@@ -168,7 +168,7 @@ class FirestorePlantingRepository @Inject constructor(
         ).await()
     }
 
-    override suspend fun harvest(plantingId: Long, harvestedDate: LocalDate) {
+    override suspend fun harvest(plantingId: Long, harvestedDate: LocalDate, isFinal: Boolean) {
         val farmId = farmRepository.getCurrentFarmId().first()
             ?: throw IllegalStateException("No farm selected")
 
@@ -180,12 +180,20 @@ class FirestorePlantingRepository @Inject constructor(
         val docRef = snapshot.documents.firstOrNull()?.reference
             ?: throw IllegalStateException("Planting not found")
 
-        docRef.update(
-            mapOf(
-                "harvestedDate" to harvestedDate.toString(),
-                "isActive" to false,
-            )
-        ).await()
+        if (isFinal) {
+            docRef.update(
+                mapOf(
+                    "harvestedDate" to harvestedDate.toString(),
+                    "isActive" to false,
+                )
+            ).await()
+        } else {
+            docRef.update(
+                mapOf(
+                    "harvestedDate" to harvestedDate.toString(),
+                )
+            ).await()
+        }
     }
 
     override suspend fun delete(planting: Planting) {

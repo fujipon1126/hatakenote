@@ -48,8 +48,13 @@ class PlantingRepositoryImpl @Inject constructor(
     override suspend fun update(planting: Planting) =
         plantingDao.update(planting.toEntity())
 
-    override suspend fun harvest(plantingId: Long, harvestedDate: LocalDate) =
-        plantingDao.harvest(plantingId, harvestedDate)
+    override suspend fun harvest(plantingId: Long, harvestedDate: LocalDate, isFinal: Boolean) {
+        if (isFinal) {
+            plantingDao.harvestFinal(plantingId, harvestedDate)
+        } else {
+            plantingDao.harvestContinue(plantingId, harvestedDate)
+        }
+    }
 
     override suspend fun delete(planting: Planting) =
         plantingDao.delete(planting.toEntity())

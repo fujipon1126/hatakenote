@@ -55,7 +55,10 @@ interface PlantingDao {
     suspend fun update(planting: PlantingEntity)
 
     @Query("UPDATE plantings SET harvestedDate = :harvestedDate, isActive = 0 WHERE id = :plantingId")
-    suspend fun harvest(plantingId: Long, harvestedDate: LocalDate)
+    suspend fun harvestFinal(plantingId: Long, harvestedDate: LocalDate)
+
+    @Query("UPDATE plantings SET harvestedDate = :harvestedDate WHERE id = :plantingId")
+    suspend fun harvestContinue(plantingId: Long, harvestedDate: LocalDate)
 
     @Delete
     suspend fun delete(planting: PlantingEntity)

@@ -17,6 +17,11 @@
     <string name="planting_harvest">収穫</string>
     <string name="planting_harvest_confirm">収穫を記録</string>
     <string name="planting_harvest_date_title">収穫日を選択</string>
+    <string name="planting_harvest_continue">まだ続ける</string>
+    <string name="planting_harvest_final">最後の収穫</string>
+    <string name="planting_harvest_history">収穫履歴</string>
+    <string name="planting_harvest_count">%1$d回目</string>
+    <string name="planting_harvest_no_history">まだ収穫記録がありません</string>
     <string name="planting_rotation_warning">連作障害の注意</string>
     <string name="planting_rotation_continue">理解して続行</string>
     <string name="planting_photo">写真</string>

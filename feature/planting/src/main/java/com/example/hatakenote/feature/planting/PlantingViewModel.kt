@@ -6,10 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.hatakenote.core.domain.model.Crop
+import com.example.hatakenote.core.domain.model.Harvest
 import com.example.hatakenote.core.domain.model.Planting
 import com.example.hatakenote.core.domain.model.PlantingPhoto
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.repository.CropRepository
+import com.example.hatakenote.core.domain.repository.HarvestRepository
 import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
@@ -50,6 +52,7 @@ data class PlantingUiState(
     val photos: List<PlantingPhoto> = emptyList(),
     val pendingPhotos: List<PendingPhotoMetadata> = emptyList(),
     val existingPlanting: Planting? = null,
+    val harvests: List<Harvest> = emptyList(),
     val rotationWarnings: List<RotationWarning> = emptyList(),
     val showCropSelector: Boolean = false,
     val showPlotSelector: Boolean = false,
@@ -70,6 +73,7 @@ class PlantingViewModel @Inject constructor(
     private val plotRepository: PlotRepository,
     private val plantingRepository: PlantingRepository,
     private val plantingPhotoRepository: PlantingPhotoRepository,
+    private val harvestRepository: HarvestRepository,
     private val generateRemindersUseCase: GenerateRemindersUseCase,
     private val checkRotationCompatibilityUseCase: CheckRotationCompatibilityUseCase,
 ) : ViewModel() {
@@ -105,6 +109,7 @@ class PlantingViewModel @Inject constructor(
                         .distinctBy { it.id }
                         .sortedByDescending { it.takenDate }
                     val crop = planting?.let { cropRepository.getById(it.cropId) }
+                    val harvests = harvestRepository.getByPlantingId(plantingId).first()
 
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -117,6 +122,7 @@ class PlantingViewModel @Inject constructor(
                         note = planting?.note ?: "",
                         photos = photos,
                         existingPlanting = planting,
+                        harvests = harvests,
                     )
                 } else {
                     // New planting mode
@@ -371,19 +377,40 @@ class PlantingViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(showHarvestDialog = false)
     }
 
-    fun harvest(harvestDate: LocalDate) {
+    fun harvest(harvestDate: LocalDate, isFinal: Boolean) {
         val plantingId = this.plantingId ?: return
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSaving = true)
 
             try {
-                plantingRepository.harvest(plantingId, harvestDate)
-                _uiState.value = _uiState.value.copy(
-                    isSaving = false,
-                    showHarvestDialog = false,
-                    harvestSuccess = true,
+                // 収穫記録を保存
+                val harvest = Harvest(
+                    plantingId = plantingId,
+                    harvestedDate = harvestDate,
                 )
+                harvestRepository.insert(harvest)
+
+                // 作付けの状態を更新
+                plantingRepository.harvest(plantingId, harvestDate, isFinal)
+
+                if (isFinal) {
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        showHarvestDialog = false,
+                        harvestSuccess = true,
+                    )
+                } else {
+                    // 継続収穫の場合は画面に留まり、収穫履歴を更新
+                    val updatedHarvests = harvestRepository.getByPlantingId(plantingId).first()
+                    val updatedPlanting = plantingRepository.getById(plantingId)
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        showHarvestDialog = false,
+                        harvests = updatedHarvests,
+                        existingPlanting = updatedPlanting,
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
