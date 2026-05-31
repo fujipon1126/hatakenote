@@ -27,6 +27,7 @@ import com.example.hatakenote.core.firestore.FirestoreReminderRepository
 import com.example.hatakenote.core.firestore.FirestoreRotationIncompatibilityRepository
 import com.example.hatakenote.core.firestore.FirestoreWorkLogRepository
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -40,6 +41,10 @@ object FirestoreProviderModule {
     @Provides
     @Singleton
     fun provideFirebaseFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
+
+    @Provides
+    @Singleton
+    fun provideFirebaseStorage(): FirebaseStorage = FirebaseStorage.getInstance()
 }
 
 @Module
