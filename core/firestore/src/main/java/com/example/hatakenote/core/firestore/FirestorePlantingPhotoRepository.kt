@@ -6,16 +6,13 @@ import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.snapshots
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.Source
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import kotlinx.datetime.LocalDate
 import java.io.File
@@ -35,79 +32,35 @@ class FirestorePlantingPhotoRepository @Inject constructor(
     private fun storageDir(farmId: String): StorageReference =
         storage.reference.child("farms").child(farmId).child("planting_photos")
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getAll(): Flow<List<PlantingPhoto>> {
-        return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
-            if (farmId == null) {
-                flowOf(emptyList())
-            } else {
-                photosCollection(farmId)
-                    .snapshots()
-                    .filter { !it.metadata.isFromCache }
-                    .map { snapshot ->
-                        snapshot.documents.mapNotNull { doc ->
-                            doc.toPlantingPhoto()
-                        }
-                    }
-            }
-        }
+    override fun getAll(): Flow<List<PlantingPhoto>> = flow {
+        emit(fetchPhotos { it })
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getByPlantingId(plantingId: Long): Flow<List<PlantingPhoto>> {
-        return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
-            if (farmId == null) {
-                flowOf(emptyList())
-            } else {
-                photosCollection(farmId)
-                    .whereEqualTo("plantingId", plantingId)
-                    .snapshots()
-                    .filter { !it.metadata.isFromCache }
-                    .map { snapshot ->
-                        snapshot.documents.mapNotNull { doc ->
-                            doc.toPlantingPhoto()
-                        }
-                    }
-            }
-        }
+    override fun getByPlantingId(plantingId: Long): Flow<List<PlantingPhoto>> = flow {
+        emit(fetchPhotos { it.whereEqualTo("plantingId", plantingId) })
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getByPlotId(plotId: Long): Flow<List<PlantingPhoto>> {
-        return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
-            if (farmId == null) {
-                flowOf(emptyList())
-            } else {
-                photosCollection(farmId)
-                    .whereEqualTo("plotId", plotId)
-                    .snapshots()
-                    .filter { !it.metadata.isFromCache }
-                    .map { snapshot ->
-                        snapshot.documents.mapNotNull { doc ->
-                            doc.toPlantingPhoto()
-                        }
-                    }
-            }
-        }
+    override fun getByPlotId(plotId: Long): Flow<List<PlantingPhoto>> = flow {
+        emit(fetchPhotos { it.whereEqualTo("plotId", plotId) })
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getByDate(date: LocalDate): Flow<List<PlantingPhoto>> {
-        return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
-            if (farmId == null) {
-                flowOf(emptyList())
-            } else {
-                photosCollection(farmId)
-                    .whereEqualTo("takenDate", date.toString())
-                    .snapshots()
-                    .filter { !it.metadata.isFromCache }
-                    .map { snapshot ->
-                        snapshot.documents.mapNotNull { doc ->
-                            doc.toPlantingPhoto()
-                        }
-                    }
-            }
+    override fun getByDate(date: LocalDate): Flow<List<PlantingPhoto>> = flow {
+        emit(fetchPhotos { it.whereEqualTo("takenDate", date.toString()) })
+    }
+
+    private suspend fun fetchPhotos(
+        buildQuery: (Query) -> Query,
+    ): List<PlantingPhoto> {
+        val farmId = farmRepository.getCurrentFarmId().first() ?: return emptyList()
+        val query = buildQuery(photosCollection(farmId))
+        // サーバー優先で取得し、共有データを各ユーザー間で確実に同期する。
+        // オフライン時のみキャッシュへフォールバック。
+        val snapshot = try {
+            query.get(Source.SERVER).await()
+        } catch (e: Exception) {
+            query.get(Source.CACHE).await()
         }
+        return snapshot.documents.mapNotNull { it.toPlantingPhoto() }
     }
 
     override suspend fun getById(id: Long): PlantingPhoto? {

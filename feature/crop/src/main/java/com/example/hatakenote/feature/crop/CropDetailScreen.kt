@@ -147,7 +147,10 @@ internal fun CropDetailScreen(
 
                 val allPhotos = (uiState.activePlantings + uiState.pastPlantings)
                     .flatMap { it.photos }
-                    .sortedByDescending { it.takenDate }
+                    .sortedWith(
+                        compareByDescending<PlantingPhoto> { it.takenDate }
+                            .thenByDescending { it.id }
+                    )
                 PhotosSection(photos = allPhotos)
             }
         }

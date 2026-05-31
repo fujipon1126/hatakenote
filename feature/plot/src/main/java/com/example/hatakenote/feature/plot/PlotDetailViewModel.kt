@@ -119,7 +119,10 @@ class PlotDetailViewModel @Inject constructor(
                     val plantingPhotos = plantingPhotoRepository.getByPlantingId(pid).first()
                     val combined = (plantingPhotos + plotOnlyPhotos)
                         .distinctBy { it.id }
-                        .sortedByDescending { it.takenDate }
+                        .sortedWith(
+                            compareByDescending<PlantingPhoto> { it.takenDate }
+                                .thenByDescending { it.id }
+                        )
                     if (combined.isNotEmpty()) {
                         photosByPlantingId[pid] = combined
                     }
