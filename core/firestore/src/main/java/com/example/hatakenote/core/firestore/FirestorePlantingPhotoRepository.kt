@@ -11,6 +11,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -42,6 +43,7 @@ class FirestorePlantingPhotoRepository @Inject constructor(
             } else {
                 photosCollection(farmId)
                     .snapshots()
+                    .filter { !it.metadata.isFromCache }
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
                             doc.toPlantingPhoto()
@@ -60,6 +62,7 @@ class FirestorePlantingPhotoRepository @Inject constructor(
                 photosCollection(farmId)
                     .whereEqualTo("plantingId", plantingId)
                     .snapshots()
+                    .filter { !it.metadata.isFromCache }
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
                             doc.toPlantingPhoto()
@@ -78,6 +81,7 @@ class FirestorePlantingPhotoRepository @Inject constructor(
                 photosCollection(farmId)
                     .whereEqualTo("plotId", plotId)
                     .snapshots()
+                    .filter { !it.metadata.isFromCache }
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
                             doc.toPlantingPhoto()
@@ -96,6 +100,7 @@ class FirestorePlantingPhotoRepository @Inject constructor(
                 photosCollection(farmId)
                     .whereEqualTo("takenDate", date.toString())
                     .snapshots()
+                    .filter { !it.metadata.isFromCache }
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
                             doc.toPlantingPhoto()
