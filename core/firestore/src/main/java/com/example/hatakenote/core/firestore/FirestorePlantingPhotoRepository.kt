@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import java.io.File
 import javax.inject.Inject
@@ -97,6 +99,7 @@ class FirestorePlantingPhotoRepository @Inject constructor(
             "storagePath" to storageObjectPath(farmId, newId),
             "takenDate" to photo.takenDate.toString(),
             "comment" to photo.comment,
+            "updatedAt" to Clock.System.now().toEpochMilliseconds(),
         )
 
         photosCollection(farmId).add(photoData).await()
@@ -118,6 +121,7 @@ class FirestorePlantingPhotoRepository @Inject constructor(
         val updateData = mapOf(
             "takenDate" to photo.takenDate.toString(),
             "comment" to photo.comment,
+            "updatedAt" to Clock.System.now().toEpochMilliseconds(),
         )
         docRef.update(updateData).await()
     }
@@ -195,6 +199,8 @@ class FirestorePlantingPhotoRepository @Inject constructor(
                 takenDate = (data["takenDate"] as? String)?.let { LocalDate.parse(it) }
                     ?: return null,
                 comment = data["comment"] as? String,
+                updatedAt = (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
+                    ?: Instant.fromEpochMilliseconds(0),
             )
         } catch (e: Exception) {
             null

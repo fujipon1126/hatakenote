@@ -72,7 +72,9 @@ import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.model.Reminder
 import com.example.hatakenote.core.domain.model.Weather
 import com.example.hatakenote.core.domain.model.WeatherCode
+import com.example.hatakenote.core.ui.component.NewLabel
 import com.example.hatakenote.core.ui.util.contrastTextColor
+import com.example.hatakenote.core.ui.util.newBadgeColors
 import com.example.hatakenote.core.ui.util.parseColorSafe
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -199,6 +201,7 @@ internal fun HomeScreen(
                 } else {
                     PlotGrid(
                         plots = uiState.plots,
+                        newBadgePlotIds = uiState.newBadgePlotIds,
                         onPlotClick = onPlotClick,
                     )
                 }
@@ -331,6 +334,7 @@ private fun computeMergedGroups(
 @Composable
 private fun PlotGrid(
     plots: List<PlotWithCurrentPlanting>,
+    newBadgePlotIds: Set<Long>,
     onPlotClick: (Long) -> Unit,
 ) {
     val gap = 8.dp
@@ -396,6 +400,7 @@ private fun PlotGrid(
                     if (group.plots.size == 1) {
                         PlotCell(
                             plotWithPlanting = group.plots.first(),
+                            isNew = group.plots.first().plot.id in newBadgePlotIds,
                             modifier = Modifier
                                 .offset(x = x, y = y)
                                 .size(width = w, height = h),
@@ -404,6 +409,7 @@ private fun PlotGrid(
                     } else {
                         MergedPlotCell(
                             group = group,
+                            isNew = group.plots.any { it.plot.id in newBadgePlotIds },
                             modifier = Modifier
                                 .offset(x = x, y = y)
                                 .size(width = w, height = h),
@@ -419,6 +425,7 @@ private fun PlotGrid(
 @Composable
 private fun PlotCell(
     plotWithPlanting: PlotWithCurrentPlanting,
+    isNew: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -452,14 +459,29 @@ private fun PlotCell(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Text(
-                text = plot.name,
-                style = MaterialTheme.typography.labelMedium,
-                color = textColor,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = plot.name,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = textColor,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (isNew) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    val (badgeBg, badgeFg) = newBadgeColors(backgroundColor)
+                    NewLabel(
+                        label = stringResource(R.string.home_new_badge),
+                        containerColor = badgeBg,
+                        contentColor = badgeFg,
+                    )
+                }
+            }
             if (currentPlantings.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(2.dp))
                 currentPlantings.take(2).forEach { plantingWithCrop ->
@@ -493,6 +515,7 @@ private fun PlotCell(
 @Composable
 private fun MergedPlotCell(
     group: MergedPlotGroup,
+    isNew: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -518,15 +541,29 @@ private fun MergedPlotCell(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // 区画名を列挙
-            Text(
-                text = group.plots.joinToString(" · ") { it.plot.name },
-                style = MaterialTheme.typography.labelMedium,
-                color = textColor,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = group.plots.joinToString(" · ") { it.plot.name },
+                    style = MaterialTheme.typography.labelMedium,
+                    color = textColor,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (isNew) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    val (badgeBg, badgeFg) = newBadgeColors(backgroundColor)
+                    NewLabel(
+                        label = stringResource(R.string.home_new_badge),
+                        containerColor = badgeBg,
+                        contentColor = badgeFg,
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(2.dp))
             // 作物名（グループ内で共通）
             currentPlantings.take(2).forEach { plantingWithCrop ->

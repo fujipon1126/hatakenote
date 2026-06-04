@@ -1,5 +1,7 @@
 package com.example.hatakenote.core.domain.model
 
+import kotlinx.datetime.Instant
+
 /**
  * 区画
  */
@@ -10,4 +12,5 @@ data class Plot(
     val number: Int,
     val width: Int = 1,
     val height: Int = 1,
+    val updatedAt: Instant = Instant.fromEpochMilliseconds(0),
 )

@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,6 +26,21 @@ class FirestoreHarvestRepository @Inject constructor(
 
     private fun harvestsCollection(farmId: String) =
         firestore.collection("farms").document(farmId).collection("harvests")
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getAll(): Flow<List<Harvest>> {
+        return farmRepository.getCurrentFarmId().flatMapLatest { farmId ->
+            if (farmId == null) {
+                flowOf(emptyList())
+            } else {
+                harvestsCollection(farmId)
+                    .snapshots()
+                    .map { snapshot ->
+                        snapshot.documents.mapNotNull { it.toHarvest() }
+                    }
+            }
+        }
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getByPlantingId(plantingId: Long): Flow<List<Harvest>> {
@@ -53,6 +70,7 @@ class FirestoreHarvestRepository @Inject constructor(
             "plantingId" to harvest.plantingId,
             "harvestedDate" to harvest.harvestedDate.toString(),
             "note" to harvest.note,
+            "updatedAt" to Clock.System.now().toEpochMilliseconds(),
         )
 
         harvestsCollection(farmId).add(data).await()
@@ -80,6 +98,8 @@ class FirestoreHarvestRepository @Inject constructor(
                 harvestedDate = (data["harvestedDate"] as? String)?.let { LocalDate.parse(it) }
                     ?: return null,
                 note = data["note"] as? String,
+                updatedAt = (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
+                    ?: Instant.fromEpochMilliseconds(0),
             )
         } catch (e: Exception) {
             null

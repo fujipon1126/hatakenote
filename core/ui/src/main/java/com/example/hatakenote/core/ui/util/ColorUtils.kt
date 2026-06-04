@@ -28,3 +28,14 @@ fun contrastTextColor(backgroundColor: Color): Color {
             0.114 * backgroundColor.blue
     return if (luminance > 0.5) Color.Black else Color.White
 }
+
+/**
+ * 任意の背景色に乗せる NEW バッジの (container, content) 色を返す。
+ * セル本体の文字色と同じ反転色をバッジ背景に、その逆色をバッジ文字に使うことで、
+ * 区画色（プライマリ緑と被るケースを含む）に左右されずに常にコントラストを確保する。
+ */
+fun newBadgeColors(cellBackground: Color): Pair<Color, Color> {
+    val container = contrastTextColor(cellBackground)
+    val content = if (container == Color.Black) Color.White else Color.Black
+    return container to content
+}

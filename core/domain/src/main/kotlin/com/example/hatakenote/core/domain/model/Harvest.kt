@@ -1,5 +1,6 @@
 package com.example.hatakenote.core.domain.model
 
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 
 /**
@@ -10,4 +11,5 @@ data class Harvest(
     val plantingId: Long,
     val harvestedDate: LocalDate,
     val note: String? = null,
+    val updatedAt: Instant = Instant.fromEpochMilliseconds(0),
 )

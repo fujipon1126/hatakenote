@@ -18,6 +18,7 @@
     <string name="home_upcoming_reminders">今後のリマインダー</string>
     <string name="home_reminder_days_format">%d日後</string>
     <string name="home_reminder_today">今日</string>
+    <string name="home_new_badge">NEW</string>
 
     <!-- Weather -->
     <string name="weather_title">今日の天気</string>

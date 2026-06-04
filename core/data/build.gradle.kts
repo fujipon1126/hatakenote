@@ -16,6 +16,7 @@ dependencies {
 
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.serialization.json)
 
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)

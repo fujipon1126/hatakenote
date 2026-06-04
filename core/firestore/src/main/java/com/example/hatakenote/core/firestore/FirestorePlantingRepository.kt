@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -131,6 +133,7 @@ class FirestorePlantingRepository @Inject constructor(
             ?: throw IllegalStateException("No farm selected")
 
         val newId = System.currentTimeMillis()
+        val now = Clock.System.now().toEpochMilliseconds()
         val plantingData = hashMapOf(
             "id" to newId,
             "cropId" to planting.cropId,
@@ -139,6 +142,7 @@ class FirestorePlantingRepository @Inject constructor(
             "note" to planting.note,
             "isActive" to planting.isActive,
             "plotIds" to plotIds,
+            "updatedAt" to now,
         )
 
         plantingsCollection(farmId).add(plantingData).await()
@@ -164,6 +168,7 @@ class FirestorePlantingRepository @Inject constructor(
                 "harvestedDate" to planting.harvestedDate?.toString(),
                 "note" to planting.note,
                 "isActive" to planting.isActive,
+                "updatedAt" to Clock.System.now().toEpochMilliseconds(),
             )
         ).await()
     }
@@ -180,17 +185,20 @@ class FirestorePlantingRepository @Inject constructor(
         val docRef = snapshot.documents.firstOrNull()?.reference
             ?: throw IllegalStateException("Planting not found")
 
+        val now = Clock.System.now().toEpochMilliseconds()
         if (isFinal) {
             docRef.update(
                 mapOf(
                     "harvestedDate" to harvestedDate.toString(),
                     "isActive" to false,
+                    "updatedAt" to now,
                 )
             ).await()
         } else {
             docRef.update(
                 mapOf(
                     "harvestedDate" to harvestedDate.toString(),
+                    "updatedAt" to now,
                 )
             ).await()
         }
@@ -232,6 +240,8 @@ class FirestorePlantingRepository @Inject constructor(
                 harvestedDate = (data["harvestedDate"] as? String)?.let { LocalDate.parse(it) },
                 note = data["note"] as? String,
                 isActive = data["isActive"] as? Boolean ?: true,
+                updatedAt = (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
+                    ?: Instant.fromEpochMilliseconds(0),
             )
         } catch (e: Exception) {
             null

@@ -1,5 +1,6 @@
 package com.example.hatakenote.core.domain.model
 
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 
 /**
@@ -21,4 +22,5 @@ data class WorkLog(
     val workDate: LocalDate,
     val detail: String? = null,
     val fertilizers: List<FertilizerEntry> = emptyList(),
+    val updatedAt: Instant = Instant.fromEpochMilliseconds(0),
 )

@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -147,6 +149,7 @@ class FirestoreWorkLogRepository @Inject constructor(
             "workDate" to workLog.workDate.toString(),
             "detail" to workLog.detail,
             "fertilizers" to fertilizersData,
+            "updatedAt" to Clock.System.now().toEpochMilliseconds(),
         )
 
         workLogsCollection(farmId).add(workLogData).await()
@@ -179,6 +182,7 @@ class FirestoreWorkLogRepository @Inject constructor(
                 "workDate" to workLog.workDate.toString(),
                 "detail" to workLog.detail,
                 "fertilizers" to fertilizersData,
+                "updatedAt" to Clock.System.now().toEpochMilliseconds(),
             )
         ).await()
     }
@@ -226,6 +230,8 @@ class FirestoreWorkLogRepository @Inject constructor(
                     ?: return null,
                 detail = data["detail"] as? String,
                 fertilizers = fertilizers,
+                updatedAt = (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
+                    ?: Instant.fromEpochMilliseconds(0),
             )
         } catch (e: Exception) {
             null

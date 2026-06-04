@@ -33,4 +33,10 @@ abstract class DataModule {
     abstract fun bindAiAssistantRepository(
         impl: AiAssistantRepositoryImpl
     ): AiAssistantRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPlotLastViewedRepository(
+        impl: PlotLastViewedRepositoryImpl
+    ): PlotLastViewedRepository
 }

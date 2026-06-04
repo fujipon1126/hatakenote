@@ -1,5 +1,6 @@
 package com.example.hatakenote.core.domain.model
 
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 
 /**
@@ -15,4 +16,5 @@ data class PlantingPhoto(
     val filePath: String,
     val takenDate: LocalDate,
     val comment: String? = null,
+    val updatedAt: Instant = Instant.fromEpochMilliseconds(0),
 )

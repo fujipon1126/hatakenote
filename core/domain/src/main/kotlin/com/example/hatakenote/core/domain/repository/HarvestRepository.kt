@@ -4,6 +4,7 @@ import com.example.hatakenote.core.domain.model.Harvest
 import kotlinx.coroutines.flow.Flow
 
 interface HarvestRepository {
+    fun getAll(): Flow<List<Harvest>>
     fun getByPlantingId(plantingId: Long): Flow<List<Harvest>>
     suspend fun insert(harvest: Harvest): Long
     suspend fun delete(harvest: Harvest)

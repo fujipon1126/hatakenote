@@ -15,6 +15,7 @@ import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.FertilizerRepository
 import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
+import com.example.hatakenote.core.domain.repository.PlotLastViewedRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.WorkLogRepository
 import com.example.hatakenote.core.domain.usecase.GetRotationAdviceUseCase
@@ -54,6 +55,7 @@ class PlotDetailViewModel @Inject constructor(
     private val fertilizerRepository: FertilizerRepository,
     private val plantingPhotoRepository: PlantingPhotoRepository,
     private val getRotationAdviceUseCase: GetRotationAdviceUseCase,
+    private val plotLastViewedRepository: PlotLastViewedRepository,
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<PlotDetailRoute>()
@@ -70,6 +72,7 @@ class PlotDetailViewModel @Inject constructor(
         viewModelScope.launch {
             val plotWithPlantings = plotRepository.getByIdWithCurrentPlantings(plotId)
             if (plotWithPlantings != null) {
+                plotLastViewedRepository.markViewed(plotId)
                 // Get past plantings (inactive)
                 val allPlantings = plantingRepository.getHistoryByPlotId(plotId).first()
                 val pastPlantings = allPlantings.filter { !it.isActive }

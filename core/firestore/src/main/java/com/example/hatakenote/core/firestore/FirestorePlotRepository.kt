@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -144,6 +146,7 @@ class FirestorePlotRepository @Inject constructor(
             ?: throw IllegalStateException("No farm selected")
 
         val newId = System.currentTimeMillis()
+        val now = Clock.System.now().toEpochMilliseconds()
         val plotData = hashMapOf(
             "id" to newId,
             "name" to plot.name,
@@ -151,6 +154,7 @@ class FirestorePlotRepository @Inject constructor(
             "number" to plot.number,
             "width" to plot.width,
             "height" to plot.height,
+            "updatedAt" to now,
         )
 
         plotsCollection(farmId).add(plotData).await()
@@ -176,6 +180,7 @@ class FirestorePlotRepository @Inject constructor(
                 "number" to plot.number,
                 "width" to plot.width,
                 "height" to plot.height,
+                "updatedAt" to Clock.System.now().toEpochMilliseconds(),
             )
         ).await()
     }
@@ -219,6 +224,7 @@ class FirestorePlotRepository @Inject constructor(
                 number = (data["number"] as? Long)?.toInt() ?: 1,
                 width = (data["width"] as? Long)?.toInt() ?: 1,
                 height = (data["height"] as? Long)?.toInt() ?: 1,
+                updatedAt = readUpdatedAt(data),
             )
         } catch (e: Exception) {
             null
@@ -237,6 +243,7 @@ class FirestorePlotRepository @Inject constructor(
                 harvestedDate = (data["harvestedDate"] as? String)?.let { LocalDate.parse(it) },
                 note = data["note"] as? String,
                 isActive = data["isActive"] as? Boolean ?: true,
+                updatedAt = readUpdatedAt(data),
             )
             val plotIds = (data["plotIds"] as? List<Long>) ?: emptyList()
             Pair(planting, plotIds)
@@ -244,6 +251,10 @@ class FirestorePlotRepository @Inject constructor(
             null
         }
     }
+
+    private fun readUpdatedAt(data: Map<String, Any?>): Instant =
+        (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
+            ?: Instant.fromEpochMilliseconds(0)
 
     private fun com.google.firebase.firestore.DocumentSnapshot.toCrop(): Crop? {
         return try {

@@ -6,6 +6,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import com.example.hatakenote.core.ui.component.FullScreenPhotoViewer
+import com.example.hatakenote.core.ui.component.NewLabel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,7 +50,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -880,7 +880,7 @@ private fun WorkLogItem(
             )
             if (isNew) {
                 Spacer(modifier = Modifier.width(6.dp))
-                NewLabel()
+                NewLabel(label = stringResource(R.string.plot_detail_work_log_new_label))
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
@@ -908,21 +908,6 @@ private fun WorkLogItem(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun NewLabel() {
-    Surface(
-        shape = RoundedCornerShape(4.dp),
-        color = MaterialTheme.colorScheme.primary,
-    ) {
-        Text(
-            text = stringResource(R.string.plot_detail_work_log_new_label),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-        )
     }
 }
 

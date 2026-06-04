@@ -9,10 +9,14 @@ import com.example.hatakenote.core.domain.model.Reminder
 import com.example.hatakenote.core.domain.model.Weather
 import com.example.hatakenote.core.domain.repository.AppSettingsRepository
 import com.example.hatakenote.core.domain.repository.FarmRepository
+import com.example.hatakenote.core.domain.repository.HarvestRepository
 import com.example.hatakenote.core.domain.repository.MasterDataInitializer
+import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
+import com.example.hatakenote.core.domain.repository.PlotLastViewedRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.ReminderRepository
 import com.example.hatakenote.core.domain.repository.WeatherRepository
+import com.example.hatakenote.core.domain.repository.WorkLogRepository
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +33,7 @@ data class HomeUiState(
     val plots: List<PlotWithCurrentPlanting> = emptyList(),
     val maxNumber: Int = 0,
     val upcomingReminders: List<Reminder> = emptyList(),
+    val newBadgePlotIds: Set<Long> = emptySet(),
     val weather: Weather? = null,
     val weatherLocationName: String = "",
     val weatherError: Boolean = false,
@@ -48,6 +53,10 @@ class HomeViewModel @Inject constructor(
     private val appSettingsRepository: AppSettingsRepository,
     private val farmRepository: FarmRepository,
     private val masterDataInitializer: MasterDataInitializer,
+    private val workLogRepository: WorkLogRepository,
+    private val plantingPhotoRepository: PlantingPhotoRepository,
+    private val harvestRepository: HarvestRepository,
+    private val plotLastViewedRepository: PlotLastViewedRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -87,24 +96,35 @@ class HomeViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            // 7日以内のリマインダーを取得
             combine(
                 plotRepository.getAllWithCurrentPlantings(),
-                reminderRepository.getUpcoming(days = 7),
-            ) { plots, reminders ->
-                Pair(plots, reminders)
+                workLogRepository.getAll(),
+                plantingPhotoRepository.getAll(),
+                harvestRepository.getAll(),
+                plotLastViewedRepository.lastViewedMap(),
+            ) { plots, workLogs, photos, harvests, lastViewed ->
+                val newBadgeIds = computeNewBadgePlotIds(plots, workLogs, photos, harvests, lastViewed)
+                plots to newBadgeIds
             }
                 .catch { e ->
                     _uiState.value = _uiState.value.copy(isLoading = false)
                 }
-                .collect { (plots, reminders) ->
+                .collect { (plots, newBadgeIds) ->
                     val maxNumber = plotRepository.getMaxNumber()
                     _uiState.value = _uiState.value.copy(
                         plots = plots,
                         maxNumber = maxNumber,
-                        upcomingReminders = reminders,
+                        newBadgePlotIds = newBadgeIds,
                         isLoading = false,
                     )
+                }
+        }
+
+        viewModelScope.launch {
+            reminderRepository.getUpcoming(days = 7)
+                .catch { /* ignore */ }
+                .collect { reminders ->
+                    _uiState.value = _uiState.value.copy(upcomingReminders = reminders)
                 }
         }
     }
