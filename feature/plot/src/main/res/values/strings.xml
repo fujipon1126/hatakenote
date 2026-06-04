@@ -6,6 +6,7 @@
     <string name="plot_detail_work_history">区画作業履歴</string>
     <string name="plot_detail_no_work_history">作業履歴はありません</string>
     <string name="plot_detail_add_work">作業追加</string>
+    <string name="plot_detail_work_log_new_label">NEW</string>
     <string name="plot_detail_more_items">他 %d 件</string>
     <string name="plot_detail_edit">区画を編集</string>
     <string name="plot_detail_delete_title">区画を削除</string>

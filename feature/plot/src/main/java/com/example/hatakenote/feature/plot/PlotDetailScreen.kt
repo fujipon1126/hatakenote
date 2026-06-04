@@ -49,6 +49,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -825,6 +826,7 @@ private fun WorkLogSection(
                 }
             }
         } else {
+            val latestWorkDate = workLogs.firstOrNull()?.workDate
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -835,6 +837,7 @@ private fun WorkLogSection(
                     WorkLogItem(
                         workLog = workLog,
                         fertilizerMap = fertilizerMap,
+                        isNew = workLog.workDate == latestWorkDate,
                         onClick = { onWorkLogClick(workLog.id) },
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -848,6 +851,7 @@ private fun WorkLogSection(
 private fun WorkLogItem(
     workLog: WorkLog,
     fertilizerMap: Map<Long, Fertilizer>,
+    isNew: Boolean,
     onClick: () -> Unit,
 ) {
     Card(
@@ -874,6 +878,10 @@ private fun WorkLogItem(
                 text = workLog.workDate.toString(),
                 style = MaterialTheme.typography.bodySmall,
             )
+            if (isNew) {
+                Spacer(modifier = Modifier.width(6.dp))
+                NewLabel()
+            }
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                 workLog.fertilizers.forEach { entry ->
@@ -900,6 +908,21 @@ private fun WorkLogItem(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun NewLabel() {
+    Surface(
+        shape = RoundedCornerShape(4.dp),
+        color = MaterialTheme.colorScheme.primary,
+    ) {
+        Text(
+            text = stringResource(R.string.plot_detail_work_log_new_label),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+        )
     }
 }
 
