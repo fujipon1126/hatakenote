@@ -95,7 +95,9 @@ internal fun PlotDetailRoute(
 
     LifecycleResumeEffect(Unit) {
         viewModel.refreshData()
-        onPauseOrDispose {}
+        onPauseOrDispose {
+            viewModel.markPastPlantingsViewed()
+        }
     }
 
     PlotDetailScreen(
@@ -216,6 +218,7 @@ internal fun PlotDetailScreen(
                 CurrentPlantingsSection(
                     plantings = uiState.currentPlantings,
                     photosByPlantingId = uiState.photosByPlantingId,
+                    newPlantingIds = uiState.newPlantingIds,
                     onPlantingClick = onPlantingClick,
                     onDeletePlantingClick = onDeletePlantingClick,
                 )
@@ -226,6 +229,7 @@ internal fun PlotDetailScreen(
                 WorkLogSection(
                     workLogs = uiState.workLogs,
                     fertilizerMap = uiState.fertilizerMap,
+                    newWorkLogIds = uiState.newWorkLogIds,
                     plotId = plotId,
                     onAddWorkLogClick = { onWorkLogClick(null, plotId) },
                     onWorkLogClick = { workLogId -> onWorkLogEditClick(workLogId, plotId) },
@@ -236,6 +240,7 @@ internal fun PlotDetailScreen(
                 // Past Plantings (Harvest History) Section
                 PastPlantingsSection(
                     plantings = uiState.pastPlantings,
+                    newPastPlantingIds = uiState.newPastPlantingIds,
                     onPlantingClick = onPlantingClick,
                 )
 
@@ -318,6 +323,7 @@ private fun InfoItem(label: String, value: String) {
 private fun CurrentPlantingsSection(
     plantings: List<PlantingWithCrop>,
     photosByPlantingId: Map<Long, List<PlantingPhoto>>,
+    newPlantingIds: Set<Long>,
     onPlantingClick: (Long) -> Unit,
     onDeletePlantingClick: (PlantingWithCrop) -> Unit,
 ) {
@@ -361,6 +367,7 @@ private fun CurrentPlantingsSection(
                 PlantingCard(
                     plantingWithCrop = plantingWithCrop,
                     photos = photos,
+                    isNew = plantingWithCrop.planting.id in newPlantingIds,
                     onClick = { onPlantingClick(plantingWithCrop.planting.id) },
                     onDeleteClick = { onDeletePlantingClick(plantingWithCrop) },
                 )
@@ -373,6 +380,7 @@ private fun CurrentPlantingsSection(
 @Composable
 private fun PastPlantingsSection(
     plantings: List<PlantingWithCrop>,
+    newPastPlantingIds: Set<Long>,
     onPlantingClick: (Long) -> Unit,
 ) {
     Column {
@@ -413,6 +421,7 @@ private fun PastPlantingsSection(
             plantings.forEach { plantingWithCrop ->
                 PastPlantingCard(
                     plantingWithCrop = plantingWithCrop,
+                    isNew = plantingWithCrop.planting.id in newPastPlantingIds,
                     onClick = { onPlantingClick(plantingWithCrop.planting.id) },
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -424,6 +433,7 @@ private fun PastPlantingsSection(
 @Composable
 private fun PastPlantingCard(
     plantingWithCrop: PlantingWithCrop,
+    isNew: Boolean,
     onClick: () -> Unit,
 ) {
     val cropColor = parseColorSafe(plantingWithCrop.crop.colorHex, MaterialTheme.colorScheme.primary)
@@ -450,11 +460,17 @@ private fun PastPlantingCard(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = plantingWithCrop.crop.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = plantingWithCrop.crop.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (isNew) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        NewLabel(label = stringResource(R.string.plot_detail_work_log_new_label))
+                    }
+                }
                 Text(
                     text = stringResource(R.string.plot_planted_date, plantingWithCrop.planting.plantedDate.toString()),
                     style = MaterialTheme.typography.bodySmall,
@@ -476,6 +492,7 @@ private fun PastPlantingCard(
 private fun PlantingCard(
     plantingWithCrop: PlantingWithCrop,
     photos: List<PlantingPhoto>,
+    isNew: Boolean,
     onClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
@@ -500,10 +517,16 @@ private fun PlantingCard(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = plantingWithCrop.crop.name,
-                    style = MaterialTheme.typography.titleSmall,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = plantingWithCrop.crop.name,
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    if (isNew) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        NewLabel(label = stringResource(R.string.plot_detail_work_log_new_label))
+                    }
+                }
                 Text(
                     text = stringResource(R.string.plot_planted_date, plantingWithCrop.planting.plantedDate.toString()),
                     style = MaterialTheme.typography.bodySmall,
@@ -772,6 +795,7 @@ private fun SafeCropCard(advice: CropAdvice) {
 private fun WorkLogSection(
     workLogs: List<WorkLog>,
     fertilizerMap: Map<Long, com.example.hatakenote.core.domain.model.Fertilizer>,
+    newWorkLogIds: Set<Long>,
     plotId: Long,
     onAddWorkLogClick: () -> Unit,
     onWorkLogClick: (Long) -> Unit,
@@ -826,7 +850,6 @@ private fun WorkLogSection(
                 }
             }
         } else {
-            val latestWorkDate = workLogs.firstOrNull()?.workDate
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -837,7 +860,7 @@ private fun WorkLogSection(
                     WorkLogItem(
                         workLog = workLog,
                         fertilizerMap = fertilizerMap,
-                        isNew = workLog.workDate == latestWorkDate,
+                        isNew = workLog.id in newWorkLogIds,
                         onClick = { onWorkLogClick(workLog.id) },
                     )
                     Spacer(modifier = Modifier.height(4.dp))

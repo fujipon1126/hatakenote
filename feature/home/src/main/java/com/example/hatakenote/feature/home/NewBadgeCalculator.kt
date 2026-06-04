@@ -1,79 +1,98 @@
 package com.example.hatakenote.feature.home
 
 import com.example.hatakenote.core.domain.model.Harvest
+import com.example.hatakenote.core.domain.model.Planting
 import com.example.hatakenote.core.domain.model.PlantingPhoto
 import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.model.WorkLog
 import kotlinx.datetime.Instant
 
 /**
- * 各区画について「ユーザーが最後に閲覧した時刻」以降の更新が一つでもあれば NEW 対象とする。
+ * 各区画について「3ブロックいずれかに他人の未読更新が残っている」場合に NEW 対象とする。
  *
- * 紐づくエンティティ（Planting, WorkLog, PlantingPhoto, Harvest）は plot との対応関係を
- * 解いた上で plot 単位の最大 updatedAt を集約する。アクティブでない過去 Planting からの
- * 紐付けは現状の `PlotWithCurrentPlanting` には含まれないため、現在進行中の作付けに
- * 紐づく更新のみが対象になる（実用上の通知精度として十分）。
+ * plantingPlotMap は `allPlantings.plotIds` から構築するので、isActive=false（収穫済み）の
+ * Planting に紐づく Harvest や Planting 自身の更新も plot 単位で正しく集約できる。
+ *
+ * 判定条件: 未読 = `updatedBy != null && updatedBy != currentUserId && updatedAt > (viewedAt ?: 0)`
  *
  * @return NEW バッジを表示すべき plotId の集合
  */
 fun computeNewBadgePlotIds(
     plots: List<PlotWithCurrentPlanting>,
+    allPlantings: List<Planting>,
     workLogs: List<WorkLog>,
     photos: List<PlantingPhoto>,
     harvests: List<Harvest>,
-    lastViewed: Map<Long, Instant>,
+    plantingLastViewed: Map<Long, Instant>,
+    workLogLastViewed: Map<Long, Instant>,
+    harvestLastViewed: Map<Long, Instant>,
+    currentUserId: String?,
 ): Set<Long> {
     if (plots.isEmpty()) return emptySet()
 
-    val plantingPlotMap: Map<Long, Set<Long>> = plots
-        .flatMap { plotWith ->
-            plotWith.currentPlantings.map { it.planting.id to plotWith.plot.id }
-        }
-        .groupBy({ it.first }, { it.second })
-        .mapValues { it.value.toSet() }
+    // 全 Planting (active + inactive) の plotIds から planting -> plotIds マップを構築。
+    // isActive=false の Planting も Firestore 上の plotIds 配列を保持しているため、
+    // 収穫済み Planting に紐づく Harvest も plot に辿り着ける。
+    val plantingPlotMap: Map<Long, Set<Long>> = allPlantings
+        .filter { it.plotIds.isNotEmpty() }
+        .associate { it.id to it.plotIds.toSet() }
 
-    val plotMaxUpdate = mutableMapOf<Long, Instant>()
+    val result = mutableSetOf<Long>()
 
-    fun bump(plotId: Long, instant: Instant) {
-        val current = plotMaxUpdate[plotId]
-        if (current == null || instant > current) {
-            plotMaxUpdate[plotId] = instant
-        }
-    }
-
+    // 現在の作物 NEW: Planting 自身 or 紐づく PlantingPhoto の他人未読更新
     for (plotWith in plots) {
-        bump(plotWith.plot.id, plotWith.plot.updatedAt)
+        val plotId = plotWith.plot.id
         for (pwc in plotWith.currentPlantings) {
-            bump(plotWith.plot.id, pwc.planting.updatedAt)
+            val planting = pwc.planting
+            val viewedAt = plantingLastViewed[planting.id]
+            if (isUnreadOthers(planting.updatedAt, planting.updatedBy, viewedAt, currentUserId)) {
+                result.add(plotId)
+                continue
+            }
+            val photoNew = photos.any { p ->
+                p.plantingId == planting.id &&
+                    isUnreadOthers(p.updatedAt, p.updatedBy, viewedAt, currentUserId)
+            }
+            if (photoNew) result.add(plotId)
         }
     }
 
+    // 区画作業履歴 NEW: その WorkLog の他人未読更新
     for (workLog in workLogs) {
-        workLog.plotId?.let { bump(it, workLog.updatedAt) }
+        if (!isUnreadOthers(workLog.updatedAt, workLog.updatedBy, workLogLastViewed[workLog.id], currentUserId)) {
+            continue
+        }
+        workLog.plotId?.let { result.add(it) }
         workLog.plantingId?.let { plantingId ->
-            plantingPlotMap[plantingId]?.forEach { plotId ->
-                bump(plotId, workLog.updatedAt)
-            }
+            plantingPlotMap[plantingId]?.let { result.addAll(it) }
         }
     }
 
-    for (photo in photos) {
-        photo.plotId?.let { bump(it, photo.updatedAt) }
-        photo.plantingId?.let { plantingId ->
-            plantingPlotMap[plantingId]?.forEach { plotId ->
-                bump(plotId, photo.updatedAt)
-            }
+    // 収穫履歴 NEW (1): 過去 Planting 自身の他人未読更新（isActive=false 化や harvestedDate 設定など）
+    for (planting in allPlantings.filter { !it.isActive }) {
+        if (isUnreadOthers(planting.updatedAt, planting.updatedBy, plantingLastViewed[planting.id], currentUserId)) {
+            result.addAll(planting.plotIds)
         }
     }
 
+    // 収穫履歴 NEW (2): Harvest の他人未読更新
     for (harvest in harvests) {
-        plantingPlotMap[harvest.plantingId]?.forEach { plotId ->
-            bump(plotId, harvest.updatedAt)
+        if (isUnreadOthers(harvest.updatedAt, harvest.updatedBy, harvestLastViewed[harvest.id], currentUserId)) {
+            plantingPlotMap[harvest.plantingId]?.let { result.addAll(it) }
         }
     }
 
-    val epochZero = Instant.fromEpochMilliseconds(0)
-    return plotMaxUpdate
-        .filter { (plotId, maxAt) -> maxAt > (lastViewed[plotId] ?: epochZero) }
-        .keys
+    return result
+}
+
+private fun isUnreadOthers(
+    updatedAt: Instant,
+    updatedBy: String?,
+    viewedAt: Instant?,
+    currentUserId: String?,
+): Boolean {
+    if (updatedBy == null) return false  // 旧データは自分扱い
+    if (currentUserId != null && updatedBy == currentUserId) return false  // 自分の更新は除外
+    val baseline = viewedAt ?: Instant.fromEpochMilliseconds(0)
+    return updatedAt > baseline
 }

@@ -8,13 +8,16 @@ import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.model.Reminder
 import com.example.hatakenote.core.domain.model.Weather
 import com.example.hatakenote.core.domain.repository.AppSettingsRepository
+import com.example.hatakenote.core.domain.repository.AuthRepository
+import com.example.hatakenote.core.domain.repository.EntityLastViewedRepository
 import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.example.hatakenote.core.domain.repository.HarvestRepository
 import com.example.hatakenote.core.domain.repository.MasterDataInitializer
 import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
-import com.example.hatakenote.core.domain.repository.PlotLastViewedRepository
+import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
 import com.example.hatakenote.core.domain.repository.ReminderRepository
+import com.example.hatakenote.core.domain.repository.ViewedEntityType
 import com.example.hatakenote.core.domain.repository.WeatherRepository
 import com.example.hatakenote.core.domain.repository.WorkLogRepository
 import kotlinx.coroutines.flow.filterNotNull
@@ -25,6 +28,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -56,8 +60,17 @@ class HomeViewModel @Inject constructor(
     private val workLogRepository: WorkLogRepository,
     private val plantingPhotoRepository: PlantingPhotoRepository,
     private val harvestRepository: HarvestRepository,
-    private val plotLastViewedRepository: PlotLastViewedRepository,
+    private val plantingRepository: PlantingRepository,
+    private val entityLastViewedRepository: EntityLastViewedRepository,
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
+
+    private data class UpdateSources(
+        val workLogs: List<com.example.hatakenote.core.domain.model.WorkLog>,
+        val photos: List<com.example.hatakenote.core.domain.model.PlantingPhoto>,
+        val harvests: List<com.example.hatakenote.core.domain.model.Harvest>,
+        val allPlantings: List<com.example.hatakenote.core.domain.model.Planting>,
+    )
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -96,17 +109,43 @@ class HomeViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            combine(
-                plotRepository.getAllWithCurrentPlantings(),
+            // combine の可変引数は最大5までなので、まず判定ソース群を集約する Flow を作る
+            val updateSources = combine(
                 workLogRepository.getAll(),
                 plantingPhotoRepository.getAll(),
                 harvestRepository.getAll(),
-                plotLastViewedRepository.lastViewedMap(),
-            ) { plots, workLogs, photos, harvests, lastViewed ->
-                val newBadgeIds = computeNewBadgePlotIds(plots, workLogs, photos, harvests, lastViewed)
+                plantingRepository.getAll(),
+            ) { workLogs, photos, harvests, allPlantings ->
+                UpdateSources(workLogs, photos, harvests, allPlantings)
+            }
+            val lastViewedSources = combine(
+                entityLastViewedRepository.lastViewed(ViewedEntityType.PLANTING),
+                entityLastViewedRepository.lastViewed(ViewedEntityType.WORK_LOG),
+                entityLastViewedRepository.lastViewed(ViewedEntityType.HARVEST),
+            ) { p, w, h -> Triple(p, w, h) }
+            val currentUserIdFlow = authRepository.currentUser.map { it?.id }
+
+            combine(
+                plotRepository.getAllWithCurrentPlantings(),
+                updateSources,
+                lastViewedSources,
+                currentUserIdFlow,
+            ) { plots, updates, viewed, userId ->
+                val (plantingLV, workLogLV, harvestLV) = viewed
+                val newBadgeIds = computeNewBadgePlotIds(
+                    plots = plots,
+                    allPlantings = updates.allPlantings,
+                    workLogs = updates.workLogs,
+                    photos = updates.photos,
+                    harvests = updates.harvests,
+                    plantingLastViewed = plantingLV,
+                    workLogLastViewed = workLogLV,
+                    harvestLastViewed = harvestLV,
+                    currentUserId = userId,
+                )
                 plots to newBadgeIds
             }
-                .catch { e ->
+                .catch { _ ->
                     _uiState.value = _uiState.value.copy(isLoading = false)
                 }
                 .collect { (plots, newBadgeIds) ->

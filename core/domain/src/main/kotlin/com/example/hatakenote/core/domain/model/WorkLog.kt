@@ -23,4 +23,5 @@ data class WorkLog(
     val detail: String? = null,
     val fertilizers: List<FertilizerEntry> = emptyList(),
     val updatedAt: Instant = Instant.fromEpochMilliseconds(0),
+    val updatedBy: String? = null,
 )

@@ -12,4 +12,5 @@ data class Harvest(
     val harvestedDate: LocalDate,
     val note: String? = null,
     val updatedAt: Instant = Instant.fromEpochMilliseconds(0),
+    val updatedBy: String? = null,
 )

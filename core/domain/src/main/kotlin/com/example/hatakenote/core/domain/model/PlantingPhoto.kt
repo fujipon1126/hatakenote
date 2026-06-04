@@ -17,4 +17,5 @@ data class PlantingPhoto(
     val takenDate: LocalDate,
     val comment: String? = null,
     val updatedAt: Instant = Instant.fromEpochMilliseconds(0),
+    val updatedBy: String? = null,
 )

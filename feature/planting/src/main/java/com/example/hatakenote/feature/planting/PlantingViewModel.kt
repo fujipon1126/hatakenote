@@ -11,10 +11,12 @@ import com.example.hatakenote.core.domain.model.Planting
 import com.example.hatakenote.core.domain.model.PlantingPhoto
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.repository.CropRepository
+import com.example.hatakenote.core.domain.repository.EntityLastViewedRepository
 import com.example.hatakenote.core.domain.repository.HarvestRepository
 import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
+import com.example.hatakenote.core.domain.repository.ViewedEntityType
 import com.example.hatakenote.core.domain.usecase.CheckRotationCompatibilityUseCase
 import com.example.hatakenote.core.domain.usecase.GenerateRemindersUseCase
 import com.example.hatakenote.core.domain.usecase.RotationWarning
@@ -76,6 +78,7 @@ class PlantingViewModel @Inject constructor(
     private val harvestRepository: HarvestRepository,
     private val generateRemindersUseCase: GenerateRemindersUseCase,
     private val checkRotationCompatibilityUseCase: CheckRotationCompatibilityUseCase,
+    private val entityLastViewedRepository: EntityLastViewedRepository,
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<PlantingRoute>()
@@ -87,6 +90,11 @@ class PlantingViewModel @Inject constructor(
 
     init {
         loadData()
+        if (plantingId != null) {
+            viewModelScope.launch {
+                entityLastViewedRepository.markViewed(ViewedEntityType.PLANTING, plantingId)
+            }
+        }
     }
 
     private fun loadData() {

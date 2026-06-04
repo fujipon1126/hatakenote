@@ -3,6 +3,7 @@ package com.example.hatakenote.core.firestore
 import com.example.hatakenote.core.domain.model.Harvest
 import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.example.hatakenote.core.domain.repository.HarvestRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +22,7 @@ import javax.inject.Singleton
 @Singleton
 class FirestoreHarvestRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth,
     private val farmRepository: FarmRepository,
 ) : HarvestRepository {
 
@@ -71,6 +73,7 @@ class FirestoreHarvestRepository @Inject constructor(
             "harvestedDate" to harvest.harvestedDate.toString(),
             "note" to harvest.note,
             "updatedAt" to Clock.System.now().toEpochMilliseconds(),
+            "updatedBy" to auth.currentUser?.uid,
         )
 
         harvestsCollection(farmId).add(data).await()
@@ -100,6 +103,7 @@ class FirestoreHarvestRepository @Inject constructor(
                 note = data["note"] as? String,
                 updatedAt = (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
                     ?: Instant.fromEpochMilliseconds(0),
+                updatedBy = data["updatedBy"] as? String,
             )
         } catch (e: Exception) {
             null

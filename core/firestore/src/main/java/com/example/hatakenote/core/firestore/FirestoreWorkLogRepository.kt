@@ -5,6 +5,7 @@ import com.example.hatakenote.core.domain.model.WorkLog
 import com.example.hatakenote.core.domain.model.WorkType
 import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.example.hatakenote.core.domain.repository.WorkLogRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,6 +24,7 @@ import javax.inject.Singleton
 @Singleton
 class FirestoreWorkLogRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth,
     private val farmRepository: FarmRepository,
 ) : WorkLogRepository {
 
@@ -150,6 +152,7 @@ class FirestoreWorkLogRepository @Inject constructor(
             "detail" to workLog.detail,
             "fertilizers" to fertilizersData,
             "updatedAt" to Clock.System.now().toEpochMilliseconds(),
+            "updatedBy" to auth.currentUser?.uid,
         )
 
         workLogsCollection(farmId).add(workLogData).await()
@@ -183,6 +186,7 @@ class FirestoreWorkLogRepository @Inject constructor(
                 "detail" to workLog.detail,
                 "fertilizers" to fertilizersData,
                 "updatedAt" to Clock.System.now().toEpochMilliseconds(),
+                "updatedBy" to auth.currentUser?.uid,
             )
         ).await()
     }
@@ -232,6 +236,7 @@ class FirestoreWorkLogRepository @Inject constructor(
                 fertilizers = fertilizers,
                 updatedAt = (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
                     ?: Instant.fromEpochMilliseconds(0),
+                updatedBy = data["updatedBy"] as? String,
             )
         } catch (e: Exception) {
             null

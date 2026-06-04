@@ -4,6 +4,7 @@ import android.net.Uri
 import com.example.hatakenote.core.domain.model.PlantingPhoto
 import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.example.hatakenote.core.domain.repository.PlantingPhotoRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -25,6 +26,7 @@ import javax.inject.Singleton
 class FirestorePlantingPhotoRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val storage: FirebaseStorage,
+    private val auth: FirebaseAuth,
     private val farmRepository: FarmRepository,
 ) : PlantingPhotoRepository {
 
@@ -100,6 +102,7 @@ class FirestorePlantingPhotoRepository @Inject constructor(
             "takenDate" to photo.takenDate.toString(),
             "comment" to photo.comment,
             "updatedAt" to Clock.System.now().toEpochMilliseconds(),
+            "updatedBy" to auth.currentUser?.uid,
         )
 
         photosCollection(farmId).add(photoData).await()
@@ -122,6 +125,7 @@ class FirestorePlantingPhotoRepository @Inject constructor(
             "takenDate" to photo.takenDate.toString(),
             "comment" to photo.comment,
             "updatedAt" to Clock.System.now().toEpochMilliseconds(),
+            "updatedBy" to auth.currentUser?.uid,
         )
         docRef.update(updateData).await()
     }
@@ -201,6 +205,7 @@ class FirestorePlantingPhotoRepository @Inject constructor(
                 comment = data["comment"] as? String,
                 updatedAt = (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
                     ?: Instant.fromEpochMilliseconds(0),
+                updatedBy = data["updatedBy"] as? String,
             )
         } catch (e: Exception) {
             null

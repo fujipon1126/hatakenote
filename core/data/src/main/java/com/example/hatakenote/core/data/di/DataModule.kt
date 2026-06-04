@@ -36,7 +36,7 @@ abstract class DataModule {
 
     @Binds
     @Singleton
-    abstract fun bindPlotLastViewedRepository(
-        impl: PlotLastViewedRepositoryImpl
-    ): PlotLastViewedRepository
+    abstract fun bindEntityLastViewedRepository(
+        impl: EntityLastViewedRepositoryImpl
+    ): EntityLastViewedRepository
 }

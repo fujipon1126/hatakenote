@@ -12,9 +12,11 @@ import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.model.WorkLog
 import com.example.hatakenote.core.domain.model.WorkType
 import com.example.hatakenote.core.domain.repository.CropRepository
+import com.example.hatakenote.core.domain.repository.EntityLastViewedRepository
 import com.example.hatakenote.core.domain.repository.FertilizerRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
+import com.example.hatakenote.core.domain.repository.ViewedEntityType
 import com.example.hatakenote.core.domain.repository.WorkLogRepository
 import com.example.hatakenote.feature.worklog.navigation.WorkLogRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -80,6 +82,7 @@ class WorkLogViewModel @Inject constructor(
     private val plotRepository: PlotRepository,
     private val cropRepository: CropRepository,
     private val fertilizerRepository: FertilizerRepository,
+    private val entityLastViewedRepository: EntityLastViewedRepository,
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<WorkLogRoute>()
@@ -99,6 +102,11 @@ class WorkLogViewModel @Inject constructor(
 
     init {
         loadData()
+        if (workLogId != null) {
+            viewModelScope.launch {
+                entityLastViewedRepository.markViewed(ViewedEntityType.WORK_LOG, workLogId)
+            }
+        }
     }
 
     private fun loadData() {

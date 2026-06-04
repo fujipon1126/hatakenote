@@ -14,4 +14,6 @@ data class Planting(
     val note: String? = null,
     val isActive: Boolean = true,
     val updatedAt: Instant = Instant.fromEpochMilliseconds(0),
+    val updatedBy: String? = null,
+    val plotIds: List<Long> = emptyList(),
 )

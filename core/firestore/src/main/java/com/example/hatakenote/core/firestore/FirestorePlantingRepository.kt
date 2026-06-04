@@ -3,6 +3,7 @@ package com.example.hatakenote.core.firestore
 import com.example.hatakenote.core.domain.model.Planting
 import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.example.hatakenote.core.domain.repository.PlantingRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +22,7 @@ import javax.inject.Singleton
 @Singleton
 class FirestorePlantingRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth,
     private val farmRepository: FarmRepository,
 ) : PlantingRepository {
 
@@ -143,6 +145,7 @@ class FirestorePlantingRepository @Inject constructor(
             "isActive" to planting.isActive,
             "plotIds" to plotIds,
             "updatedAt" to now,
+            "updatedBy" to auth.currentUser?.uid,
         )
 
         plantingsCollection(farmId).add(plantingData).await()
@@ -169,6 +172,7 @@ class FirestorePlantingRepository @Inject constructor(
                 "note" to planting.note,
                 "isActive" to planting.isActive,
                 "updatedAt" to Clock.System.now().toEpochMilliseconds(),
+                "updatedBy" to auth.currentUser?.uid,
             )
         ).await()
     }
@@ -186,12 +190,14 @@ class FirestorePlantingRepository @Inject constructor(
             ?: throw IllegalStateException("Planting not found")
 
         val now = Clock.System.now().toEpochMilliseconds()
+        val userId = auth.currentUser?.uid
         if (isFinal) {
             docRef.update(
                 mapOf(
                     "harvestedDate" to harvestedDate.toString(),
                     "isActive" to false,
                     "updatedAt" to now,
+                    "updatedBy" to userId,
                 )
             ).await()
         } else {
@@ -199,6 +205,7 @@ class FirestorePlantingRepository @Inject constructor(
                 mapOf(
                     "harvestedDate" to harvestedDate.toString(),
                     "updatedAt" to now,
+                    "updatedBy" to userId,
                 )
             ).await()
         }
@@ -229,6 +236,7 @@ class FirestorePlantingRepository @Inject constructor(
         return (data["plotIds"] as? List<Long>) ?: emptyList()
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun com.google.firebase.firestore.DocumentSnapshot.toPlanting(): Planting? {
         return try {
             val data = this.data ?: return null
@@ -242,6 +250,8 @@ class FirestorePlantingRepository @Inject constructor(
                 isActive = data["isActive"] as? Boolean ?: true,
                 updatedAt = (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
                     ?: Instant.fromEpochMilliseconds(0),
+                updatedBy = data["updatedBy"] as? String,
+                plotIds = (data["plotIds"] as? List<Long>) ?: emptyList(),
             )
         } catch (e: Exception) {
             null

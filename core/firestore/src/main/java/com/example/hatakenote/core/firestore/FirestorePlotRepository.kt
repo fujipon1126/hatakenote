@@ -8,6 +8,7 @@ import com.example.hatakenote.core.domain.model.PlotSide
 import com.example.hatakenote.core.domain.model.PlotWithCurrentPlanting
 import com.example.hatakenote.core.domain.repository.FarmRepository
 import com.example.hatakenote.core.domain.repository.PlotRepository
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,6 +28,7 @@ import javax.inject.Singleton
 @Singleton
 class FirestorePlotRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth,
     private val farmRepository: FarmRepository,
 ) : PlotRepository {
 
@@ -155,6 +157,7 @@ class FirestorePlotRepository @Inject constructor(
             "width" to plot.width,
             "height" to plot.height,
             "updatedAt" to now,
+            "updatedBy" to auth.currentUser?.uid,
         )
 
         plotsCollection(farmId).add(plotData).await()
@@ -181,6 +184,7 @@ class FirestorePlotRepository @Inject constructor(
                 "width" to plot.width,
                 "height" to plot.height,
                 "updatedAt" to Clock.System.now().toEpochMilliseconds(),
+                "updatedBy" to auth.currentUser?.uid,
             )
         ).await()
     }
@@ -225,6 +229,7 @@ class FirestorePlotRepository @Inject constructor(
                 width = (data["width"] as? Long)?.toInt() ?: 1,
                 height = (data["height"] as? Long)?.toInt() ?: 1,
                 updatedAt = readUpdatedAt(data),
+                updatedBy = data["updatedBy"] as? String,
             )
         } catch (e: Exception) {
             null
@@ -235,6 +240,7 @@ class FirestorePlotRepository @Inject constructor(
     private fun com.google.firebase.firestore.DocumentSnapshot.toPlantingWithPlotIds(): Pair<Planting, List<Long>>? {
         return try {
             val data = this.data ?: return null
+            val plotIds = (data["plotIds"] as? List<Long>) ?: emptyList()
             val planting = Planting(
                 id = (data["id"] as? Long) ?: return null,
                 cropId = (data["cropId"] as? Long) ?: return null,
@@ -244,8 +250,9 @@ class FirestorePlotRepository @Inject constructor(
                 note = data["note"] as? String,
                 isActive = data["isActive"] as? Boolean ?: true,
                 updatedAt = readUpdatedAt(data),
+                updatedBy = data["updatedBy"] as? String,
+                plotIds = plotIds,
             )
-            val plotIds = (data["plotIds"] as? List<Long>) ?: emptyList()
             Pair(planting, plotIds)
         } catch (e: Exception) {
             null
