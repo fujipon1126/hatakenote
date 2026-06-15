@@ -6,10 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.hatakenote.core.domain.model.Crop
+import com.example.hatakenote.core.domain.model.CropFamily
 import com.example.hatakenote.core.domain.model.Harvest
 import com.example.hatakenote.core.domain.model.Planting
 import com.example.hatakenote.core.domain.model.PlantingPhoto
 import com.example.hatakenote.core.domain.model.Plot
+import com.example.hatakenote.core.domain.repository.CropFamilyRepository
 import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.EntityLastViewedRepository
 import com.example.hatakenote.core.domain.repository.HarvestRepository
@@ -46,6 +48,7 @@ data class PlantingUiState(
     val isLoading: Boolean = true,
     val isEditMode: Boolean = false,
     val crops: List<Crop> = emptyList(),
+    val cropFamilies: List<CropFamily> = emptyList(),
     val plots: List<Plot> = emptyList(),
     val selectedCrop: Crop? = null,
     val selectedPlotIds: Set<Long> = emptySet(),
@@ -72,6 +75,7 @@ data class PlantingUiState(
 class PlantingViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val cropRepository: CropRepository,
+    private val cropFamilyRepository: CropFamilyRepository,
     private val plotRepository: PlotRepository,
     private val plantingRepository: PlantingRepository,
     private val plantingPhotoRepository: PlantingPhotoRepository,
@@ -101,6 +105,7 @@ class PlantingViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val crops = cropRepository.getActiveOnly().first()
+                val cropFamilies = cropFamilyRepository.getAll().first()
                 val plots = plotRepository.getAll().first()
 
                 if (plantingId != null) {
@@ -123,6 +128,7 @@ class PlantingViewModel @Inject constructor(
                         isLoading = false,
                         isEditMode = true,
                         crops = crops,
+                        cropFamilies = cropFamilies,
                         plots = plots,
                         selectedCrop = crop,
                         selectedPlotIds = plotIds.toSet(),
@@ -140,6 +146,7 @@ class PlantingViewModel @Inject constructor(
                         isLoading = false,
                         isEditMode = false,
                         crops = crops,
+                        cropFamilies = cropFamilies,
                         plots = plots,
                         selectedPlotIds = initialPlots,
                     )

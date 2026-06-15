@@ -16,9 +16,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class CropFamilyGroup(
+    val family: CropFamily?,
+    val crops: List<Crop>,
+)
+
 data class CropListUiState(
     val crops: List<Crop> = emptyList(),
     val families: List<CropFamily> = emptyList(),
+    val groupedCrops: List<CropFamilyGroup> = emptyList(),
     val isLoading: Boolean = true,
     val editingCrop: Crop? = null,
     val showEditDialog: Boolean = false,
@@ -41,9 +47,22 @@ class CropListViewModel @Inject constructor(
         cropFamilyRepository.getAll(),
         _dialogState,
     ) { crops, families, dialogState ->
+        val groupedCrops = buildList {
+            families.forEach { family ->
+                val cropsInFamily = crops.filter { it.familyId == family.id }
+                if (cropsInFamily.isNotEmpty()) {
+                    add(CropFamilyGroup(family = family, crops = cropsInFamily))
+                }
+            }
+            val orphanCrops = crops.filter { crop -> families.none { it.id == crop.familyId } }
+            if (orphanCrops.isNotEmpty()) {
+                add(CropFamilyGroup(family = null, crops = orphanCrops))
+            }
+        }
         CropListUiState(
             crops = crops,
             families = families,
+            groupedCrops = groupedCrops,
             isLoading = false,
             editingCrop = dialogState.editingCrop,
             showEditDialog = dialogState.showEditDialog,

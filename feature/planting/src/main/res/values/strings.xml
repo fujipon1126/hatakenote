@@ -8,6 +8,7 @@
     <string name="planting_plot">区画（複数選択可）</string>
     <string name="planting_no_plots">区画がありません。先に区画を作成してください。</string>
     <string name="planting_no_crops">作物が登録されていません。先に作物を登録してください。</string>
+    <string name="crop_family_unknown">不明</string>
     <string name="planting_date">植付日</string>
     <string name="planting_select_date">日付選択</string>
     <string name="planting_date_format">%1$d年%2$d月%3$d日</string>

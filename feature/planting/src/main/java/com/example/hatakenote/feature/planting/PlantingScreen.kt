@@ -34,6 +34,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Warning
@@ -86,6 +88,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hatakenote.feature.planting.R
 import coil.compose.AsyncImage
 import com.example.hatakenote.core.domain.model.Crop
+import com.example.hatakenote.core.domain.model.CropFamily
 import com.example.hatakenote.core.domain.model.Harvest
 import com.example.hatakenote.core.domain.model.Plot
 import com.example.hatakenote.core.domain.usecase.RotationWarning
@@ -368,6 +371,7 @@ internal fun PlantingScreen(
         if (uiState.showCropSelector) {
             CropSelectorDialog(
                 crops = uiState.crops,
+                cropFamilies = uiState.cropFamilies,
                 selectedCrop = uiState.selectedCrop,
                 onCropSelected = onCropSelected,
                 onDismiss = onDismissCropSelector,
@@ -945,13 +949,35 @@ private fun PhotoDatePickerDialog(
     }
 }
 
+private const val ORPHAN_FAMILY_KEY = -1L
+
 @Composable
 private fun CropSelectorDialog(
     crops: List<Crop>,
+    cropFamilies: List<CropFamily>,
     selectedCrop: Crop?,
     onCropSelected: (Crop) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val groupedCrops = remember(crops, cropFamilies) {
+        buildList {
+            cropFamilies.forEach { family ->
+                val cropsInFamily = crops.filter { it.familyId == family.id }
+                if (cropsInFamily.isNotEmpty()) {
+                    add(family to cropsInFamily)
+                }
+            }
+            val orphanCrops = crops.filter { crop -> cropFamilies.none { it.id == crop.familyId } }
+            if (orphanCrops.isNotEmpty()) {
+                add(null to orphanCrops)
+            }
+        }
+    }
+    // 選択中の作物が含まれる科は初期から展開しておく
+    var expandedFamilyIds by remember(selectedCrop?.familyId) {
+        mutableStateOf(selectedCrop?.familyId?.let { listOf(it) } ?: emptyList())
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.planting_select_crop)) },
@@ -963,16 +989,35 @@ private fun CropSelectorDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
+                val unknownFamily = stringResource(R.string.crop_family_unknown)
                 Column(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    crops.forEach { crop ->
-                        CropItem(
-                            crop = crop,
-                            isSelected = crop.id == selectedCrop?.id,
-                            onClick = { onCropSelected(crop) },
+                    groupedCrops.forEach { (family, cropsInFamily) ->
+                        val familyKey = family?.id ?: ORPHAN_FAMILY_KEY
+                        val isExpanded = familyKey in expandedFamilyIds
+                        CropFamilyHeader(
+                            familyName = family?.name ?: unknownFamily,
+                            count = cropsInFamily.size,
+                            isExpanded = isExpanded,
+                            onToggle = {
+                                expandedFamilyIds = if (isExpanded) {
+                                    expandedFamilyIds - familyKey
+                                } else {
+                                    expandedFamilyIds + familyKey
+                                }
+                            },
                         )
+                        if (isExpanded) {
+                            cropsInFamily.forEach { crop ->
+                                CropItem(
+                                    crop = crop,
+                                    isSelected = crop.id == selectedCrop?.id,
+                                    onClick = { onCropSelected(crop) },
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -983,6 +1028,40 @@ private fun CropSelectorDialog(
             }
         },
     )
+}
+
+@Composable
+private fun CropFamilyHeader(
+    familyName: String,
+    count: Int,
+    isExpanded: Boolean,
+    onToggle: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(vertical = 8.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = familyName,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = "($count)",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 @Composable

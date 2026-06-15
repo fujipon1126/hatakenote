@@ -22,6 +22,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Grass
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -49,6 +51,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -149,7 +152,7 @@ internal fun CropListScreen(
             ) {
                 CircularProgressIndicator()
             }
-        } else if (uiState.crops.isEmpty()) {
+        } else if (uiState.groupedCrops.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -179,6 +182,7 @@ internal fun CropListScreen(
             }
         } else {
             val unknownFamily = stringResource(R.string.crop_family_unknown)
+            var expandedFamilyIds by rememberSaveable { mutableStateOf(emptyList<Long>()) }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -186,16 +190,35 @@ internal fun CropListScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                items(uiState.crops, key = { it.id }) { crop ->
-                    val family = uiState.families.find { it.id == crop.familyId }
-                    CropListItem(
-                        crop = crop,
-                        familyName = family?.name ?: unknownFamily,
-                        onClick = { onCropClick(crop.id) },
-                        onEditClick = { onEditClick(crop) },
-                        onDeleteClick = { onDeleteClick(crop) },
-                        onToggleActive = { onToggleActive(crop) },
-                    )
+                uiState.groupedCrops.forEach { group ->
+                    val familyKey = group.family?.id ?: ORPHAN_FAMILY_KEY
+                    val isExpanded = familyKey in expandedFamilyIds
+                    val familyName = group.family?.name ?: unknownFamily
+                    item(key = "header-$familyKey") {
+                        CropFamilyHeader(
+                            familyName = familyName,
+                            count = group.crops.size,
+                            isExpanded = isExpanded,
+                            onToggle = {
+                                expandedFamilyIds = if (isExpanded) {
+                                    expandedFamilyIds - familyKey
+                                } else {
+                                    expandedFamilyIds + familyKey
+                                }
+                            },
+                        )
+                    }
+                    if (isExpanded) {
+                        items(group.crops, key = { "crop-${it.id}" }) { crop ->
+                            CropListItem(
+                                crop = crop,
+                                onClick = { onCropClick(crop.id) },
+                                onEditClick = { onEditClick(crop) },
+                                onDeleteClick = { onDeleteClick(crop) },
+                                onToggleActive = { onToggleActive(crop) },
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -235,10 +258,45 @@ internal fun CropListScreen(
     }
 }
 
+private const val ORPHAN_FAMILY_KEY = -1L
+
+@Composable
+private fun CropFamilyHeader(
+    familyName: String,
+    count: Int,
+    isExpanded: Boolean,
+    onToggle: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(vertical = 8.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = familyName,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = "($count)",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
 @Composable
 private fun CropListItem(
     crop: Crop,
-    familyName: String,
     onClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
@@ -273,22 +331,16 @@ private fun CropListItem(
             Spacer(modifier = Modifier.width(16.dp))
 
             // Crop info
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = crop.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (crop.isActive) {
-                        MaterialTheme.colorScheme.onSurface
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-                Text(
-                    text = familyName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Text(
+                text = crop.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (crop.isActive) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                modifier = Modifier.weight(1f),
+            )
 
             // Active switch
             Switch(
