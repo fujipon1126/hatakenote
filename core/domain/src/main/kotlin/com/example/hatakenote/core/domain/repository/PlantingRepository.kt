@@ -12,7 +12,7 @@ interface PlantingRepository {
     fun getByCropId(cropId: Long): Flow<List<Planting>>
     fun getHistoryByPlotId(plotId: Long): Flow<List<Planting>>
     suspend fun insert(planting: Planting, plotIds: List<Long>): Long
-    suspend fun update(planting: Planting)
+    suspend fun update(planting: Planting, plotIds: List<Long>)
     suspend fun harvest(plantingId: Long, harvestedDate: LocalDate, isFinal: Boolean = true)
     suspend fun delete(planting: Planting)
     suspend fun getPlotIdsForPlanting(plantingId: Long): List<Long>

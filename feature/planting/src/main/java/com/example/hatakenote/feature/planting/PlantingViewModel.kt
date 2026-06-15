@@ -332,7 +332,7 @@ class PlantingViewModel @Inject constructor(
                         plantedDate = state.plantedDate,
                         note = state.note.ifBlank { null },
                     )
-                    plantingRepository.update(updatedPlanting)
+                    plantingRepository.update(updatedPlanting, plotIds)
                     plantingIdResult = state.existingPlanting.id
                 } else {
                     // Create new planting

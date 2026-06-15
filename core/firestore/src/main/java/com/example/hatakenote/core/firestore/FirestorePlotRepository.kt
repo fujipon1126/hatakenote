@@ -222,12 +222,12 @@ class FirestorePlotRepository @Inject constructor(
         return try {
             val data = this.data ?: return null
             Plot(
-                id = (data["id"] as? Long) ?: return null,
+                id = (data["id"] as? Number)?.toLong() ?: return null,
                 name = data["name"] as? String ?: "",
                 side = (data["side"] as? String)?.let { PlotSide.valueOf(it) } ?: PlotSide.LEFT,
-                number = (data["number"] as? Long)?.toInt() ?: 1,
-                width = (data["width"] as? Long)?.toInt() ?: 1,
-                height = (data["height"] as? Long)?.toInt() ?: 1,
+                number = (data["number"] as? Number)?.toInt() ?: 1,
+                width = (data["width"] as? Number)?.toInt() ?: 1,
+                height = (data["height"] as? Number)?.toInt() ?: 1,
                 updatedAt = readUpdatedAt(data),
                 updatedBy = data["updatedBy"] as? String,
             )
@@ -236,14 +236,15 @@ class FirestorePlotRepository @Inject constructor(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun com.google.firebase.firestore.DocumentSnapshot.toPlantingWithPlotIds(): Pair<Planting, List<Long>>? {
         return try {
             val data = this.data ?: return null
-            val plotIds = (data["plotIds"] as? List<Long>) ?: emptyList()
+            val plotIds = (data["plotIds"] as? List<*>)
+                ?.mapNotNull { (it as? Number)?.toLong() }
+                ?: emptyList()
             val planting = Planting(
-                id = (data["id"] as? Long) ?: return null,
-                cropId = (data["cropId"] as? Long) ?: return null,
+                id = (data["id"] as? Number)?.toLong() ?: return null,
+                cropId = (data["cropId"] as? Number)?.toLong() ?: return null,
                 plantedDate = (data["plantedDate"] as? String)?.let { LocalDate.parse(it) }
                     ?: return null,
                 harvestedDate = (data["harvestedDate"] as? String)?.let { LocalDate.parse(it) },
@@ -260,16 +261,16 @@ class FirestorePlotRepository @Inject constructor(
     }
 
     private fun readUpdatedAt(data: Map<String, Any?>): Instant =
-        (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
+        (data["updatedAt"] as? Number)?.toLong()?.let { Instant.fromEpochMilliseconds(it) }
             ?: Instant.fromEpochMilliseconds(0)
 
     private fun com.google.firebase.firestore.DocumentSnapshot.toCrop(): Crop? {
         return try {
             val data = this.data ?: return null
             Crop(
-                id = (data["id"] as? Long) ?: return null,
+                id = (data["id"] as? Number)?.toLong() ?: return null,
                 name = data["name"] as? String ?: "",
-                familyId = (data["familyId"] as? Long) ?: 0,
+                familyId = (data["familyId"] as? Number)?.toLong() ?: 0,
                 colorHex = data["colorHex"] as? String ?: "#4CAF50",
                 isActive = data["isActive"] as? Boolean ?: true,
             )

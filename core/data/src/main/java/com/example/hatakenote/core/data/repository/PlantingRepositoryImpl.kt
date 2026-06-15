@@ -45,8 +45,8 @@ class PlantingRepositoryImpl @Inject constructor(
     override suspend fun insert(planting: Planting, plotIds: List<Long>): Long =
         plantingDao.insertWithPlots(planting.toEntity(), plotIds)
 
-    override suspend fun update(planting: Planting) =
-        plantingDao.update(planting.toEntity())
+    override suspend fun update(planting: Planting, plotIds: List<Long>) =
+        plantingDao.updateWithPlots(planting.toEntity(), plotIds)
 
     override suspend fun harvest(plantingId: Long, harvestedDate: LocalDate, isFinal: Boolean) {
         if (isFinal) {

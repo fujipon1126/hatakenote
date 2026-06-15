@@ -78,4 +78,14 @@ interface PlantingDao {
         insertCrossRefs(crossRefs)
         return plantingId
     }
+
+    @Transaction
+    suspend fun updateWithPlots(planting: PlantingEntity, plotIds: List<Long>) {
+        update(planting)
+        deleteCrossRefsByPlantingId(planting.id)
+        val crossRefs = plotIds.map { plotId ->
+            PlantingPlotCrossRef(plantingId = planting.id, plotId = plotId)
+        }
+        insertCrossRefs(crossRefs)
+    }
 }

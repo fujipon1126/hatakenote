@@ -152,7 +152,7 @@ class FirestorePlantingRepository @Inject constructor(
         return newId
     }
 
-    override suspend fun update(planting: Planting) {
+    override suspend fun update(planting: Planting, plotIds: List<Long>) {
         val farmId = farmRepository.getCurrentFarmId().first()
             ?: throw IllegalStateException("No farm selected")
 
@@ -171,6 +171,7 @@ class FirestorePlantingRepository @Inject constructor(
                 "harvestedDate" to planting.harvestedDate?.toString(),
                 "note" to planting.note,
                 "isActive" to planting.isActive,
+                "plotIds" to plotIds,
                 "updatedAt" to Clock.System.now().toEpochMilliseconds(),
                 "updatedBy" to auth.currentUser?.uid,
             )
@@ -223,7 +224,6 @@ class FirestorePlantingRepository @Inject constructor(
         snapshot.documents.firstOrNull()?.reference?.delete()?.await()
     }
 
-    @Suppress("UNCHECKED_CAST")
     override suspend fun getPlotIdsForPlanting(plantingId: Long): List<Long> {
         val farmId = farmRepository.getCurrentFarmId().first() ?: return emptyList()
 
@@ -233,28 +233,32 @@ class FirestorePlantingRepository @Inject constructor(
             .await()
 
         val data = snapshot.documents.firstOrNull()?.data ?: return emptyList()
-        return (data["plotIds"] as? List<Long>) ?: emptyList()
+        return readPlotIds(data)
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun com.google.firebase.firestore.DocumentSnapshot.toPlanting(): Planting? {
         return try {
             val data = this.data ?: return null
             Planting(
-                id = (data["id"] as? Long) ?: return null,
-                cropId = (data["cropId"] as? Long) ?: return null,
+                id = (data["id"] as? Number)?.toLong() ?: return null,
+                cropId = (data["cropId"] as? Number)?.toLong() ?: return null,
                 plantedDate = (data["plantedDate"] as? String)?.let { LocalDate.parse(it) }
                     ?: return null,
                 harvestedDate = (data["harvestedDate"] as? String)?.let { LocalDate.parse(it) },
                 note = data["note"] as? String,
                 isActive = data["isActive"] as? Boolean ?: true,
-                updatedAt = (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
+                updatedAt = (data["updatedAt"] as? Number)?.toLong()?.let { Instant.fromEpochMilliseconds(it) }
                     ?: Instant.fromEpochMilliseconds(0),
                 updatedBy = data["updatedBy"] as? String,
-                plotIds = (data["plotIds"] as? List<Long>) ?: emptyList(),
+                plotIds = readPlotIds(data),
             )
         } catch (e: Exception) {
             null
         }
+    }
+
+    private fun readPlotIds(data: Map<String, Any?>): List<Long> {
+        val raw = data["plotIds"] as? List<*> ?: return emptyList()
+        return raw.mapNotNull { (it as? Number)?.toLong() }
     }
 }
