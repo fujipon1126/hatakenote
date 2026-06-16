@@ -62,7 +62,7 @@ fun computeNewBadgePlotIds(
         if (!isUnreadOthers(workLog.updatedAt, workLog.updatedBy, workLogLastViewed[workLog.id], currentUserId)) {
             continue
         }
-        workLog.plotId?.let { result.add(it) }
+        result.addAll(workLog.plotIds)
         workLog.plantingId?.let { plantingId ->
             plantingPlotMap[plantingId]?.let { result.addAll(it) }
         }

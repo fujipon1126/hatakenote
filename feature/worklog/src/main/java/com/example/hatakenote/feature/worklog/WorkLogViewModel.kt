@@ -57,7 +57,7 @@ data class WorkLogUiState(
     val selectedPlanting: PlantingWithCropAndPlots? = null,
     // For plot-bound work types
     val availablePlots: List<Plot> = emptyList(),
-    val selectedPlot: Plot? = null,
+    val selectedPlotIds: Set<Long> = emptySet(),
     val isPlotLocked: Boolean = false,
     val isPlantingLocked: Boolean = false,
     // Fertilizer selection (multiple)
@@ -136,13 +136,13 @@ class WorkLogViewModel @Inject constructor(
                         val selectedPlanting = if (workLog.plantingId != null) {
                             plantingsWithCropAndPlots.find { it.planting.id == workLog.plantingId }
                         } else null
-                        val selectedPlot = if (workLog.plotId != null) {
-                            plots.find { it.id == workLog.plotId }
-                        } else if (initialPlotId != null) {
-                            plots.find { it.id == initialPlotId }
-                        } else null
+                        val selectedPlotIds = when {
+                            workLog.plotIds.isNotEmpty() -> workLog.plotIds.toSet()
+                            initialPlotId != null -> setOf(initialPlotId)
+                            else -> emptySet()
+                        }
 
-                        val hasPlotContext = selectedPlot != null || initialPlotId != null
+                        val hasPlotContext = selectedPlotIds.isNotEmpty() || initialPlotId != null
 
                         val selectedFertilizers = workLog.fertilizers.mapNotNull { entry ->
                             fertilizers.find { it.id == entry.fertilizerId }?.let { fert ->
@@ -160,7 +160,7 @@ class WorkLogViewModel @Inject constructor(
                             availablePlantings = plantingsWithCropAndPlots,
                             selectedPlanting = selectedPlanting,
                             availablePlots = plots,
-                            selectedPlot = selectedPlot,
+                            selectedPlotIds = selectedPlotIds,
                             isPlotLocked = hasPlotContext,
                             isPlantingLocked = selectedPlanting != null,
                             availableFertilizers = fertilizers,
@@ -184,9 +184,7 @@ class WorkLogViewModel @Inject constructor(
                         plantingsWithCropAndPlots.find { it.planting.id == initialPlantingId }
                     } else null
 
-                    val selectedPlot = if (initialPlotId != null) {
-                        plots.find { it.id == initialPlotId }
-                    } else null
+                    val initialSelectedPlotIds = if (initialPlotId != null) setOf(initialPlotId) else emptySet()
 
                     // Filter plantings to only those in the specified plot
                     val filteredPlantings = if (initialPlotId != null) {
@@ -211,8 +209,8 @@ class WorkLogViewModel @Inject constructor(
                         availablePlantings = filteredPlantings,
                         selectedPlanting = autoSelectedPlanting,
                         availablePlots = plots,
-                        selectedPlot = selectedPlot,
-                        isPlotLocked = initialPlotId != null,
+                        selectedPlotIds = initialSelectedPlotIds,
+                        isPlotLocked = false,
                         isPlantingLocked = initialPlotId != null && filteredPlantings.size <= 1,
                         availableFertilizers = fertilizers,
                     )
@@ -251,11 +249,10 @@ class WorkLogViewModel @Inject constructor(
         )
     }
 
-    fun selectPlot(plot: Plot) {
-        _uiState.value = _uiState.value.copy(
-            selectedPlot = plot,
-            showPlotSelector = false,
-        )
+    fun togglePlotSelection(plotId: Long) {
+        val current = _uiState.value.selectedPlotIds
+        val updated = if (current.contains(plotId)) current - plotId else current + plotId
+        _uiState.value = _uiState.value.copy(selectedPlotIds = updated)
     }
 
     fun addFertilizer(fertilizer: Fertilizer) {
@@ -335,7 +332,7 @@ class WorkLogViewModel @Inject constructor(
             return
         }
 
-        if (workType.bindToPlot() && state.selectedPlot == null) {
+        if (workType.bindToPlot() && state.selectedPlotIds.isEmpty()) {
             _uiState.value = state.copy(errorMessage = "区画を選択してください")
             return
         }
@@ -353,7 +350,7 @@ class WorkLogViewModel @Inject constructor(
                 val workLog = WorkLog(
                     id = state.existingWorkLog?.id ?: 0,
                     plantingId = if (workType.bindToPlanting()) state.selectedPlanting?.planting?.id else null,
-                    plotId = if (workType.bindToPlot()) state.selectedPlot?.id else null,
+                    plotIds = if (workType.bindToPlot()) state.selectedPlotIds.toList() else emptyList(),
                     workType = workType,
                     workDate = state.workDate,
                     detail = state.detail.ifBlank { null },
@@ -386,7 +383,7 @@ class WorkLogViewModel @Inject constructor(
         return when {
             state.isSaving -> false
             workType.bindToPlanting() && state.selectedPlanting == null -> false
-            workType.bindToPlot() && state.selectedPlot == null -> false
+            workType.bindToPlot() && state.selectedPlotIds.isEmpty() -> false
             else -> true
         }
     }

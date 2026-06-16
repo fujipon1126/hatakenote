@@ -89,7 +89,7 @@ internal fun WorkLogRoute(
         onPlantingSelected = viewModel::selectPlanting,
         onPlantingSelectorDismiss = viewModel::dismissPlantingSelector,
         onPlotSelectorClick = viewModel::showPlotSelector,
-        onPlotSelected = viewModel::selectPlot,
+        onPlotToggle = viewModel::togglePlotSelection,
         onPlotSelectorDismiss = viewModel::dismissPlotSelector,
         onFertilizerSelectorClick = viewModel::showFertilizerSelector,
         onFertilizerSelected = viewModel::addFertilizer,
@@ -119,7 +119,7 @@ internal fun WorkLogScreen(
     onPlantingSelected: (PlantingWithCropAndPlots) -> Unit,
     onPlantingSelectorDismiss: () -> Unit,
     onPlotSelectorClick: () -> Unit,
-    onPlotSelected: (Plot) -> Unit,
+    onPlotToggle: (Long) -> Unit,
     onPlotSelectorDismiss: () -> Unit,
     onFertilizerSelectorClick: () -> Unit,
     onFertilizerSelected: (Fertilizer) -> Unit,
@@ -228,7 +228,7 @@ internal fun WorkLogScreen(
                             )
                         }
                     } else {
-                        // Plot selection
+                        // Plot selection (multiple)
                         Text(
                             text = stringResource(R.string.worklog_target_plot),
                             style = MaterialTheme.typography.titleMedium,
@@ -238,20 +238,10 @@ internal fun WorkLogScreen(
                         OutlinedButton(
                             onClick = onPlotSelectorClick,
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = !uiState.isPlotLocked,
                         ) {
-                            val selectedPlot = uiState.selectedPlot
-                            if (selectedPlot != null) {
-                                val cropNames = uiState.availablePlantings
-                                    .filter { it.plots.any { plot -> plot.id == selectedPlot.id } }
-                                    .joinToString(", ") { it.crop.name }
-                                Text(
-                                    text = if (cropNames.isNotEmpty()) {
-                                        "${selectedPlot.name}（$cropNames）"
-                                    } else {
-                                        selectedPlot.name
-                                    },
-                                )
+                            val selected = uiState.availablePlots.filter { it.id in uiState.selectedPlotIds }
+                            if (selected.isNotEmpty()) {
+                                Text(text = selected.joinToString(", ") { it.name })
                             } else {
                                 Text(text = stringResource(R.string.worklog_select_plot))
                             }
@@ -415,7 +405,7 @@ internal fun WorkLogScreen(
         )
     }
 
-    // Plot Selector Dialog
+    // Plot Selector Dialog (multiple selection)
     if (uiState.showPlotSelector) {
         AlertDialog(
             onDismissRequest = onPlotSelectorDismiss,
@@ -434,8 +424,8 @@ internal fun WorkLogScreen(
                             PlotSelectItem(
                                 plot = plot,
                                 cropNames = cropNames,
-                                isSelected = uiState.selectedPlot?.id == plot.id,
-                                onClick = { onPlotSelected(plot) },
+                                isSelected = plot.id in uiState.selectedPlotIds,
+                                onClick = { onPlotToggle(plot.id) },
                             )
                         }
                     }

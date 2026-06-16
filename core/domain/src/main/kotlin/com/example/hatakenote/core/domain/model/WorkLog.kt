@@ -17,7 +17,7 @@ data class FertilizerEntry(
 data class WorkLog(
     val id: Long = 0,
     val plantingId: Long? = null,
-    val plotId: Long? = null,
+    val plotIds: List<Long> = emptyList(),
     val workType: WorkType,
     val workDate: LocalDate,
     val detail: String? = null,

@@ -43,7 +43,7 @@ data class WorkLogEntity(
 fun WorkLogEntity.toDomain(): WorkLog = WorkLog(
     id = id,
     plantingId = plantingId,
-    plotId = plotId,
+    plotIds = listOfNotNull(plotId),
     workType = workType,
     workDate = workDate,
     detail = detail,
@@ -52,7 +52,7 @@ fun WorkLogEntity.toDomain(): WorkLog = WorkLog(
 fun WorkLog.toEntity(): WorkLogEntity = WorkLogEntity(
     id = id,
     plantingId = plantingId,
-    plotId = plotId,
+    plotId = plotIds.firstOrNull(),
     workType = workType,
     workDate = workDate,
     detail = detail,

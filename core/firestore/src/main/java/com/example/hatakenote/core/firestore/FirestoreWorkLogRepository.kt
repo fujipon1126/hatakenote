@@ -65,14 +65,23 @@ class FirestoreWorkLogRepository @Inject constructor(
             if (farmId == null) {
                 flowOf(emptyList())
             } else {
-                workLogsCollection(farmId)
+                // 新フォーマット: plotIds 配列で whereArrayContains
+                val byArray = workLogsCollection(farmId)
+                    .whereArrayContains("plotIds", plotId)
+                    .snapshots()
+                    .map { snapshot ->
+                        snapshot.documents.mapNotNull { doc -> doc.toWorkLog() }
+                    }
+                // 旧フォーマット: plotId 単一フィールド（後方互換）
+                val byScalar = workLogsCollection(farmId)
                     .whereEqualTo("plotId", plotId)
                     .snapshots()
                     .map { snapshot ->
-                        snapshot.documents.mapNotNull { doc ->
-                            doc.toWorkLog()
-                        }
+                        snapshot.documents.mapNotNull { doc -> doc.toWorkLog() }
                     }
+                kotlinx.coroutines.flow.combine(byArray, byScalar) { a, b ->
+                    (a + b).distinctBy { it.id }
+                }
             }
         }
     }
@@ -146,7 +155,7 @@ class FirestoreWorkLogRepository @Inject constructor(
         val workLogData = hashMapOf(
             "id" to newId,
             "plantingId" to workLog.plantingId,
-            "plotId" to workLog.plotId,
+            "plotIds" to workLog.plotIds,
             "workType" to workLog.workType.name,
             "workDate" to workLog.workDate.toString(),
             "detail" to workLog.detail,
@@ -180,7 +189,8 @@ class FirestoreWorkLogRepository @Inject constructor(
         docRef.update(
             mapOf(
                 "plantingId" to workLog.plantingId,
-                "plotId" to workLog.plotId,
+                "plotIds" to workLog.plotIds,
+                "plotId" to null,
                 "workType" to workLog.workType.name,
                 "workDate" to workLog.workDate.toString(),
                 "detail" to workLog.detail,
@@ -224,17 +234,22 @@ class FirestoreWorkLogRepository @Inject constructor(
                     }
                 )
 
+            // 新フォーマット: plotIds 配列 / 旧フォーマット: plotId 単一値（[plotId] に変換）
+            val plotIds = (data["plotIds"] as? List<*>)
+                ?.mapNotNull { (it as? Number)?.toLong() }
+                ?: listOfNotNull((data["plotId"] as? Number)?.toLong())
+
             WorkLog(
-                id = (data["id"] as? Long) ?: return null,
-                plantingId = data["plantingId"] as? Long,
-                plotId = data["plotId"] as? Long,
+                id = (data["id"] as? Number)?.toLong() ?: return null,
+                plantingId = (data["plantingId"] as? Number)?.toLong(),
+                plotIds = plotIds,
                 workType = (data["workType"] as? String)?.let { WorkType.valueOf(it) }
                     ?: return null,
                 workDate = (data["workDate"] as? String)?.let { LocalDate.parse(it) }
                     ?: return null,
                 detail = data["detail"] as? String,
                 fertilizers = fertilizers,
-                updatedAt = (data["updatedAt"] as? Long)?.let { Instant.fromEpochMilliseconds(it) }
+                updatedAt = (data["updatedAt"] as? Number)?.toLong()?.let { Instant.fromEpochMilliseconds(it) }
                     ?: Instant.fromEpochMilliseconds(0),
                 updatedBy = data["updatedBy"] as? String,
             )
