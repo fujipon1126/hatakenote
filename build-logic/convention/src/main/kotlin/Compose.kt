@@ -18,6 +18,7 @@ internal fun Project.configureAndroidCompose(
             add("implementation", catalog.library("androidx-compose-ui"))
             add("implementation", catalog.library("androidx-compose-ui-graphics"))
             add("implementation", catalog.library("androidx-compose-ui-tooling-preview"))
+            add("implementation", catalog.library("androidx-compose-foundation"))
             add("implementation", catalog.library("androidx-compose-material3"))
             add("implementation", catalog.library("androidx-compose-material-icons-extended"))
             add("debugImplementation", catalog.library("androidx-compose-ui-tooling"))

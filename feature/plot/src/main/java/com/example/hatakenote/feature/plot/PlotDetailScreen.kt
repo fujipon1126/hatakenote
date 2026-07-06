@@ -5,6 +5,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.example.hatakenote.core.ui.component.CropChip
 import com.example.hatakenote.core.ui.component.FullScreenPhotoViewer
 import com.example.hatakenote.core.ui.component.NewLabel
 import androidx.compose.foundation.layout.Arrangement
@@ -783,9 +784,12 @@ private fun SafeCropCard(advice: CropAdvice) {
                     .background(cropColor),
             )
             Spacer(modifier = Modifier.width(12.dp))
+            CropChip(text = advice.crop.name)
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "${advice.crop.name}（${advice.familyName}）",
-                style = MaterialTheme.typography.bodyMedium,
+                text = "（${advice.familyName}）",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
