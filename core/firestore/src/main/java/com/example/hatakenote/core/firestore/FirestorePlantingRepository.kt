@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -118,14 +119,16 @@ class FirestorePlantingRepository @Inject constructor(
             if (farmId == null) {
                 flowOf(emptyList())
             } else {
-                plantingsCollection(farmId)
-                    .whereArrayContains("plotIds", plotId)
-                    .snapshots()
-                    .map { snapshot ->
-                        snapshot.documents.mapNotNull { doc ->
-                            doc.toPlanting()
-                        }
-                    }
+                // 一発読みの消費者（.first()）のみのため、snapshots() ではなく get().await() で確定取得する。
+                // snapshots().first() は新規インストール等のコールドキャッシュ時に空のキャッシュ emission を掴んで
+                // 即キャンセルし、サーバー同期が完走せず履歴が永続的に空になる不具合があるため。
+                flow {
+                    val snapshot = plantingsCollection(farmId)
+                        .whereArrayContains("plotIds", plotId)
+                        .get()
+                        .await()
+                    emit(snapshot.documents.mapNotNull { doc -> doc.toPlanting() })
+                }
             }
         }
     }

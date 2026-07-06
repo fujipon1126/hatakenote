@@ -9,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
@@ -48,15 +49,21 @@ class FirestoreCropRepository @Inject constructor(
             if (farmId == null) {
                 flowOf(emptyList())
             } else {
-                cropsCollection(farmId)
-                    .whereEqualTo("isActive", true)
-                    .orderBy("name")
-                    .snapshots()
-                    .map { snapshot ->
-                        snapshot.documents.mapNotNull { doc ->
-                            doc.toCrop()
-                        }
-                    }
+                // 一発読み（.first()）でも完全なリストを返すよう get().await() で確定取得する。
+                // snapshots().first() はコールドキャッシュ時に部分的/空の初回 emission を掴む不具合がある。
+                // orderBy("name") は isActive フィルタとの複合インデックスを要求するため、
+                // サーバー取得で FAILED_PRECONDITION になる。並び替えはクライアント側で行いインデックス不要にする。
+                flow {
+                    val snapshot = cropsCollection(farmId)
+                        .whereEqualTo("isActive", true)
+                        .get()
+                        .await()
+                    emit(
+                        snapshot.documents
+                            .mapNotNull { doc -> doc.toCrop() }
+                            .sortedBy { it.name }
+                    )
+                }
             }
         }
     }
