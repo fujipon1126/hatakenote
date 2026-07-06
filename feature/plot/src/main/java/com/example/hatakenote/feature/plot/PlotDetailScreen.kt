@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import com.example.hatakenote.core.ui.component.CropChip
 import com.example.hatakenote.core.ui.component.FullScreenPhotoViewer
 import com.example.hatakenote.core.ui.component.NewLabel
+import com.example.hatakenote.core.ui.component.OutlinedCropChip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -745,11 +746,15 @@ private fun AvoidCropCard(advice: CropAdvice) {
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "${advice.crop.name}（${advice.familyName}）",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedCropChip(text = advice.crop.name, color = cropColor)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "（${advice.familyName}）",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
                 advice.reason?.let { reason ->
                     Text(
                         text = reason,

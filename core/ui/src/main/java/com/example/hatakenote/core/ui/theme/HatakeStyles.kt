@@ -27,12 +27,14 @@ val CropChipStyle: Style = Style {
 
 /**
  * [StyleScope] 拡張による独自スタイルプロパティ。
- * Styles API では拡張関数でスタイルの語彙そのものを増やせる（枠線付き背景など）。
+ * Styles API では拡張関数でスタイルの語彙そのものを増やせる。
+ * ここでは「[color] の実線枠 ＋ 同色の薄いティント背景」をまとめて適用し、
+ * 枠線が背景に埋もれない“outlined”な見た目を1関数で表現する。
  */
-fun StyleScope.leafOutlinedBackground(color: Color) {
-    borderWidth(1.dp)
+fun StyleScope.outlinedBackground(color: Color) {
+    borderWidth(2.dp)
     borderColor(color)
-    background(color)
+    background(color.copy(alpha = 0.12f))
 }
 
 /** Style 定義で使う raw カラー（テーマ非依存の素値）。 */
