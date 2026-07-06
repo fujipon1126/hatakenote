@@ -90,7 +90,7 @@ android {
     }
 }
 
-firebaseAppDistribution {
+firebaseAppDistributionDefault {
     groups = "testers"
     releaseNotes = "テスト版"
 }

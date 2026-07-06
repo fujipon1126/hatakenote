@@ -11,3 +11,6 @@ google-services.json
 *.keystore
 *.jks
 /docs
+
+# Claude Code local skills / tooling
+.claude/
