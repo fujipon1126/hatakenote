@@ -6,8 +6,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.style.ExperimentalFoundationStyleApi
 import androidx.compose.foundation.style.Style
 import androidx.compose.foundation.style.StyleScope
+import androidx.compose.foundation.style.pressed
+import androidx.compose.foundation.style.selected
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /**
  * Jetpack Compose Foundation の Styles API（実験的 / Google I/O 2026 で紹介）で定義した独自スタイルトークン。
@@ -35,6 +40,52 @@ fun StyleScope.outlinedBackground(color: Color) {
     borderWidth(2.dp)
     borderColor(color)
     background(color.copy(alpha = 0.12f))
+}
+
+/**
+ * Styles API の「状態連動スタイル」を使った選択可能チップ用トークン。
+ *
+ * 従来は押下フィードバックに `interactionSource.collectIsPressedAsState()`＋条件分岐、
+ * 選択状態に `if (selected) ... else ...` の手配線が必要だったが、
+ * Styles API では `pressed { }` / `selected { }` として **状態別スタイルを1つの [Style] に宣言**でき、
+ * 適用側は状態を意識せず [androidx.compose.foundation.style.styleable] するだけでよい。
+ */
+val SelectableCropChipStyle: Style = Style {
+    shape(RoundedCornerShape(percent = 50))
+    contentPaddingStart(12.dp)
+    contentPaddingEnd(12.dp)
+    contentPaddingTop(6.dp)
+    contentPaddingBottom(6.dp)
+    // 既定（未選択）：実線枠のみ
+    borderWidth(1.dp)
+    borderColor(HatakeStyleColors.cropChipBackground)
+    // 押下中：うっすら塗り（InteractionSource 連動。手動の状態監視は不要）
+    pressed {
+        background(HatakeStyleColors.cropChipBackground.copy(alpha = 0.2f))
+    }
+    // 選択中：塗りつぶし
+    selected {
+        background(HatakeStyleColors.cropChipBackground)
+    }
+}
+
+/**
+ * スタイル継承（cascade）デモ用のセクションスタイル。
+ *
+ * Styles API では、親の [androidx.compose.foundation.style.styleable] に宣言した
+ * contentColor / textStyle などを **子孫テキストが継承**できる（CSS のカスケードに近い）。
+ * 従来は LocalContentColor / LocalTextStyle を CompositionLocalProvider で
+ * 手動配線する必要があった。
+ * ※ 継承には `ComposeFoundationFlags.isInheritedTextStyleEnabled = true` の opt-in が必要。
+ */
+val SectionTextStyle: Style = Style {
+    contentColor(HatakeStyleColors.cropChipBackground)
+    textStyle(
+        TextStyle(
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp,
+        ),
+    )
 }
 
 /** Style 定義で使う raw カラー（テーマ非依存の素値）。 */

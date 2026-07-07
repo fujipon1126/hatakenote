@@ -7,8 +7,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import com.example.hatakenote.core.ui.component.CropChip
 import com.example.hatakenote.core.ui.component.FullScreenPhotoViewer
+import com.example.hatakenote.core.ui.component.InheritedTextSection
 import com.example.hatakenote.core.ui.component.NewLabel
 import com.example.hatakenote.core.ui.component.OutlinedCropChip
+import com.example.hatakenote.core.ui.component.SelectableCropChip
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -605,6 +608,15 @@ private fun RotationAdviceSection(rotationAdvice: RotationAdvice) {
         )
         Spacer(modifier = Modifier.height(8.dp))
 
+        // --- Styles API 継承（cascade）デモ ---
+        // 親の Style（SectionTextStyle）に宣言した色・書体を、子の BasicText が継承する。
+        // 各 BasicText には色/スタイルを一切指定していない点がポイント（従来は LocalContentColor 等の手配線が必要）。
+        InheritedTextSection {
+            BasicText("Styles API 継承デモ")
+            BasicText("この2行は親Styleから色・書体を継承しています")
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+
         if (rotationAdvice.avoidCrops.isEmpty() && rotationAdvice.safeCrops.isEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -622,6 +634,8 @@ private fun RotationAdviceSection(rotationAdvice: RotationAdvice) {
         } else {
             var avoidExpanded by remember { mutableStateOf(false) }
             var safeExpanded by remember { mutableStateOf(false) }
+            // 次に植える候補として選択中の作物（Styles API の状態連動チップのデモ）
+            var selectedSafeCropId by remember { mutableStateOf<Long?>(null) }
 
             // Avoid crops
             if (rotationAdvice.avoidCrops.isNotEmpty()) {
@@ -713,7 +727,14 @@ private fun RotationAdviceSection(rotationAdvice: RotationAdvice) {
                             .verticalScroll(rememberScrollState()),
                     ) {
                         rotationAdvice.safeCrops.forEach { advice ->
-                            SafeCropCard(advice)
+                            SafeCropCard(
+                                advice = advice,
+                                selected = advice.crop.id == selectedSafeCropId,
+                                onClick = {
+                                    selectedSafeCropId =
+                                        if (selectedSafeCropId == advice.crop.id) null else advice.crop.id
+                                },
+                            )
                             Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
@@ -768,7 +789,11 @@ private fun AvoidCropCard(advice: CropAdvice) {
 }
 
 @Composable
-private fun SafeCropCard(advice: CropAdvice) {
+private fun SafeCropCard(
+    advice: CropAdvice,
+    selected: Boolean = false,
+    onClick: () -> Unit = {},
+) {
     val cropColor = parseColorSafe(advice.crop.colorHex, MaterialTheme.colorScheme.primary)
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -789,7 +814,12 @@ private fun SafeCropCard(advice: CropAdvice) {
                     .background(cropColor),
             )
             Spacer(modifier = Modifier.width(12.dp))
-            CropChip(text = advice.crop.name)
+            // Styles API の状態連動チップ：押下/選択の見た目は Style 側の pressed{}/selected{} が担当
+            SelectableCropChip(
+                text = advice.crop.name,
+                selected = selected,
+                onClick = onClick,
+            )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "（${advice.familyName}）",
