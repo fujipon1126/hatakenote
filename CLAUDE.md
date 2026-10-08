@@ -88,4 +88,13 @@ RELEASE_KEY_ALIAS=...
 RELEASE_KEY_PASSWORD=...
 ```
 
+Firebase config `app/google-services.json` is also gitignored (the repo is public) and must be placed manually:
+1. Firebase Console → HatakeNote project → Project settings → Your apps → Android app `com.example.hatakenote`
+2. Download `google-services.json` and put it at `app/google-services.json`
+3. For Google Sign-In on debug builds, register the debug keystore SHA-1 (`./gradlew :app:signingReport`) in the same Firebase app
+
+Without it, the build fails at `:app:processDebugGoogleServices` with "File google-services.json is missing". Keep a copy outside the repo (e.g. password manager) since a fresh clone won't have it.
+
+Build with JDK 17 or 21. Running Gradle 8.13 on JDK 24+ fails during configuration with "Type T not present".
+
 Dependency versions are managed in `gradle/libs.versions.toml`.

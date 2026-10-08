@@ -41,9 +41,31 @@
 
 - Kotlin
 - Gradle (Kotlin DSL)
-- Java 11
+- JDK 17 / 21
+
+## セットアップ
+
+以下のファイルは Git 管理外のため、clone 後に手動で配置してください。
+
+### `local.properties`
+
+```properties
+GEMINI_API_KEY=...
+FIREBASE_WEB_CLIENT_ID=...
+```
+
+### `app/google-services.json`
+
+1. Firebase コンソールで HatakeNote プロジェクトを開く
+2. 「プロジェクトの設定」→「マイアプリ」→ Android アプリ（`com.example.hatakenote`）を選択
+3. `google-services.json` をダウンロードし、`app/google-services.json` に配置
+4. デバッグビルドで Google ログインを使う場合は、`./gradlew :app:signingReport` で確認したデバッグ用 SHA-1 を同じアプリに登録
+
+配置していないと `:app:processDebugGoogleServices` で `File google-services.json is missing` エラーになります。clone し直したときに困らないよう、リポジトリ外（パスワードマネージャー等）にも保管しておいてください。
 
 ## ビルド方法
+
+JDK 17 または 21 を使用してください（JDK 24 以降では Gradle 8.13 が `Type T not present` で失敗します）。
 
 ```bash
 ./gradlew build
