@@ -18,4 +18,24 @@ data class PlantingPhoto(
     val comment: String? = null,
     val updatedAt: Instant = Instant.fromEpochMilliseconds(0),
     val updatedBy: String? = null,
-)
+) {
+    /** 特定の作付けに紐づかない区画全体の写真か */
+    val isPlotOnly: Boolean
+        get() = plantingId == null && plotId != null
+}
+
+/**
+ * この写真を [planting] の写真として表示してよいか。
+ * - plantingId が一致する写真は常に対象
+ * - 区画のみの写真は、撮影日が作付け期間（植え付け日〜最終収穫日）内のものだけ対象
+ * - 別の作付けに紐づく写真は対象外
+ *
+ * 継続収穫中も harvestedDate は最新の収穫日で更新されるため、
+ * 収穫日を期間の終わりとして扱うのは栽培終了（isActive = false）の作付けのみ。
+ */
+fun PlantingPhoto.belongsTo(planting: Planting): Boolean {
+    if (plantingId != null) return plantingId == planting.id
+    if (takenDate < planting.plantedDate) return false
+    val endDate = planting.harvestedDate.takeIf { !planting.isActive } ?: return true
+    return takenDate <= endDate
+}

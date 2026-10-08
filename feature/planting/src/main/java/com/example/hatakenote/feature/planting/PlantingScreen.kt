@@ -408,6 +408,7 @@ internal fun PlantingScreen(
                 },
                 onDelete = { onExistingPhotoRemoved(photo) },
                 onDismiss = onDismissPhotoDetail,
+                confirmDelete = photo.isPlotOnly,
             )
         }
 
@@ -776,12 +777,14 @@ private fun PhotoDetailBottomSheet(
     onSave: (date: LocalDate, comment: String) -> Unit,
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
+    confirmDelete: Boolean = false,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var editedDate by remember { mutableStateOf(initialDate) }
     var editedComment by remember { mutableStateOf(initialComment) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showFullScreenPhoto by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val canSave = editedDate != initialDate || editedComment != initialComment
 
@@ -876,7 +879,7 @@ private fun PhotoDetailBottomSheet(
 
             // Delete button
             TextButton(
-                onClick = onDelete,
+                onClick = { if (confirmDelete) showDeleteConfirm = true else onDelete() },
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Icon(
@@ -891,6 +894,32 @@ private fun PhotoDetailBottomSheet(
                 )
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text(stringResource(R.string.planting_photo_delete_plot_photo_title)) },
+            text = { Text(stringResource(R.string.planting_photo_delete_plot_photo_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirm = false
+                        onDelete()
+                    },
+                ) {
+                    Text(
+                        text = stringResource(R.string.planting_photo_remove),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 
     if (showDatePicker) {

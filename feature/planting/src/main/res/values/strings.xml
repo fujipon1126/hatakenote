@@ -38,6 +38,8 @@
     <string name="planting_photo_comment_hint">コメントを入力...</string>
     <string name="planting_photo_date">撮影日</string>
     <string name="planting_photo_delete">この写真を削除</string>
+    <string name="planting_photo_delete_plot_photo_title">区画の写真を削除しますか？</string>
+    <string name="planting_photo_delete_plot_photo_message">この写真はカレンダーから区画に登録された写真です。削除すると、同じ区画の他の栽培記録からも表示されなくなります。</string>
     <string name="planting_status_growing">栽培中</string>
     <string name="planting_status_harvested">収穫済み</string>
     <string name="planting_filter_all">すべて</string>

@@ -11,6 +11,7 @@ import com.example.hatakenote.core.domain.model.Harvest
 import com.example.hatakenote.core.domain.model.Planting
 import com.example.hatakenote.core.domain.model.PlantingPhoto
 import com.example.hatakenote.core.domain.model.Plot
+import com.example.hatakenote.core.domain.model.belongsTo
 import com.example.hatakenote.core.domain.repository.CropFamilyRepository
 import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.EntityLastViewedRepository
@@ -113,9 +114,14 @@ class PlantingViewModel @Inject constructor(
                     val planting = plantingRepository.getById(plantingId)
                     val plotIds = plantingRepository.getPlotIdsForPlanting(plantingId)
                     val plantingPhotos = plantingPhotoRepository.getByPlantingId(plantingId).first()
-                    // 区画に紐づく写真も取得（カレンダーから登録された写真）
-                    val plotPhotos = plotIds.flatMap { plotId ->
-                        plantingPhotoRepository.getByPlotId(plotId).first()
+                    // 区画に紐づく写真も取得（カレンダーから登録された写真）。
+                    // 同じ区画の過去・未来の作付けの写真が混ざらないよう、この作付けに属するものだけに絞る
+                    val plotPhotos = if (planting == null) {
+                        emptyList()
+                    } else {
+                        plotIds.flatMap { plotId ->
+                            plantingPhotoRepository.getByPlotId(plotId).first()
+                        }.filter { it.belongsTo(planting) }
                     }
                     // 重複を除いて統合（両方に紐づく写真がある場合）
                     val photos = (plantingPhotos + plotPhotos)
@@ -229,6 +235,8 @@ class PlantingViewModel @Inject constructor(
     }
 
     fun removeExistingPhoto(photo: PlantingPhoto) {
+        // 別の作付けの写真はこの画面から削除させない（他の栽培記録から消えてしまうため）
+        if (photo.plantingId != null && photo.plantingId != plantingId) return
         viewModelScope.launch {
             plantingPhotoRepository.delete(photo)
             _uiState.value = _uiState.value.copy(

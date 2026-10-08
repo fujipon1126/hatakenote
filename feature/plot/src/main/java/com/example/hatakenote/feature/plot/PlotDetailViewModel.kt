@@ -12,6 +12,7 @@ import com.example.hatakenote.core.domain.model.PlantingWithCrop
 import com.example.hatakenote.core.domain.model.WorkLog
 import com.example.hatakenote.core.domain.model.Fertilizer
 import com.example.hatakenote.core.domain.model.Harvest
+import com.example.hatakenote.core.domain.model.belongsTo
 import com.example.hatakenote.core.domain.repository.AuthRepository
 import com.example.hatakenote.core.domain.repository.CropRepository
 import com.example.hatakenote.core.domain.repository.EntityLastViewedRepository
@@ -133,7 +134,9 @@ class PlotDetailViewModel @Inject constructor(
                 for (pwc in plotWithPlantings.currentPlantings) {
                     val pid = pwc.planting.id
                     val plantingPhotos = plantingPhotoRepository.getByPlantingId(pid).first()
-                    val combined = (plantingPhotos + plotOnlyPhotos)
+                    // 区画全体の写真は、この作付けの期間内に撮影されたものだけを含める
+                    val plotOnlyPhotosInPeriod = plotOnlyPhotos.filter { it.belongsTo(pwc.planting) }
+                    val combined = (plantingPhotos + plotOnlyPhotosInPeriod)
                         .distinctBy { it.id }
                         .sortedWith(
                             compareByDescending<PlantingPhoto> { it.takenDate }

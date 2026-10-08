@@ -68,10 +68,13 @@ class PlotPhotoViewModel @Inject constructor(
                     try { LocalDate.parse(it) } catch (_: Exception) { null }
                 } ?: Clock.System.todayIn(TimeZone.currentSystemDefault())
 
+                val selectedPlotId = route.plotId ?: plotsWithPlantings.firstOrNull()?.plot?.id
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     plotsWithPlantings = plotsWithPlantings,
-                    selectedPlotId = route.plotId ?: plotsWithPlantings.firstOrNull()?.plot?.id,
+                    selectedPlotId = selectedPlotId,
+                    selectedPlantingId = defaultPlantingIdFor(plotsWithPlantings, selectedPlotId),
                     photoDate = initialDate,
                 )
             } catch (e: Exception) {
@@ -86,9 +89,23 @@ class PlotPhotoViewModel @Inject constructor(
     fun selectPlot(plotId: Long) {
         _uiState.value = _uiState.value.copy(
             selectedPlotId = plotId,
-            selectedPlantingId = null,
+            selectedPlantingId = defaultPlantingIdFor(_uiState.value.plotsWithPlantings, plotId),
         )
     }
+
+    /**
+     * 区画で栽培中の作付けが1つだけなら、その作付けを初期選択にする。
+     * 作付け未指定の写真は同じ区画の後続の作付けにも混ざりうるため、なるべく紐づけておく。
+     */
+    private fun defaultPlantingIdFor(
+        plotsWithPlantings: List<PlotWithCurrentPlanting>,
+        plotId: Long?,
+    ): Long? = plotsWithPlantings
+        .find { it.plot.id == plotId }
+        ?.currentPlantings
+        ?.singleOrNull()
+        ?.planting
+        ?.id
 
     fun selectPlanting(plantingId: Long?) {
         _uiState.value = _uiState.value.copy(selectedPlantingId = plantingId)
