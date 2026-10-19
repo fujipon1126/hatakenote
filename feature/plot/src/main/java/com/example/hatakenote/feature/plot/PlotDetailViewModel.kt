@@ -107,8 +107,20 @@ class PlotDetailViewModel @Inject constructor(
                     .sortedWith(compareBy({ it.side }, { it.number }))
 
                 // 全兄弟区画の plot-bound 作業記録を取得（TILL, BASE_FERTILIZE）
+                // 区画ごとに最後の収穫日以降に絞り、過去の作付けサイクルの準備作業を除外する
+                // （収穫当日は次作の準備をすることがあるので含める）
                 val plotWorkLogs = siblingPlotIds.flatMap { sibPlotId ->
+                    val history = if (sibPlotId == plotId) {
+                        allPlantings
+                    } else {
+                        plantingRepository.getHistoryByPlotId(sibPlotId).first()
+                    }
+                    val lastHarvestedDate = history
+                        .filter { !it.isActive }
+                        .mapNotNull { it.harvestedDate }
+                        .maxOrNull()
                     workLogRepository.getByPlotId(sibPlotId).first()
+                        .filter { lastHarvestedDate == null || it.workDate >= lastHarvestedDate }
                 }
 
                 // planting-bound 作業記録を取得（FERTILIZE, OTHER）
